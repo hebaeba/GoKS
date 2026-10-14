@@ -18,15 +18,40 @@
  panes.sequence.append(empty);const syncEmpty=()=>empty.hidden=!$('tree-block').hidden;new MutationObserver(syncEmpty).observe($('tree-block'),{attributes:true,attributeFilter:['hidden']});syncEmpty();
  const tools=$('tools');panes.tools.append(tools);tools.querySelector('summary').hidden=true;tools.open=true;tools.addEventListener('click',event=>{if(event.target.closest('[data-tool]')){tools.open=true;if(matchMedia('(max-width:899px)').matches)q('.canvas-wrap').scrollIntoView({behavior:'smooth',block:'start'});}});new MutationObserver(()=>{if(!panes.tools.hidden&&!tools.open)tools.open=true;}).observe(tools,{attributes:true,attributeFilter:['open']});const toolHeading=document.createElement('h2');toolHeading.textContent='碁石・記号・文字の配置';panes.tools.prepend(toolHeading);
  tools.querySelector('.close-tools').textContent='配置を終了';tools.querySelector('.close-tools').addEventListener('click',()=>{tools.open=true;activate('sequence');});
- const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-menu'),$('save-options'),$('recovery'));
+ const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
  const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 0.6 · KataGo解析</span>');
  const toolShortcut=document.createElement('button');toolShortcut.textContent='ツール';toolShortcut.title='碁石・記号・文字を配置します';toolShortcut.onclick=()=>activate('tools');q('.edit-buttons').append(toolShortcut);
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent=document.body.classList.contains('editing-mode')?'編集中':'閲覧中';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
- function activate(id){for(const [key,pane]of Object.entries(panes)){pane.hidden=key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}if(id==='tools')tools.open=true;if(id==='storage')$('save-menu').open=true;window.dispatchEvent(new Event('workspace-layout'));window.dispatchEvent(new Event('resize'));}
+ function activate(id){for(const [key,pane]of Object.entries(panes)){pane.hidden=key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}if(id==='tools')tools.open=true;if(id==='storage')$('save-options').hidden=false;window.dispatchEvent(new Event('workspace-layout'));window.dispatchEvent(new Event('resize'));}
  tabs.addEventListener('keydown',event=>{const list=[...tabs.children],i=list.indexOf(document.activeElement);if(i<0)return;let n;if(event.key==='ArrowRight')n=(i+1)%list.length;else if(event.key==='ArrowLeft')n=(i+list.length-1)%list.length;else if(event.key==='Home')n=0;else if(event.key==='End')n=list.length-1;else return;event.preventDefault();list[n].click();list[n].focus();});
- $('workspace-open').onclick=()=>$('open').click();$('workspace-save').onclick=()=>{activate('storage');if(matchMedia('(max-width: 899px)').matches)panel.scrollIntoView({behavior:'smooth',block:'start'});};
+ $('workspace-open').onclick=()=>$('open').click();
+ const saveTrigger=$('workspace-save'),savePopup=document.createElement('div');
+ savePopup.id='workspace-save-popup';savePopup.className='save-popup';savePopup.hidden=true;
+ savePopup.setAttribute('role','group');savePopup.setAttribute('aria-label','保存・印刷');
+ savePopup.innerHTML='<button type="button" id="quick-save"><strong>棋譜を保存…</strong><small>変化・コメント・対局情報を含みます</small></button><button type="button" id="quick-print">盤面を印刷…</button><button type="button" id="quick-more">その他の保存…</button>';
+ toolbar.append(savePopup);saveTrigger.setAttribute('aria-expanded','false');saveTrigger.setAttribute('aria-controls',savePopup.id);saveTrigger.title='棋譜を保存・盤面を印刷・その他の保存を選びます';
+ function syncSaveActions(){$('quick-save').disabled=$('save').disabled;$('quick-print').disabled=$('print').disabled;}
+ function closeSave(focus=false){savePopup.hidden=true;saveTrigger.setAttribute('aria-expanded','false');if(focus)saveTrigger.focus();}
+ function openSave(){syncSaveActions();savePopup.hidden=false;saveTrigger.setAttribute('aria-expanded','true');}
+ saveTrigger.onclick=()=>savePopup.hidden?openSave():closeSave();
+ saveTrigger.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();openSave();savePopup.querySelector('button:not(:disabled)')?.focus();}});
+ savePopup.addEventListener('keydown',e=>{const buttons=[...savePopup.querySelectorAll('button:not(:disabled)')],i=buttons.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();buttons[(i+(e.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!savePopup.hidden){e.preventDefault();closeSave(true);}});
+ document.addEventListener('pointerdown',e=>{if(!toolbar.contains(e.target))closeSave();});
+ toolbar.addEventListener('focusout',e=>{if(!toolbar.contains(e.relatedTarget))closeSave();});
+ $('quick-save').onclick=()=>{closeSave(true);$('save').click();};
+ $('quick-print').onclick=()=>{closeSave(true);$('print').click();};
+ $('quick-more').onclick=()=>{closeSave();activate('storage');$('tab-storage').focus();if(matchMedia('(max-width:899px)').matches)panel.scrollIntoView({behavior:'smooth',block:'start'});};
+ new MutationObserver(syncSaveActions).observe($('save'),{attributes:true,attributeFilter:['disabled']});
+ new MutationObserver(syncSaveActions).observe($('print'),{attributes:true,attributeFilter:['disabled']});
+ // Keep the full-save handler reachable from the header without a duplicate details menu.
+ $('save').hidden=true;$('print').hidden=true;
+ const records=$('save-options').querySelector('.record-save-row'),images=$('save-options').querySelector('.image-save-row');
+ for(const [target,text] of [[records,'棋譜の保存'],[images,'画像の保存']]){const h=document.createElement('h3');h.textContent=text;target.before(h);}
+ const recoveryHeading=document.createElement('h3');recoveryHeading.textContent='一時保存';$('recovery').before(recoveryHeading);
+
  toolShortcut.addEventListener('click',()=>{if(matchMedia('(max-width:899px)').matches)panel.scrollIntoView({behavior:'smooth',block:'start'});});
  window.KifuWorkspace={activate};activate('analysis');
 })();

@@ -5,6 +5,16 @@ const S=typeof module!=='undefined'?require('./sgf.js'):global.GoSgf;
 const letters='ABCDEFGHJKLMNOPQRST';
 function gtp(p,size){return p===null?'pass':letters[p%size]+(size-Math.floor(p/size));}
 function point(move,size){if(/^pass$/i.test(move))return null;const m=/^([A-HJ-T])(\d{1,2})$/.exec(move);if(!m)throw Error('候補手の座標が不正です');const x=letters.indexOf(m[1]),y=size-Number(m[2]);if(x<0||x>=size||y<0||y>=size)throw Error('候補手が盤外です');return y*size+x;}
+// Prefix identities exclude sibling variations: adding a variation preserves shared results.
+function positionKeys(snapshot){
+ let node=S.parse(snapshot.sgf).root;const props=[node.props],keys=[JSON.stringify([snapshot.size,snapshot.komi,props])];
+ for(const choice of snapshot.path){node=node.children[choice];if(!node)throw Error('変化の経路が不正です');props.push(node.props);keys.push(JSON.stringify([snapshot.size,snapshot.komi,props]));}
+ return keys;
+}
+function rebaseResults(previous,next,results){
+ const oldKeys=positionKeys(previous),newKeys=positionKeys(next),byKey=new Map([...results].map(([i,v])=>[oldKeys[i],v]));
+ return new Map(newKeys.flatMap((key,i)=>byKey.has(key)?[[i,{...byKey.get(key),index:i}]]:[]));
+}
 function identity(snapshot){return JSON.stringify([snapshot.sgf,snapshot.path]);}
 function effectiveRules(ru){const s=String(ru||'').toLowerCase();if(/japan|日本/.test(s))return 'japanese';if(/chinese|中国/.test(s))return 'chinese';if(!s)return null;return null;}
 function stones(state){return state.board.flatMap((c,p)=>c?[[c===1?'B':'W',gtp(p,state.size)]]:[]);}
@@ -66,5 +76,5 @@ function preview(snapshot,pv,count){
 }
 function shortVisits(n){return n>=1000000?(n/1000000).toFixed(1)+'m':n>=1000?(n/1000).toFixed(1)+'k':String(n);}
 function candidateColor(m,best,turn,rank){if(rank===0)return '#087ea4';const loss=Math.max(0,(best.scoreLead-m.scoreLead)*(turn===2?-1:1));return loss<=0.5?'#bce4a2':loss<=2?'#f4e684':'#f5b47a';}
-const api={shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
+const api={positionKeys,rebaseResults,shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
 })(globalThis);

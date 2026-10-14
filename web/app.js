@@ -7,7 +7,7 @@
   const allElements=selector=>[...new Set([...document.querySelectorAll(selector),...(toolRoot?toolRoot.querySelectorAll(selector):[])])];
   let root = S.create(), size = 19, choices = new WeakMap(), route = [], frames = [], numberFrames = [], issues = [], index = 0;
   let editing = true, numbers = false, dirty = false, focusPoint = 0, keyboardBoard = false, originalName = 'kifu.sgf';
-  let autoTimer=null,autoPlaying=false;
+  let autoTimer=null,autoPlaying=false,analysisPreview=null;
   const canvas = $('board'), context = canvas.getContext('2d');
   const read = (props, key, fallback = '') => props[key]?.[0] ?? fallback;
   // Explicit KM takes priority; HA is the SGF handicap count, AB alone may be a problem diagram.
@@ -163,12 +163,13 @@
     if ([17,19].includes(n)) return [inset,middle,far].flatMap(y=>[inset,middle,far].map(x=>[x,y]));
     return [[inset,inset],[far,inset],[middle,middle],[inset,far],[far,far]];
   }
-  function draw() {
-    const state = scoreSession?.result?{...frames[index],board:scoreSession.result.board}:frames[index], {extent, gap, start, wood, span} = geometry();
+  function draw(usePreview=true) {
+    const pv=usePreview?analysisPreview:null;
+    const state = pv?pv.state:scoreSession?.result?{...frames[index],board:scoreSession.result.board}:frames[index], {extent, gap, start, wood, span} = geometry();
     const width = canvas.clientWidth || extent, ratio = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.round(width * ratio); canvas.height = canvas.width;
     context.setTransform(canvas.width / extent, 0, 0, canvas.height / extent, 0, 0);
-    const marks=markupMap();const c = context; c.clearRect(0,0,extent,extent);
+    const marks=pv?new Map():markupMap();const c = context; c.clearRect(0,0,extent,extent);
     c.fillStyle = 'silver'; c.fillRect(0,0,extent,extent); c.strokeStyle = '#1d2926'; c.lineWidth = 1.5; c.strokeRect(.75,.75,extent-1.5,extent-1.5);
     c.fillStyle = '#ebc365'; c.fillRect(wood,wood,span,span);
     c.strokeStyle = '#564424'; c.lineWidth = .85; c.beginPath();
@@ -184,19 +185,20 @@
       if(color===R.BLACK){gradient.addColorStop(0,'#555b5c');gradient.addColorStop(1,'#111415');}
       else{gradient.addColorStop(0,'#ffffff');gradient.addColorStop(1,'#dce2df');}
       c.fillStyle=gradient;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle=color===R.BLACK?'#0a1111':'#87958f';c.lineWidth=.7;c.stroke();
-      const label=numberFrames[index][point],latest=state.last?.point===point;
-      if(numbers&&label&&(!$('recent').checked||label>state.move-5)&&!marks.has(point)){
+      const pvLabel=pv?.labels.get(point),label=pv?pvLabel:numberFrames[index][point],latest=state.last?.point===point;
+      if((pvLabel||numbers)&&label&&(pvLabel||!$('recent').checked||label>state.move-5)&&!marks.has(point)){
         const text=String(label);let font=r*1.12;c.font='600 '+font+'px Arial,sans-serif';
         const actual=c.measureText(text).width;if(actual>r*1.55)font*=r*1.55/actual;
         c.font='600 '+font+'px Arial,sans-serif';c.fillStyle=latest?(color===R.BLACK?'#ff9e89':'#b12212'):(color===R.BLACK?'#fff':'#192824');c.fillText(text,x,y+.4);
       }else if(latest&&!marks.has(point)){c.strokeStyle=color===R.BLACK?'#ff9980':'#b5261a';c.lineWidth=Math.max(1.5,gap*.07);c.beginPath();c.arc(x,y,r*.28,0,Math.PI*2);c.stroke();}
     });
     if(!scoreSession)drawMarkup(c,{gap,start,extent},marks,state);drawScore(c,{gap,start,extent});
-    if(!scoreSession&&route[index].children.length>1&&!insertion&&(tool==='play'||!editing)){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point]||marks.has(point))continue;const text=lineEntry(child).label,x=start+point%size*gap,y=start+Math.floor(point/size)*gap;c.save();const font=16*extent/(canvas.clientWidth||extent);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle='#06ad01';c.fillText(text,x,y);c.restore();}}
+    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion&&(tool==='play'||!editing)){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point]||marks.has(point))continue;const text=lineEntry(child).label,x=start+point%size*gap,y=start+Math.floor(point/size)*gap;c.save();const font=16*extent/(canvas.clientWidth||extent);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle='#06ad01';c.fillText(text,x,y);c.restore();}}
 
     if(keyboardBoard){const x=start+focusPoint%size*gap,y=start+Math.floor(focusPoint/size)*gap;c.strokeStyle='#006675';c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
   }
   function refresh() {
+    analysisPreview=null;
     document.body.classList.toggle('editing-mode',editing);queueMicrotask(()=>window.dispatchEvent(new Event('kifu-position-change')));
     syncAuto();invalidateGif();
     const state=frames[index], max=frames.at(-1).move;const title=read(root.props,'GN')||(originalName!=='kifu.sgf'?originalName.replace(/\.sgf$/i,''):'新しい碁盤');firstElement('h1').textContent=title;firstElement('h1').title=title;
@@ -353,7 +355,7 @@
   }
   let exportBusy=false,gifBlob=null,gifUrl=null;
   function invalidateGif(){if(exportBusy||!$('gif-preview'))return;gifBlob=null;$('gif-preview').hidden=true;$('gif-save').hidden=true;if(gifUrl){URL.revokeObjectURL(gifUrl);gifUrl=null;}}
-  function rasterAt(position=index,scale=1){const old=index,keyboard=keyboardBoard;index=position;keyboardBoard=false;draw();const output=document.createElement('canvas');output.width=Math.max(1,Math.round(canvas.clientWidth*scale));output.height=output.width;output.getContext('2d').drawImage(canvas,0,0,output.width,output.height);index=old;keyboardBoard=keyboard;draw();return output;}
+  function rasterAt(position=index,scale=1){const old=index,keyboard=keyboardBoard;index=position;keyboardBoard=false;draw(false);const output=document.createElement('canvas');output.width=Math.max(1,Math.round(canvas.clientWidth*scale));output.height=output.width;output.getContext('2d').drawImage(canvas,0,0,output.width,output.height);index=old;keyboardBoard=keyboard;draw();return output;}
   function pointAt(event){const rect=canvas.getBoundingClientRect(),g=geometry(),x=(event.clientX-rect.left)*g.extent/rect.width,y=(event.clientY-rect.top)*g.extent/rect.height,ix=Math.round((x-g.start)/g.gap),iy=Math.round((y-g.start)/g.gap);return ix>=0&&ix<size&&iy>=0&&iy<size?iy*size+ix:null;}
   function configureInterface(){
     firstElement('.text-label').hidden=true;$('sgf').placeholder='棋譜欄';$('sgf').setAttribute('aria-label','棋譜欄');$('import-text').textContent='棋譜欄から碁盤へ';$('export-text').textContent='碁盤から棋譜欄へ';
@@ -426,7 +428,7 @@
   function saveRecovery(manual){if(insertion||scoreSession)return;try{const current=localStorage.getItem(recoveryKey);if(recoveryPending||current!==recoveryRaw){if(!manual||!confirm('端末内にある一時保存を、現在の棋譜で置き換えますか？')){recoveryPending=true;recoveryStatus('前回または別の画面の一時保存があります。「復元」か「今すぐ保存」を選んでください。');return;}}const value=recoveryData(),raw=JSON.stringify(value);if(raw.length>4*1024*1024)throw Error('一時保存の上限を超えています');localStorage.setItem(recoveryKey,raw);recoveryRaw=raw;recoveryPending=false;recoveryStatus('端末内に一時保存しました（'+new Date(value.time).toLocaleTimeString('ja-JP')+'）');}catch(error){recoveryStatus('一時保存できません。棋譜をファイルに保存してください：'+error.message);}}
   function scheduleRecovery(){if(!recoveryReady||insertion||scoreSession)return;const signature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));if(signature===recoverySignature)return;recoverySignature=signature;clearTimeout(recoveryTimer);if($('auto-recovery').checked&&!recoveryPending&&(dirty||hasCommentDraft()||hasInfoDraft()||$('sgf').value.trim()))recoveryTimer=setTimeout(()=>saveRecovery(false),700);}
   function setupExtra(){const score=document.createElement('button');score.id='score';score.textContent='勝敗判定';score.title='元の碁盤で死に石・セキを指定し、別窓で日本ルール・中国ルールの結果を表示します';$('turn').after(score);score.onclick=openScore;
-    const recovery=document.createElement('details');recovery.id='recovery';recovery.innerHTML='<summary title="このブラウザー内に盤面を一時保存し、復元します">盤面の一時保存・復元</summary><label><input id="auto-recovery" type="checkbox" checked> 自動で一時保存</label><div><button id="recovery-save" title="現在の棋譜をこの端末に一時保存します">今すぐ保存</button><button id="recovery-restore" title="端末内の一時保存を確認して復元します">復元</button><button id="recovery-delete" title="端末内の一時保存だけを削除します">保存を削除</button></div><p>このブラウザーに１件保存します。サーバーへの送信や他の端末との共有は行いません。大切な棋譜は「棋譜全体を保存」でファイルに保存してください。</p><p id="recovery-status" role="status"></p>';
+    const recovery=document.createElement('details');recovery.id='recovery';recovery.innerHTML='<summary title="このブラウザー内に盤面を一時保存し、復元します">盤面の一時保存・復元</summary><label><input id="auto-recovery" type="checkbox" checked> 自動で一時保存</label><div><button id="recovery-save" title="現在の棋譜をこの端末に一時保存します">今すぐ保存</button><button id="recovery-restore" title="端末内の一時保存を確認して復元します">復元</button><button id="recovery-delete" title="端末内の一時保存だけを削除します">保存を削除</button></div><p>このブラウザーに１件保存します。サーバーへの送信や他の端末との共有は行いません。大切な棋譜は上部の「保存・印刷」→「棋譜を保存…」でファイルに保存してください。</p><p id="recovery-status" role="status"></p>';
     firstElement('.text-actions').after(recovery);try{recoveryRaw=localStorage.getItem(recoveryKey);recoveryPending=!!recoveryRaw;if(recoveryPending)recoveryStatus('前回の一時保存があります。「復元」で読み込めます。');}catch{recoveryStatus('このブラウザーでは一時保存を利用できません。');$('auto-recovery').checked=false;}
     $('recovery-save').onclick=()=>saveRecovery(true);$('auto-recovery').onchange=()=>{clearTimeout(recoveryTimer);if($('auto-recovery').checked){recoverySignature='';scheduleRecovery();}};
     $('recovery-restore').onclick=()=>{if(insertion||!canLeave())return;try{const raw=localStorage.getItem(recoveryKey);if(!raw){recoveryStatus('一時保存はありません。');return;}const saved=JSON.parse(raw);if(saved.version!==1||!saved.snapshot||typeof saved.snapshot.name!=='string'||!Array.isArray(saved.info)||saved.info.some(pair=>!Array.isArray(pair)||pair.length!==2||pair.some(value=>typeof value!=='string'))||!Number.isInteger(saved.snapshot.index)||saved.snapshot.index<0||!Array.isArray(saved.snapshot.selected)||saved.snapshot.selected.some(pair=>!Array.isArray(pair)||pair.length!==2||pair.some(value=>!Number.isInteger(value)||value<0)))throw Error('保存データが不正です');const parsed=S.parse(saved.snapshot.sgf);validate(parsed.root,parsed.size);if(parsed.size!==saved.snapshot.size)throw Error('盤の大きさが一致しません');if(!confirm(new Date(saved.time).toLocaleString('ja-JP')+' の一時保存を復元しますか？現在の棋譜を置き換えます。'))return;clearTimeout(recoveryTimer);recoveryReady=false;resetHistory();restore(saved.snapshot);editing=!!saved.editing;dirty=true;$('size').value=String(size);$('sgf').value=String(saved.input||'');$('comment-edit').value=String(saved.comment||'');for(const [key,value]of saved.info||[]){const input=[...allElements('[data-prop]')].find(input=>input.dataset.prop===key);if(input)input.value=String(value);}recoveryRaw=raw;recoveryPending=false;refresh();recoverySignature='';recoveryReady=true;scheduleRecovery();recoveryStatus('一時保存を復元しました。');}catch(error){recoveryReady=true;recoveryStatus('復元できません：'+error.message);}};
@@ -447,6 +449,15 @@
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
     getText(){return $('sgf').value;},
     getMove(){return frames[index].move;},
+    previewAnalysis(result){if(scoreSession||insertion)return false;analysisPreview=result;draw();return true;},
+    clearAnalysisPreview(){if(analysisPreview){analysisPreview=null;draw();}},
+    playAnalysisMove(point,expected){
+      if(insertion||scoreSession||exportBusy||!canLeave())throw Error('挿入・勝敗判定・未反映の入力を終了してください。');
+      if(serialized()!==expected.sgf||index!==expected.index||JSON.stringify(route.slice(1).map((n,i)=>route[i].children.indexOf(n)))!==JSON.stringify(expected.path))throw Error('局面が変わりました。候補手を選び直してください。');
+      R.play(frames[index],point); // Validate before changing mode or tool.
+      analysisPreview=null;editing=true;tool='play';$('tool').value='play';canvas.style.touchAction='pan-y';$('tools').querySelector('summary').textContent='ツール';
+      place(point);
+    },
     analysisSnapshot(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・未反映の入力を終了してください。');return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     peekAnalysisSnapshot(){return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     async analysisAt(target,expected){if(serialized()!==expected)throw Error('棋譜が変更されています。');if(!Number.isInteger(target)||target<0||target>=route.length)throw Error('局面番号が不正です。');await at(target);},
