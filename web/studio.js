@@ -1,18 +1,18 @@
-/* Workspace composition. Layout changes never change record or edit permissions. */
+/* Workspace composition. Editing layout enables board editing. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),q=s=>document.querySelector(s),api=IndependentGo;
 const inspector=q('.inspector'),settings=$('pane-settings'),analysis=$('pane-analysis');
 settings.innerHTML='<h2>エンジン・接続の設定</h2>';
 settings.append($('engine-settings'),q('.engine-actions'),$('engine-notice'),$('engine-error'),q('.engine-log'));
 const dock=document.createElement('section');dock.className='engine-dock';dock.setAttribute('aria-label','解析エンジンの状態と操作');
-dock.append($('engine-active'),q('.analysis-primary'),q('.analysis-conditions'));
+dock.append($('engine-active'),q('.engine-actions'),q('.analysis-primary'),q('.analysis-conditions'));
 const status=document.createElement('div');status.className='engine-compact-status';status.append($('engine-state'));
 const config=document.createElement('button');config.id='engine-settings-open';config.textContent='エンジン設定';config.onclick=()=>KifuWorkspace.activate('settings');status.append(config);dock.prepend(status);
-q('.workspace-mode').after(dock);
+q('.workspace-mode').after(dock);$('engine-connect').title='選択したエンジンを起動し、解析の準備をします';
 q('.analysis-heading').remove();
 // Only detailed startup messages stay beside configuration. The common dock stays visible.
 const compact=document.createElement('p');compact.id='engine-compact-message';compact.setAttribute('role','status');dock.append(compact);
-const sync=()=>{compact.textContent=$('engine-notice-title').textContent;};new MutationObserver(sync).observe($('engine-notice'),{subtree:true,childList:true,characterData:true});sync();
+const sync=()=>{const state=$('engine-notice').dataset.state;compact.textContent=$('engine-notice-title').textContent+(['starting','tuning','error'].includes(state)?'：'+$('engine-notice-message').textContent:'');};new MutationObserver(sync).observe($('engine-notice'),{subtree:true,childList:true,characterData:true});sync();
 // Full-game controls are secondary and follow the graph.
 analysis.append($('analysis-batch'));
 const rotation=document.createElement('div');rotation.className='board-view-tools';rotation.innerHTML='<span>盤面の向き</span><button id="rotate-left" title="表示を左へ90度回転します。棋譜は変更しません">↶ 左回転</button><button id="rotate-right" title="表示を右へ90度回転します。棋譜は変更しません">↷ 右回転</button><button id="rotate-reset" title="元の表示方向に戻します">元に戻す</button><output id="rotation-state">0°</output>';

@@ -286,11 +286,15 @@
   $('file').onchange=async()=>{try{await importFile($('file').files[0]);}finally{$('file').value='';}};
   const dropZone=firstElement('.canvas-wrap');
   let dropTicket=0,pendingDrop=null;
+  const dropStatus=document.createElement('p');dropStatus.id='drop-status';dropStatus.hidden=true;dropStatus.setAttribute('role','status');dropZone.before(dropStatus);
+  function dragStatus(text){dropStatus.textContent=text;dropStatus.hidden=!text;}
+  function nativeDrag(phase){dropZone.classList.toggle('file-dragover',phase==='enter');if(phase==='enter')dragStatus('棋譜ファイルをここへドロップしてください');if(phase==='leave')dragStatus('');if(phase==='drop')dragStatus('ファイルを受け取りました。読み込んでいます…');}
+
   const dropNotice=document.createElement('div');dropNotice.className='pending-drop';dropNotice.hidden=true;
   const dropName=document.createElement('span'),dropLoad=document.createElement('button'),dropCancel=document.createElement('button');
   dropName.setAttribute('role','status');dropLoad.textContent='受け取った棋譜を読込み';dropCancel.textContent='中止';dropNotice.append(dropName,dropLoad,dropCancel);dropZone.after(dropNotice);
-  dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file)await importFile(file);};
-  dropCancel.onclick=()=>{dropTicket++;pendingDrop=null;dropNotice.hidden=true;};
+  dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file){const loaded=await importFile(file);dragStatus(loaded?file.name+' を読み込みました。':'読込みを中止したか、棋譜の形式が正しくありません。');}};
+  dropCancel.onclick=()=>{dropTicket++;pendingDrop=null;dropNotice.hidden=true;dragStatus('読込みを中止しました。');};
 
   dropZone.title='棋譜ファイルをここへドラッグして読み込めます。盤面にフォーカスしてCtrl+VでSGFを貼り付けできます。';
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files'))e.preventDefault();});
@@ -477,11 +481,12 @@
   window.IndependentGo=Object.freeze({
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
     rotateBoard,displayPoint,
-    importFile,
+    importFile,nativeDrag,
     async nativeDrop(payload){
-      const rect=canvas.getBoundingClientRect(),ratio=window.devicePixelRatio||1,x=payload.x/ratio,y=payload.y/ratio;
-      if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom)return false;
-      if(payload.error){report(payload.error,true);return false;}
+      nativeDrag('drop');
+      // OS-delivered record drops are accepted anywhere in the main window.
+      // Do not silently discard them based on client/screen/DPI coordinates.
+      if(payload.error){dragStatus(payload.error);report(payload.error,true);return false;}
       // Native focus activation is asynchronous. Do not run a replacement confirmation
       // while WebView2 still considers the receiving document inactive.
       const ticket=++dropTicket;pendingDrop=null;dropNotice.hidden=true;
@@ -489,9 +494,9 @@
       if(ticket!==dropTicket)return false;
       const file=new File([new Uint8Array(payload.bytes)],payload.name);
       if(!document.hasFocus()){
-        pendingDrop=file;dropName.textContent=file.name+' を受け取りました。読込みボタンを押してください。';dropNotice.hidden=false;return false;
+        pendingDrop=file;dragStatus(file.name+' を受け取りました。読込みボタンで開けます。');dropName.textContent=file.name+' を受け取りました。読込みボタンを押してください。';dropNotice.hidden=false;return false;
       }
-      return importFile(file);
+      const loaded=await importFile(file);dragStatus(loaded?file.name+' を読み込みました。':'読み込めませんでした、または置き換えを中止しました。');return loaded;
     },
     pasteRecord,
     getText(){return $('sgf').value;},
@@ -597,7 +602,7 @@
   setupExtra();if(!document.body.hasAttribute('data-standalone'))setupToolWindow();setupKomi();
   const boardBlock=document.createElement('section');boardBlock.className='board-block';boardBlock.setAttribute('aria-label','碁盤ブロック');
   const boardTop=firstElement('.topline');boardTop.before(boardBlock);
-  for(const selector of ['.topline','.canvas-wrap','.players','.statusline','#comment-area'])boardBlock.append(firstElement(selector));
+  for(const selector of ['.topline','#drop-status','.canvas-wrap','.players','.statusline','#comment-area'])boardBlock.append(firstElement(selector));
   window.addEventListener('workspace-layout',()=>{drawMoveStrip();draw();});
   setupAuto();new ResizeObserver(()=>draw()).observe(canvas);rebuild();refresh();recoveryReady=true;recoverySignature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));
 })();
