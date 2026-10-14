@@ -261,7 +261,7 @@
   function load(text,name='kifu.sgf'){
     try{const game=GoImport.parse(text,name);validate(game.root,game.size);if(!okayToReplace())return false;
       clearTimeout(recoveryTimer);root=game.root;size=game.size;choices=new WeakMap();index=0;dirty=false;editing=false;focusPoint=0;originalName=name.replace(/\.(?:sgf|ngf|ugf|ugi|gib|mgt)$/i,'')+'.sgf';
-      $('size').value=String(size);resetHistory();rebuild();index=route.length-1;refresh();$('load-menu').open=false;$('load-options').hidden=true;report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
+      $('size').value=String(size);resetHistory();rebuild();index=route.length-1;refresh();$('load-menu').open=false;$('load-options').hidden=true;dragStatus('');report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
     }catch(error){report('読込みできませんでした：'+error.message,true);return false;}
   }
   function serialized(){const old=root.props.CA,oldKomi=root.props.KM;root.props.CA=['UTF-8'];root.props.KM=[String(currentKomi())];try{return S.write(root);}finally{if(old)root.props.CA=old;else delete root.props.CA;if(oldKomi)root.props.KM=oldKomi;else delete root.props.KM;}}
@@ -293,7 +293,7 @@
   const dropNotice=document.createElement('div');dropNotice.className='pending-drop';dropNotice.hidden=true;
   const dropName=document.createElement('span'),dropLoad=document.createElement('button'),dropCancel=document.createElement('button');
   dropName.setAttribute('role','status');dropLoad.textContent='受け取った棋譜を読込み';dropCancel.textContent='中止';dropNotice.append(dropName,dropLoad,dropCancel);dropZone.after(dropNotice);
-  dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file){const loaded=await importFile(file);dragStatus(loaded?file.name+' を読み込みました。':'読込みを中止したか、棋譜の形式が正しくありません。');}};
+  dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file){const loaded=await importFile(file);dragStatus(loaded?'':'読込みを中止したか、棋譜の形式が正しくありません。');}};
   dropCancel.onclick=()=>{dropTicket++;pendingDrop=null;dropNotice.hidden=true;dragStatus('読込みを中止しました。');};
 
   dropZone.title='棋譜ファイルをここへドラッグして読み込めます。盤面にフォーカスしてCtrl+VでSGFを貼り付けできます。';
@@ -496,7 +496,7 @@
       if(!document.hasFocus()){
         pendingDrop=file;dragStatus(file.name+' を受け取りました。読込みボタンで開けます。');dropName.textContent=file.name+' を受け取りました。読込みボタンを押してください。';dropNotice.hidden=false;return false;
       }
-      const loaded=await importFile(file);dragStatus(loaded?file.name+' を読み込みました。':'読み込めませんでした、または置き換えを中止しました。');return loaded;
+      const loaded=await importFile(file);dragStatus(loaded?'':'読み込めませんでした、または置き換えを中止しました。');return loaded;
     },
     pasteRecord,
     getText(){return $('sgf').value;},
