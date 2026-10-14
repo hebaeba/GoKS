@@ -15,3 +15,12 @@
 .open-record-hint{position:absolute;top:calc(100% + 8px);right:0;z-index:70;width:330px;max-width:calc(100vw - 24px);white-space:pre-line;text-align:left;padding:12px;border:1px solid #89a696;border-radius:7px;background:#fffbea;box-shadow:0 4px 14px #18392c25;color:#294536;font-size:12px;line-height:1.8;pointer-events:none}.open-record-hint[hidden]{display:none}
 @media(min-width:900px){.inspector-navigation{position:sticky;top:0}.engine-dock{position:static;top:auto}.inspector-pane{scroll-margin-top:130px}}
 @media(max-width:520px){.controls .board-view-tools button{min-height:36px;height:36px}.controls .position-settings .jump{margin-top:0}.controls .position-settings{gap:6px}}
+
+/* Update21: one status display, contextual help. */
+#engine-notice[hidden],#engine-notice-title,#engine-nearby-name{display:none!important}
+.engine-dock #engine-notice{min-height:0;margin:8px 0 0;padding:8px 10px}
+#engine-state{display:inline-block;padding:4px 10px;border-radius:5px;font-weight:700;background:#e0e7e3;color:#344b40}
+#engine-state[data-state=analyzing]{background:#126c62;color:white}
+#analysis-help{margin-top:18px;font-size:13px;line-height:1.7}
+#analysis-help summary{cursor:pointer;font-weight:700}
+#analysis-help li{margin:6px 0}
