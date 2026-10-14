@@ -11,7 +11,7 @@
  workspace.className='workspace studio-grid';panel.classList.add('inspector');workspace.append(panel);
  const tabs=document.createElement('nav');tabs.className='workspace-tabs';tabs.setAttribute('aria-label','編集パネル');tabs.setAttribute('role','tablist');panel.prepend(tabs);
  let focusLayout='analysis';
- const modeBar=document.createElement('div');modeBar.className='workspace-mode';modeBar.innerHTML='<button id="layout-analysis" aria-pressed="true" title="候補手とグラフを中心に表示します">解析中心</button><button id="layout-edit" aria-pressed="false" title="手順と編集ツールを中心に表示します。閲覧・編集モードは変更しません">編集中心</button>';panel.prepend(modeBar);
+ const modeBar=document.createElement('div');modeBar.className='workspace-mode';modeBar.innerHTML='<button id="layout-analysis" aria-pressed="true" title="候補手とグラフを中心に表示します">解析中心</button><button id="layout-edit" aria-pressed="false" title="手順と編集ツールを表示し、碁盤を編集モードにします">編集中心</button>';panel.prepend(modeBar);
  const panes={};for(const [id,text] of [['analysis','解析'],['sequence','手順'],['tools','ツール'],['record','棋譜'],['storage','保存'],['settings','設定']]){
   const button=document.createElement('button');button.id='tab-'+id;button.textContent=text;button.type='button';button.setAttribute('role','tab');button.setAttribute('aria-controls','pane-'+id);button.onclick=()=>activate(id);tabs.append(button);
   const pane=document.createElement('section');pane.id='pane-'+id;pane.className='inspector-pane';pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);panel.append(pane);panes[id]=pane;
@@ -23,12 +23,13 @@
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新17</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新18</span>');
  const toolShortcut=document.createElement('button');toolShortcut.textContent='ツール';toolShortcut.title='碁石・記号・文字を配置します';toolShortcut.onclick=()=>activate('tools');q('.edit-buttons').append(toolShortcut);
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent=document.body.classList.contains('editing-mode')?'編集中':'閲覧中';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
  function activate(id){
   if(id==='analysis')focusLayout='analysis';else if(id==='tools'||id==='sequence')focusLayout='edit';
   const combined=id==='tools'||id==='sequence';
+  if(combined&&!$('edit').disabled&&!$('edit').closest('[inert]'))$('edit').click();
   for(const [key,pane]of Object.entries(panes)){pane.hidden=combined?!['tools','sequence'].includes(key):key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}
   $('layout-analysis').setAttribute('aria-pressed',String(focusLayout==='analysis'));$('layout-edit').setAttribute('aria-pressed',String(focusLayout==='edit'));panel.dataset.layout=focusLayout;
   if(combined)tools.open=true;if(id==='storage')$('save-options').hidden=false;

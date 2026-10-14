@@ -266,7 +266,7 @@
   }
   function serialized(){const old=root.props.CA,oldKomi=root.props.KM;root.props.CA=['UTF-8'];root.props.KM=[String(currentKomi())];try{return S.write(root);}finally{if(old)root.props.CA=old;else delete root.props.CA;if(oldKomi)root.props.KM=oldKomi;else delete root.props.KM;}}
   $('new').onclick=()=>{if(!okayToReplace())return;size=Number($('size').value);root=S.create(size);choices=new WeakMap();index=0;editing=true;dirty=false;focusPoint=0;originalName='kifu.sgf';resetHistory();rebuild();refresh();report(size+'路の新しい碁盤です。編集モードで石を打てます。');};
-  $('view').onclick=()=>{if(insertion||!canLeave())return;editing=false;refresh();report('閲覧モードです。棋譜は変更されません。');};$('edit').onclick=()=>{editing=true;refresh();report('編集モードです。途中から別の手を打つと変化として記録します。');};
+  $('view').onclick=()=>{if(insertion||!canLeave())return;editing=false;refresh();report('閲覧モードです。棋譜は変更されません。');};$('edit').onclick=()=>{if(scoreSession||exportBusy)return;editing=true;refresh();report('編集モードです。途中から別の手を打つと変化として記録します。');};
   $('numbers').onclick=()=>{numbers=!numbers;refresh();};$('recent').onchange=()=>{if($('recent').checked)numbers=true;refresh();};$('pass').onclick=()=>place(null);
   $('first').onclick=()=>at(0);$('last').onclick=()=>at(route.length-1);$('back').onclick=()=>byMoves(-1);$('next').onclick=()=>byMoves(1);$('back10').onclick=()=>byMoves(-10);$('next10').onclick=()=>byMoves(10);
   $('slider').oninput=()=>{const move=Math.min(Number($('slider').value),frames.at(-1).move);let next=frames.findIndex(frame=>frame.move>=move);at(next<0?route.length-1:next);};
@@ -285,6 +285,13 @@
   function pasteRecord(text){if(new TextEncoder().encode(text).length>2*1024*1024){report('棋譜は2MB以内にしてください',true);return false;}return load(text,'貼り付けた棋譜.sgf');}
   $('file').onchange=async()=>{try{await importFile($('file').files[0]);}finally{$('file').value='';}};
   const dropZone=firstElement('.canvas-wrap');
+  let dropTicket=0,pendingDrop=null;
+  const dropNotice=document.createElement('div');dropNotice.className='pending-drop';dropNotice.hidden=true;
+  const dropName=document.createElement('span'),dropLoad=document.createElement('button'),dropCancel=document.createElement('button');
+  dropName.setAttribute('role','status');dropLoad.textContent='受け取った棋譜を読込み';dropCancel.textContent='中止';dropNotice.append(dropName,dropLoad,dropCancel);dropZone.after(dropNotice);
+  dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file)await importFile(file);};
+  dropCancel.onclick=()=>{dropTicket++;pendingDrop=null;dropNotice.hidden=true;};
+
   dropZone.title='棋譜ファイルをここへドラッグして読み込めます。盤面にフォーカスしてCtrl+VでSGFを貼り付けできます。';
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files'))e.preventDefault();});
   document.addEventListener('drop',e=>{if(e.dataTransfer.files.length)e.preventDefault();dropZone.classList.remove('file-dragover');});
@@ -471,7 +478,21 @@
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
     rotateBoard,displayPoint,
     importFile,
-    nativeDrop(payload){const rect=canvas.getBoundingClientRect(),ratio=window.devicePixelRatio||1,x=payload.x/ratio,y=payload.y/ratio;if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom)return;if(payload.error){report(payload.error,true);return;}return importFile(new File([new Uint8Array(payload.bytes)],payload.name));},
+    async nativeDrop(payload){
+      const rect=canvas.getBoundingClientRect(),ratio=window.devicePixelRatio||1,x=payload.x/ratio,y=payload.y/ratio;
+      if(x<rect.left||x>rect.right||y<rect.top||y>rect.bottom)return false;
+      if(payload.error){report(payload.error,true);return false;}
+      // Native focus activation is asynchronous. Do not run a replacement confirmation
+      // while WebView2 still considers the receiving document inactive.
+      const ticket=++dropTicket;pendingDrop=null;dropNotice.hidden=true;
+      for(let n=0;n<20&&!document.hasFocus();n++)await new Promise(r=>setTimeout(r,50));
+      if(ticket!==dropTicket)return false;
+      const file=new File([new Uint8Array(payload.bytes)],payload.name);
+      if(!document.hasFocus()){
+        pendingDrop=file;dropName.textContent=file.name+' を受け取りました。読込みボタンを押してください。';dropNotice.hidden=false;return false;
+      }
+      return importFile(file);
+    },
     pasteRecord,
     getText(){return $('sgf').value;},
     getMove(){return frames[index].move;},

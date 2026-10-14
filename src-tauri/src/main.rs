@@ -29,6 +29,16 @@ async fn desktop_print(window:tauri::WebviewWindow)->Result<(),String>{window.pr
 fn main(){
  let app=tauri::Builder::default().on_webview_event(|webview,event|{
  if webview.label()!="main"{return;}
+ // Activate the destination during an external record drag, without permanent
+ // always-on-top. This also makes a later replacement confirmation interactive.
+ let activate=match event {
+  tauri::WebviewEvent::DragDrop(tauri::DragDropEvent::Enter{paths,..})|
+  tauri::WebviewEvent::DragDrop(tauri::DragDropEvent::Drop{paths,..})=>
+    paths.len()==1 && paths[0].extension().and_then(|v|v.to_str()).map(|v|["sgf","ngf","ugf","ugi","gib","mgt"].contains(&v.to_ascii_lowercase().as_str())).unwrap_or(false),
+  _=>false,
+ };
+ if activate {if let Some(window)=webview.get_webview_window("main"){let _=window.unminimize();let _=window.show();let _=window.set_focus();}let _=webview.set_focus();}
+
  if let tauri::WebviewEvent::DragDrop(tauri::DragDropEvent::Drop{paths,position})=event{
   let paths=paths.clone();let x=position.x;let y=position.y;let view=webview.clone();
   std::thread::spawn(move||{
