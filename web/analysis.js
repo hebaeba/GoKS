@@ -18,7 +18,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <div class="analysis-conditions"><label>ルール<select id="analysis-rules"><option value="japanese">日本ルール</option><option value="chinese">中国ルール</option></select></label><label>読み筋の表示手数<select id="analysis-pv-length" title="候補手の読み筋を取得・表示する最大手数です。探索の深さを制限する設定ではありません。"><option value="5">5手</option><option value="10">10手</option><option value="15">15手</option><option value="20" selected>20手</option><option value="30">30手</option></select></label><span class="analysis-visits" title="現在表示している局面の解析結果に含まれる総訪問数です。候補手１つの訪問数ではありません。">訪問数 <output id="analysis-visits">—</output><small id="analysis-visits-state">未解析</small></span></div>
 <p id="analysis-context" class="analysis-note"></p>
 <div class="analysis-buttons analysis-primary"><button id="analyze-live" disabled aria-pressed="false" title="局面に追従して解析を続けます。スペースキーでも開始・停止できます。">解析を開始</button><span>スペースキーで開始／停止</span></div>
-<p class="analysis-note">解析は時間制限なしで続け、着手・手戻り・変化の切り替えに追従します。文字入力やボタンの操作中はスペースキーの通常操作を優先します。</p>
+<p class="analysis-note">解析は時間制限なしで続け、着手・手戻り・変化の切り替えに追従します。文字入力中とダイアログ表示中は通常のキー操作を優先します。ボタンはEnterでも操作できます。</p>
 <details id="analysis-batch"><summary>全局解析・時間設定</summary><p class="analysis-note">選択中の本譜または変化を順に解析して、全局グラフを作ります。時間設定は全局解析だけに適用します。</p><div class="analysis-batch-settings"><label>１局面の時間<select id="analysis-seconds"><option value="0.1">0.1秒（簡単）</option><option value="0.5">0.5秒</option><option value="1" selected>１秒</option><option value="3">３秒</option><option value="5">５秒</option><option value="custom">指定する</option></select></label><label id="analysis-custom-label" hidden><input id="analysis-custom" type="number" min="0.1" max="600" step="0.1" value="10" aria-label="全局解析の１局面の秒数">秒</label><button id="analyze-all" disabled title="選択中の手順を各局面の指定時間で解析します">全局解析を開始</button></div></details>
 <progress id="analysis-progress" value="0" max="1" hidden></progress><p id="analysis-status" role="status">エンジン未接続でも、保存済み解析を読み込んで閲覧できます。</p>
 <div id="engine-error" role="alert" hidden><strong>起動・接続エラー</strong><pre id="engine-error-text"></pre></div><p id="analysis-stale" class="analysis-warning" hidden></p>
@@ -142,7 +142,7 @@ function renderResult(){
  const chosen=moves[selectedCandidate];if(chosen)$('analysis-pv').textContent='候補'+(selectedCandidate+1)+'：'+(chosen.pv.length?chosen.pv.map(v=>v==='pass'?'パス':v).join(' → '):'読み筋なし')+(r.isDuringSearch?'（探索中の結果）':'');
  const shown=moves.filter(m=>m.move!=='pass').slice(0,display.count<0?undefined:display.count);$('candidate-count-note').textContent='盤上 '+shown.length+'手 ／ 取得済み '+moves.length+'候補（一覧はすべて表示）'+(display.count===0?'。候補は非表示。実戦手の枠と直前の着手印は残します。':'。実戦手の枠は表示数に含みません。'+(display.count<0?'無限大は取得済みの全候補です。パスは一覧に表示します。':''));
  const {extent,start,gap}=s.geometry;overlay.setAttribute('viewBox',`0 0 ${extent} ${extent}`);
- const xy=p=>({x:start+(p%s.size)*gap,y:start+Math.floor(p/s.size)*gap});
+ const xy=p=>{p=api.displayPoint(p);return {x:start+(p%s.size)*gap,y:start+Math.floor(p/s.size)*gap};};
  if(actual&&actual!=='pass'){const p=A.point(actual,s.size),{x,y}=xy(p);svgElement('rect',{class:'actual-move-frame',x:x-gap*.48,y:y-gap*.48,width:gap*.96,height:gap*.96,rx:gap*.15,fill:'none',stroke:'#a65a00','stroke-width':gap*.065,'stroke-dasharray':actualRank<0?'3 2':'none'});}
  shown.forEach(m=>{const i=moves.indexOf(m);const p=A.point(m.move,s.size);if(p===null)return;const {x,y}=xy(p),g=svgElement('g',{class:'candidate-mark',role:'button',tabindex:0,'aria-label':'候補'+(i+1)+' '+m.move+' '+side+'勝率'+win(m)+'%' });
  svgElement('title',{},'候補'+(i+1)+' '+m.move+' / '+side+'勝率 '+win(m)+'% / '+side+'視点 '+leadText(m)+'目 / 訪問数 '+m.visits+'回。マウスオーバーで読み筋、クリックで編集・着手',g);
@@ -194,7 +194,11 @@ function scheduleLive(force=false){
  controls();
 }
 function toggleLive(){if(live||active){cancel();return;}if(!ready||active||pendingCalls>0)return;live=true;note('連続解析を開始します。');scheduleLive(true);controls();}
-document.addEventListener('keydown',event=>{if(event.code!=='Space'&&event.key!==' ')return;if(event.defaultPrevented||event.repeat||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;const target=event.target;if(target?.closest?.('input,textarea,select,button,a,summary,[role="button"],[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;if(!ready||pendingCalls>0)return;event.preventDefault();event.stopPropagation();if(live||active)cancel();else toggleLive();},true);
+let spaceReserved=false;
+document.addEventListener('keydown',event=>{if(event.code!=='Space'&&event.key!==' ')return;if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;const target=event.target;if(target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;event.preventDefault();event.stopPropagation();spaceReserved=true;if(event.repeat)return;if(!ready){note('先にエンジン設定から「起動・接続」を押してください。');return;}if(pendingCalls>0)return;if(live||active)cancel();else toggleLive();},true);
+document.addEventListener('keyup',event=>{if((event.code==='Space'||event.key===' ')&&spaceReserved){event.preventDefault();event.stopPropagation();spaceReserved=false;}},true);
+window.addEventListener('blur',()=>spaceReserved=false);
+window.addEventListener('kifu-board-view',()=>{clearPreview();renderResult();});
 $('analyze-live').onclick=toggleLive;
 $('engine-connect').onclick=connect;$('engine-disconnect').onclick=disconnect;$('analyze-all').onclick=()=>analyze(true);
 $('analysis-save').onclick=async()=>{try{if(!session||!results.size)return;const archive={format:'kifu-katago-analysis',version:1,perspective:'BLACK',...session,results:[...results.values()].sort((a,b)=>a.index-b.index),saved:new Date().toISOString()};await GoExport.save(new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),'棋譜解析.kifu-analysis.json');unsaved=false;note('解析を保存しました。');}catch(e){note('保存できません：'+e.message);}};

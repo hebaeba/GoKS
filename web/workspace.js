@@ -10,7 +10,9 @@
  const toolbar=document.createElement('div');toolbar.className='header-actions';toolbar.innerHTML='<button id="workspace-open" title="棋譜ファイルを開きます">棋譜を開く</button><button id="workspace-save" title="棋譜の保存・印刷を表示します">保存・印刷</button>';header.append(toolbar);
  workspace.className='workspace studio-grid';panel.classList.add('inspector');workspace.append(panel);
  const tabs=document.createElement('nav');tabs.className='workspace-tabs';tabs.setAttribute('aria-label','編集パネル');tabs.setAttribute('role','tablist');panel.prepend(tabs);
- const panes={};for(const [id,text] of [['analysis','解析'],['sequence','手順'],['tools','ツール'],['record','棋譜'],['storage','保存']]){
+ let focusLayout='analysis';
+ const modeBar=document.createElement('div');modeBar.className='workspace-mode';modeBar.innerHTML='<button id="layout-analysis" aria-pressed="true" title="候補手とグラフを中心に表示します">解析中心</button><button id="layout-edit" aria-pressed="false" title="手順と編集ツールを中心に表示します。閲覧・編集モードは変更しません">編集中心</button>';panel.prepend(modeBar);
+ const panes={};for(const [id,text] of [['analysis','解析'],['sequence','手順'],['tools','ツール'],['record','棋譜'],['storage','保存'],['settings','設定']]){
   const button=document.createElement('button');button.id='tab-'+id;button.textContent=text;button.type='button';button.setAttribute('role','tab');button.setAttribute('aria-controls','pane-'+id);button.onclick=()=>activate(id);tabs.append(button);
   const pane=document.createElement('section');pane.id='pane-'+id;pane.className='inspector-pane';pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);panel.append(pane);panes[id]=pane;
  }
@@ -21,11 +23,20 @@
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 0.6 · KataGo解析</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新17</span>');
  const toolShortcut=document.createElement('button');toolShortcut.textContent='ツール';toolShortcut.title='碁石・記号・文字を配置します';toolShortcut.onclick=()=>activate('tools');q('.edit-buttons').append(toolShortcut);
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent=document.body.classList.contains('editing-mode')?'編集中':'閲覧中';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
- function activate(id){for(const [key,pane]of Object.entries(panes)){pane.hidden=key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}if(id==='tools')tools.open=true;if(id==='storage')$('save-options').hidden=false;window.dispatchEvent(new Event('workspace-layout'));window.dispatchEvent(new Event('resize'));}
- tabs.addEventListener('keydown',event=>{const list=[...tabs.children],i=list.indexOf(document.activeElement);if(i<0)return;let n;if(event.key==='ArrowRight')n=(i+1)%list.length;else if(event.key==='ArrowLeft')n=(i+list.length-1)%list.length;else if(event.key==='Home')n=0;else if(event.key==='End')n=list.length-1;else return;event.preventDefault();list[n].click();list[n].focus();});
+ function activate(id){
+  if(id==='analysis')focusLayout='analysis';else if(id==='tools'||id==='sequence')focusLayout='edit';
+  const combined=id==='tools'||id==='sequence';
+  for(const [key,pane]of Object.entries(panes)){pane.hidden=combined?!['tools','sequence'].includes(key):key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}
+  $('layout-analysis').setAttribute('aria-pressed',String(focusLayout==='analysis'));$('layout-edit').setAttribute('aria-pressed',String(focusLayout==='edit'));panel.dataset.layout=focusLayout;
+  if(combined)tools.open=true;if(id==='storage')$('save-options').hidden=false;
+  window.dispatchEvent(new Event('workspace-layout'));window.dispatchEvent(new Event('resize'));
+ }
+ $('layout-analysis').onclick=()=>activate('analysis');$('layout-edit').onclick=()=>activate('sequence');
+
+ tabs.addEventListener('keydown',event=>{const list=[...tabs.children].filter(b=>!b.hidden),i=list.indexOf(document.activeElement);if(i<0)return;let n;if(event.key==='ArrowRight')n=(i+1)%list.length;else if(event.key==='ArrowLeft')n=(i+list.length-1)%list.length;else if(event.key==='Home')n=0;else if(event.key==='End')n=list.length-1;else return;event.preventDefault();list[n].click();list[n].focus();});
  $('workspace-open').onclick=()=>$('open').click();
  const saveTrigger=$('workspace-save'),savePopup=document.createElement('div');
  savePopup.id='workspace-save-popup';savePopup.className='save-popup';savePopup.hidden=true;
@@ -47,11 +58,11 @@
  new MutationObserver(syncSaveActions).observe($('save'),{attributes:true,attributeFilter:['disabled']});
  new MutationObserver(syncSaveActions).observe($('print'),{attributes:true,attributeFilter:['disabled']});
  // Keep the full-save handler reachable from the header without a duplicate details menu.
- $('save').hidden=true;$('print').hidden=true;
+ $('save').hidden=true;$('print').hidden=false;
  const records=$('save-options').querySelector('.record-save-row'),images=$('save-options').querySelector('.image-save-row');
  for(const [target,text] of [[records,'棋譜の保存'],[images,'画像の保存']]){const h=document.createElement('h3');h.textContent=text;target.before(h);}
  const recoveryHeading=document.createElement('h3');recoveryHeading.textContent='一時保存';$('recovery').before(recoveryHeading);
 
  toolShortcut.addEventListener('click',()=>{if(matchMedia('(max-width:899px)').matches)panel.scrollIntoView({behavior:'smooth',block:'start'});});
- window.KifuWorkspace={activate};activate('analysis');
+ panel.prepend(modeBar);$('tab-tools').hidden=true;$('tab-sequence').textContent='手順・ツール';$('tab-record').textContent='棋譜欄';window.KifuWorkspace={activate};activate('analysis');
 })();

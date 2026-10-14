@@ -24,10 +24,30 @@ async fn desktop_save(name:String,bytes:Vec<u8>)->Result<Value,String>{
  #[cfg(not(windows))]{let _=(name,bytes);Err("この保存機能はWindows向けです".into())}
  }).await.map_err(|e|e.to_string())?
 }
+#[tauri::command]
+async fn desktop_print(window:tauri::WebviewWindow)->Result<(),String>{window.print().map_err(|e|e.to_string())}
 fn main(){
- let app=tauri::Builder::default().setup(|app|{
+ let app=tauri::Builder::default().on_webview_event(|webview,event|{
+ if webview.label()!="main"{return;}
+ if let tauri::WebviewEvent::DragDrop(tauri::DragDropEvent::Drop{paths,position})=event{
+  let paths=paths.clone();let x=position.x;let y=position.y;let view=webview.clone();
+  std::thread::spawn(move||{
+   let result=(||->Result<Value,String>{
+    if paths.len()!=1{return Err("棋譜ファイルは１つずつ読み込んでください".into());}
+    let path=&paths[0];let ext=path.extension().and_then(|v|v.to_str()).unwrap_or("").to_ascii_lowercase();
+    if !["sgf","ngf","ugf","ugi","gib","mgt"].contains(&ext.as_str()){return Err("対応する棋譜ファイルをドロップしてください".into());}
+    if !path.is_file(){return Err("棋譜ファイルを指定してください".into());}
+    use std::io::Read;let file=std::fs::File::open(path).map_err(|e|e.to_string())?;let mut bytes=Vec::new();file.take(2*1024*1024+1).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
+    if bytes.len()>2*1024*1024{return Err("棋譜ファイルは2MB以内にしてください".into());}
+    Ok(json!({"name":path.file_name().and_then(|v|v.to_str()).unwrap_or("kifu.sgf"),"bytes":bytes,"x":x,"y":y}))
+   })();
+   let payload=result.unwrap_or_else(|error|json!({"error":error,"x":x,"y":y}));
+   let _=view.eval(format!("window.IndependentGo?.nativeDrop({});",payload));
+  });
+ }
+ }).setup(|app|{
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("analysis_cpu.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/analysis_cpu.cfg"))?;}
  app.manage(Desktop{engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
- }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
+ }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
  app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){if let Ok(mut engine)=state.engine.lock(){engine.stop();}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
 }
