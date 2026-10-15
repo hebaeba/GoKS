@@ -51,7 +51,7 @@ q('.help ul').insertAdjacentHTML('beforeend','<li>棋譜ファイルを盤面に
 // Compact controls retain the existing elements and their event handlers.
 const controls=q('.controls'),displayBox=document.createElement('details');displayBox.id='board-display-options';displayBox.innerHTML='<summary>盤面表示</summary><div class="compact-options"></div>';controls.append(displayBox);displayBox.lastElementChild.append($('numbers'),q('.recent-label'),rotation);
 const editBox=document.createElement('details');editBox.id='board-edit-options';editBox.innerHTML='<summary>編集操作</summary><div class="compact-options"></div>';controls.append(editBox);editBox.lastElementChild.append($('turn'),$('pass'),$('delete-move'),q('.edit-buttons'));
-const toolExtras=document.createElement('div');toolExtras.className='tool-extras';$('tools').before(toolExtras);toolExtras.append($('handicap').closest('label'),$('score'));
+q('.topline > label').after($('handicap').closest('label'));$('handicap').closest('label').after($('score')); 
 const modeSync=()=>{editBox.open=q('.inspector').dataset.layout==='edit';};window.addEventListener('workspace-layout',modeSync);modeSync();
 const grid=q('.studio-grid'),divider=document.createElement('div');divider.id='board-divider';divider.tabIndex=0;divider.setAttribute('role','separator');divider.setAttribute('aria-orientation','vertical');divider.setAttribute('aria-label','碁盤の幅');divider.title='左右にドラッグして碁盤の幅を変更します。矢印キーでも調整できます';grid.insertBefore(divider,q('.inspector'));
 const fit=document.createElement('button');fit.id='board-fit';fit.textContent='画面に合わせる';fit.title='碁盤と右側メニューの幅を標準に戻します';displayBox.lastElementChild.append(fit);
