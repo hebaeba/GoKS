@@ -94,6 +94,8 @@ function snap(){try{return api.peekAnalysisSnapshot();}catch{return null;}}
 function matches(){const s=snap();return session&&s&&A.identity(s)===A.identity(session.snapshot)&&$('analysis-rules').value===session.rules;}
 function controls(){
  syncEngineStatus();
+ const quick=$('engine-quick');if(quick){quick.textContent=running?'終了':'起動';quick.disabled=!available||pendingCalls>0;quick.title=running?'解析を停止し、エンジンを終了します':'選択中のエンジンを起動します';}
+ syncSummary();
  const busy=!!active||live;
  $('analyze-live').disabled=!available||pendingCalls>0||!!handshake;
  $('analyze-live').textContent=busy?'解析を停止':'解析を開始';$('analyze-live').setAttribute('aria-pressed',String(busy));
@@ -140,7 +142,9 @@ function bindCandidate(element,m,s,i){
 }
 window.addEventListener('blur',clearPreview);
 function svgElement(tag,attrs,text,parent=overlay){const e=document.createElementNS(overlay.namespaceURI,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;parent.append(e);return e;}
+function syncSummary(){const s=snap();$('analysis-summary').hidden=!!(active&&session?.analysisRun?.scope==='all')||!s||!matches()||!results.has(s.index);}
 function renderResult(){
+ syncSummary();
  const s=snap(),item=matches()?results.get(s.index):null;
  updateVisits();
  if(previewLine&&(previewLine.sgf!==s?.sgf||previewLine.path!==JSON.stringify(s?.path)||previewLine.index!==s?.index||!item||pane.hidden))clearPreview();
@@ -157,17 +161,18 @@ function renderResult(){
  const shown=moves.filter(m=>m.move!=='pass').slice(0,display.count<0?undefined:display.count);$('candidate-count-note').textContent='盤上 '+shown.length+'手 ／ 取得済み '+moves.length+'候補（一覧はすべて表示）'+(display.count===0?'。候補は非表示。実戦手の枠と直前の着手印は残します。':'。実戦手の枠は表示数に含みません。'+(display.count<0?'無限大は取得済みの全候補です。パスは一覧に表示します。':''));
  const {extent,start,gap}=s.geometry;overlay.setAttribute('viewBox',`0 0 ${extent} ${extent}`);
  const xy=p=>{p=api.displayPoint(p);return {x:start+(p%s.size)*gap,y:start+Math.floor(p/s.size)*gap};};
- if(actual&&actual!=='pass'){const p=A.point(actual,s.size),{x,y}=xy(p);svgElement('rect',{class:'actual-move-frame',x:x-gap*.48,y:y-gap*.48,width:gap*.96,height:gap*.96,rx:gap*.15,fill:'none',stroke:'#a65a00','stroke-width':gap*.065,'stroke-dasharray':actualRank<0?'3 2':'none'});}
+
  shown.forEach(m=>{const i=moves.indexOf(m);const p=A.point(m.move,s.size);if(p===null)return;const {x,y}=xy(p),g=svgElement('g',{class:'candidate-mark',role:'button',tabindex:0,'aria-label':'候補'+(i+1)+' '+m.move+' '+side+'勝率'+win(m)+'%' });
  svgElement('title',{},'候補'+(i+1)+' '+m.move+' / '+side+'勝率 '+win(m)+'% / '+side+'視点 '+leadText(m)+'目 / 訪問数 '+m.visits+'回。マウスオーバーで読み筋、クリックで編集・着手',g);
  svgElement('circle',{cx:x,cy:y,r:gap*.49,fill:A.candidateColor(m,moves[0],position.state.turn,i),stroke:i===0?'#045771':'#748839','stroke-width':1},undefined,g);
  const values=display.detail===3?[win(m),A.shortVisits(m.visits),leadText(m)]:[win(m),leadText(m)];const ys=display.detail===3?[-.28,.055,.35]:[-.20,.22];values.forEach((v,row)=>svgElement('text',{x,y:y+gap*ys[row],class:'candidate-value','text-anchor':'middle','dominant-baseline':'central','font-size':gap*(display.detail===3?(row===0?.36:.31):.39),'font-weight':800,fill:i===0?'#ffffff':'#071f18'},v,g));
  for(const text of g.querySelectorAll('.candidate-value'))if(text.getComputedTextLength()>gap*.80){text.setAttribute('textLength',gap*.80);text.setAttribute('lengthAdjust','spacingAndGlyphs');}
- const badgeWidth=gap*(i>=99?.50:i>=9?.38:.28);
+ const badgeText=m.move===actual?'実・'+(i+1):String(i+1),badgeWidth=gap*(m.move===actual?.85:i>=99?.50:i>=9?.38:.28);
  svgElement('rect',{class:'candidate-rank-badge',x:x+gap*.32,y:y-gap*.65,width:badgeWidth,height:gap*.30,rx:gap*.07,fill:'#fff',stroke:'#31554a','stroke-width':.5},undefined,g);
- svgElement('text',{class:'candidate-rank',x:x+gap*.32+badgeWidth/2,y:y-gap*.50,'text-anchor':'middle','dominant-baseline':'central','font-size':gap*.24,fill:'#154b43'},i+1,g);
+ svgElement('text',{class:'candidate-rank',x:x+gap*.32+badgeWidth/2,y:y-gap*.50,'text-anchor':'middle','dominant-baseline':'central','font-size':gap*.24,fill:'#154b43'},badgeText,g);
  bindCandidate(g,m,s,i);
  });
+ if(actual&&actual!=='pass'){const p=A.point(actual,s.size);if(p!==null){const {x,y}=xy(p);const frame=svgElement('g',{class:'actual-move-frame','pointer-events':'none'});for(const [stroke,width]of [['#493600',.13],['#ffd447',.065]])svgElement('rect',{x:x-gap*.47,y:y-gap*.47,width:gap*.94,height:gap*.94,rx:gap*.15,fill:'none',stroke,'stroke-width':gap*width},undefined,frame);}}
  // app.js already renders the latest move number or mark; do not cover it with another ring.
 
 }
@@ -253,7 +258,7 @@ async function initBundledEngine(){
 function autoConnect(){if(!defaultsLoaded||autoAttempted||running||pendingCalls||document.querySelector('.inspector')?.dataset.layout!=='analysis')return;autoAttempted=true;connect();}
 window.addEventListener('workspace-layout',autoConnect);
 setTimeout(initBundledEngine,0);
-$('engine-connect').onclick=async()=>{if(pendingCalls)return;if(running||handshake)await disconnect();await connect();};$('engine-disconnect').onclick=disconnect;$('analyze-all').onclick=()=>requestAnalysis('all');
+$('engine-connect').onclick=async()=>{if(pendingCalls)return;if(running||handshake)await disconnect();await connect();};$('engine-disconnect').onclick=disconnect;const quick=document.createElement('button');quick.id='engine-quick';quick.textContent='起動';$('engine-active').append(quick);quick.onclick=()=>running?disconnect():connect();$('analyze-all').onclick=()=>requestAnalysis('all');
 $('analysis-save').onclick=async()=>{try{if(!session||!results.size)return;const archive={format:'kifu-katago-analysis',version:1,perspective:'BLACK',...session,results:[...results.values()].sort((a,b)=>a.index-b.index),saved:new Date().toISOString()};await GoExport.save(new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),'棋譜解析.kifu-analysis.json');unsaved=false;note('解析を保存しました。');}catch(e){note('保存できません：'+e.message);}};
 $('analysis-open').onclick=()=>$('analysis-file').click();$('analysis-file').onchange=async()=>{const file=$('analysis-file').files[0];$('analysis-file').value='';if(!file)return;try{if(file.size>32*1024*1024)throw Error('解析ファイルは32MB以内です。');const data=A.validateArchive(JSON.parse(await file.text()));if(unsaved&&!confirm('保存していない解析結果を置き換えますか？'))return;if(!await api.loadAnalysisSnapshot(data.snapshot))return;$('batch-progress').hidden=true;$('batch-progress').dataset.state='';stopping=null;session={snapshot:api.peekAnalysisSnapshot(),rules:data.rules,engine:data.engine||null,created:data.created||'',timing:data.timing||null,analysisRun:data.analysisRun||null};results=new Map(data.results.map(item=>[item.index,item]));$('analysis-rules').value=data.rules;unsaved=false;selectedCandidate=0;note('保存済み解析を読み込みました。'+results.size+'局面。グラフから局面を選べます。');controls();displayState();}catch(e){note('読み込めません：'+e.message);}};
 window.addEventListener('kifu-position-change',()=>{clearPreview();const s=snap();if(live)scheduleLive();else if(active?.infinite&&s&&(s.index!==active.index||A.identity(s)!==A.identity(session.snapshot)))cancel();displayState();});window.addEventListener('workspace-layout',()=>{clearPreview();overlay.hidden=$('pane-analysis').hidden;displayState();});window.addEventListener('beforeunload',e=>{if(active||live||unsaved){e.preventDefault();e.returnValue='';}});
