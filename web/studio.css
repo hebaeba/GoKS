@@ -41,3 +41,10 @@
 #analysis-worst select{font-size:12px;max-width:10em}
 .actual-move-info{padding:6px 8px;border-left:3px solid #b58a29;background:#fffaf0}
 @media(max-width:460px){.engine-dock .analysis-primary .analysis-conditions{flex-basis:100%}}
+
+/* Update23: engine actions above all configuration fields. */
+#pane-settings>.engine-actions{display:flex;position:sticky;top:0;z-index:3;gap:8px;padding:10px;background:#f4f9f6;border:1px solid #b8cfc2;border-radius:6px}
+#pane-settings #engine-connect{background:#216959;color:#fff;font-weight:700}
+#pane-settings #engine-disconnect{background:#fff0ed;color:#8c2d24;font-weight:700;border-color:#cc8d83}
+.engine-running-details{font-size:12px;margin:8px 0}.engine-running-details pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px}
+.worst-side{margin:14px 0;border:1px solid #c6d7cd;border-radius:6px;padding:8px}.worst-side h4{margin:2px 0 8px;font-size:13px}
