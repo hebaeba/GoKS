@@ -76,5 +76,19 @@ function preview(snapshot,pv,count){
 }
 function shortVisits(n){return n>=1000000?(n/1000000).toFixed(1)+'m':n>=1000?(n/1000).toFixed(1)+'k':String(n);}
 function candidateColor(m,best,turn,rank){if(rank===0)return '#087ea4';const loss=Math.max(0,(best.scoreLead-m.scoreLead)*(turn===2?-1:1));return loss<=0.5?'#bce4a2':loss<=2?'#f4e684':'#f5b47a';}
-const api={positionKeys,rebaseResults,shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
+function worstMoves(snapshot,items){
+ const byIndex=new Map(items.map(x=>[x.index,x])),out=[];let node=S.parse(snapshot.sgf).root,move=0;
+ for(let i=0;i<snapshot.path.length;i++){
+  node=node.children[snapshot.path[i]];if(!node)break;
+  const color=node.props.B?'B':node.props.W?'W':null;if(!color)continue;move++;
+  if(node.props.AB||node.props.AW||node.props.AE||node.props.XIGFORCE)continue;
+  const before=byIndex.get(i),after=byIndex.get(i+1);if(!before||!after)continue;
+  const a=before.result.rootInfo,b=after.result.rootInfo,sign=color==='B'?1:-1;
+  if(!Number.isFinite(a.scoreLead)||!Number.isFinite(b.scoreLead))continue;
+  const loss=(a.scoreLead-b.scoreLead)*sign;if(loss<=0)continue;
+  out.push({index:i+1,move:after.move??move,color,point:gtp(R.coordinate(node.props[color][0],snapshot.size,true),snapshot.size),loss,winrateLoss:(a.winrate-b.winrate)*sign*100});
+ }
+ return out.sort((a,b)=>b.loss-a.loss||a.move-b.move);
+}
+const api={worstMoves,positionKeys,rebaseResults,shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
 })(globalThis);

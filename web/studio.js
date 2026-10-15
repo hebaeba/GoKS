@@ -5,15 +5,20 @@ const inspector=q('.inspector'),settings=$('pane-settings'),analysis=$('pane-ana
 settings.innerHTML='<h2>エンジン・接続の設定</h2>';
 settings.append($('engine-settings'),q('.engine-actions'),$('engine-notice'),$('engine-error'),q('.engine-log'));
 const dock=document.createElement('section');dock.className='engine-dock';dock.setAttribute('aria-label','解析エンジンの状態と操作');
-dock.append($('engine-active'),q('.engine-actions'),q('.analysis-primary'),q('.analysis-conditions'));
-const status=document.createElement('div');status.className='engine-compact-status';status.append($('engine-state'));
-const config=document.createElement('button');config.id='engine-settings-open';config.textContent='エンジン設定';config.onclick=()=>KifuWorkspace.activate('settings');status.append(config);dock.prepend(status);
+const primary=q('.analysis-primary'),conditions=q('.analysis-conditions'),engineName=$('engine-active');primary.querySelector('span').remove();primary.append(conditions);engineName.append($('engine-state'));dock.append(engineName,primary);
 const navigation=document.createElement('div');navigation.className='inspector-navigation';inspector.prepend(navigation);navigation.append(q('.workspace-mode'),q('.workspace-tabs'));navigation.after(dock);$('engine-connect').title='選択したエンジンを起動し、解析の準備をします';
 q('.analysis-heading').remove();
 // One lifecycle badge; show startup/error details beside the connection controls only.
 dock.append($('engine-notice'));$('engine-notice-title').hidden=true;$('engine-nearby-name').hidden=true;
 // Full-game controls are secondary and follow the graph.
-analysis.append($('analysis-batch'),$('analysis-help'));
+analysis.append($('analysis-help'));
+const batch=document.createElement('section');batch.id='analysis-batch';const old=$('analysis-batch');
+for(const child of [...old.children])if(child.tagName!=='SUMMARY')batch.append(child);old.replaceWith(batch);
+const title=document.createElement('h3');title.textContent='全局解析';batch.prepend(title);q('.analysis-graph-heading').before(batch);
+$('candidate-settings').append(q('.analysis-legend'),$('analysis-played'));$('analysis-played').classList.add('actual-move-info');
+const rank=document.createElement('section');rank.id='analysis-worst';rank.hidden=true;rank.innerHTML='<h3>ワーストランキング <select id="worst-color" aria-label="ランキングの対象"><option value="">黒白すべて</option><option value="B">黒のみ</option><option value="W">白のみ</option></select></h3><p id="worst-note" class="analysis-note"></p><div class="candidate-scroll"><table class="candidate-table"><thead><tr><th>順位</th><th>着手</th><th>目数低下</th><th>勝率低下</th></tr></thead><tbody id="worst-rows"></tbody></table></div>';
+q('.analysis-seek').after(rank);$('worst-color').onchange=()=>$('analysis-metric').dispatchEvent(new Event('change'));
+
 const rotation=document.createElement('div');rotation.className='board-view-tools';rotation.innerHTML='<span>盤面の向き</span><button id="rotate-left" title="表示を左へ90度回転します。棋譜は変更しません">↶ 左回転</button><button id="rotate-right" title="表示を右へ90度回転します。棋譜は変更しません">↷ 右回転</button><button id="rotate-reset" title="元の表示方向に戻します">元に戻す</button><output id="rotation-state">0°</output>';
 rotation.querySelector('span').textContent='回転';q('.position-settings').insertBefore(rotation,q('.jump'));let angle=0;
 function turn(n){angle=(angle+n+4)%4;api.rotateBoard(n);$('rotation-state').textContent=angle*90+'°';}

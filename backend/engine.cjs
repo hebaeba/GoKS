@@ -22,6 +22,6 @@ class Engine {
  }
  send(query){if(!this.child)throw Error('KataGoを起動してください。');if(!query||typeof query.id!=='string'||query.id.length>160)throw Error('解析IDが不正です。');const line=JSON.stringify(query);if(line.length>2*1024*1024)throw Error('解析リクエストが大きすぎます');if(query.action&&!['query_version','query_models','terminate','terminate_all'].includes(query.action))throw Error('未対応の操作です');this.child.stdin.write(line+'\n');return {accepted:true};}
  poll(){return {running:!!this.child,events:this.events.splice(0),logs:this.logs.splice(0),meta:this.meta};}
- async call(action,payload={}){if(action==='pick')return windowsFiles.pick(payload.kind);if(action==='start')return this.start(payload);if(action==='stop')return this.stop();if(action==='send')return this.send(payload);if(action==='poll')return this.poll();throw Error('操作が不正です');}
+ async call(action,payload={}){if(action==='defaults'){const base=path.resolve(__dirname,'../engines/eigen');return {name:'KataGo Eigen（CPU・標準）',exe:path.join(base,'katago.exe'),model:path.join(base,'model.bin.gz'),config:path.join(base,'analysis_example.cfg'),missing:['katago.exe','model.bin.gz','analysis_example.cfg','z.dll','zip.dll','libssl-3-x64.dll','libcrypto-3-x64.dll'].filter(n=>!fs.existsSync(path.join(base,n)))};}if(action==='pick')return windowsFiles.pick(payload.kind);if(action==='start')return this.start(payload);if(action==='stop')return this.stop();if(action==='send')return this.send(payload);if(action==='poll')return this.poll();throw Error('操作が不正です');}
 }
 module.exports={Engine};

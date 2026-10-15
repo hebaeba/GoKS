@@ -24,3 +24,20 @@
 #analysis-help{margin-top:18px;font-size:13px;line-height:1.7}
 #analysis-help summary{cursor:pointer;font-weight:700}
 #analysis-help li{margin:6px 0}
+
+/* Update22 compact analysis header. */
+.engine-dock #engine-active{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+.engine-dock #engine-active small{display:none}
+.engine-dock #engine-active-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.engine-dock #engine-state[data-state=ready],.engine-dock #engine-state[data-state=analyzing]{background:#fff0ec;color:#ad201b;font-size:12px}
+.engine-dock .analysis-primary{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.engine-dock .analysis-primary .analysis-conditions{display:flex;flex:1;gap:8px;align-items:end;margin:0}
+.engine-dock .analysis-conditions label{font-size:12px;min-width:0}
+.engine-dock .analysis-visits{flex-basis:100%;font-size:12px}
+#analysis-batch{padding:12px;border:1px solid #b8d1c4;background:#f2f8f4;border-radius:8px;margin:16px 0}
+#analysis-batch h3{margin:0 0 8px}#analysis-batch #analysis-context{margin:6px 0}
+#analyze-all{background:#216959;color:white;font-weight:700}
+#analysis-worst h3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#analysis-worst select{font-size:12px;max-width:10em}
+.actual-move-info{padding:6px 8px;border-left:3px solid #b58a29;background:#fffaf0}
+@media(max-width:460px){.engine-dock .analysis-primary .analysis-conditions{flex-basis:100%}}

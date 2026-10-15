@@ -6,6 +6,11 @@ cargo build --release --manifest-path src-tauri/Cargo.toml --features custom-pro
 if ($LASTEXITCODE -ne 0) { throw 'Windows build failed. No release was created.' }
 New-Item -ItemType Directory -Force dist | Out-Null
 Copy-Item src-tauri/target/release/kifu-editor.exe dist/kifu-editor.exe -Force
+if (Test-Path dist/engines) { Remove-Item dist/engines -Recurse -Force }
+Copy-Item engines dist/engines -Recurse -Force
+node scripts/check-bundled-engine.cjs
+if ($LASTEXITCODE -ne 0) { throw 'Bundled KataGo startup or analysis check failed.' }
+if (Test-Path dist/engines/eigen/analysis_logs) { Remove-Item dist/engines/eigen/analysis_logs -Recurse -Force }
 Copy-Item WINDOWS-TEST.md dist/README.txt -Force
 Copy-Item web/LICENSE.txt dist/LICENSE.txt -Force
 Copy-Item web/licenses.html dist/licenses.html -Force

@@ -45,6 +45,7 @@ $('engine-connect').parentElement.after($('engine-notice'));
 const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.id='analysis-overlay';overlay.setAttribute('aria-hidden','true');document.querySelector('.canvas-wrap').append(overlay);
 let running=false,ready=false,polling=false,session=null,results=new Map(),active=null,engineMeta=null,handshake=null,selectedCandidate=0,logs=[],timer=null,unsaved=false,pendingCalls=0,lastRu=null,previewLine=null;
 let stopping=null,live=false,liveTarget='',followVersion=0,followTimer=null,followQueue=Promise.resolve();
+let requestedScope=null,defaultsLoaded=false,autoAttempted=false;
 let startupAt=0,startupPhase='idle',startupName='';
 const displayKey='kifu-candidate-display-v1';
 let display={count:5,detail:2,perspective:'black'};
@@ -73,18 +74,18 @@ $('engine-profile-new').onclick=()=>{$('engine-profile').value='';$('engine-prof
 $('engine-profile-delete').onclick=()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(!p||!confirm('「'+p.name+'」をエンジンリストから削除しますか？'))return;if(writeProfiles(profiles.filter(v=>v.id!==p.id))){renderProfiles();$('engine-name').value='';profileMessage('登録を削除しました。入力欄のパスと端末内のファイルは残しています。');controls();}};
 renderProfiles();
 const restored=profiles.find(p=>['exe','model','config'].every(k=>p[k]===paths()[k]));if(restored){renderProfiles(restored.id);$('engine-name').value=restored.name;}
-function engineState(state,title,message){$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':'未接続';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
+function engineState(state,title,message){$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':$('engine-name').value.trim()||'未選択';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
 function syncEngineStatus(){
  const state=startupPhase==='error'?'error':ready?(active||live?'analyzing':'ready'):['starting','tuning'].includes(startupPhase)?startupPhase:'idle';
  const label={idle:'停止中',starting:'起動中',tuning:'チューニング中',ready:'待機中',analyzing:'解析中',error:'起動・接続エラー'}[state];
- $('engine-state').textContent=label;$('engine-state').dataset.state=state;
+ $('engine-state').textContent=ready?'● 起動中'+(active||live?'・解析中':''):label;$('engine-state').dataset.state=state;
  $('engine-notice').hidden=!['starting','tuning','error'].includes(state);
 }
 function startingStatus(){if(!['starting','tuning'].includes(startupPhase))return;const text='経過 '+Math.floor((Date.now()-startupAt)/1000)+'秒';if($('engine-elapsed').textContent!==text)$('engine-elapsed').textContent=text;}
 function startupLog(text){if(!['starting','tuning'].includes(startupPhase))return;if(/(?:tuning|autotun|building.*(?:engine|plan)|(?:engine|plan).*building|compiling.*(?:kernel|model))/i.test(text)&&!/(?:skip|not |no |disabled|loaded|finished|completed)/i.test(text))engineState('tuning','ただいまチューニング中です','エンジンの最適化・初期化を行っています。しばらくお待ちください。初回は数分以上かかることがあります。');}
 function note(text){$('analysis-status').textContent=text;$('analysis-status').hidden=!text;}
 function log(text){startupLog(String(text));logs.push(String(text));logs=logs.slice(-120);$('engine-log').textContent=logs.join('\n');}
-function engineError(message){if(!ready)engineState('error','起動・接続エラー','下のエラー内容と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-error').scrollIntoView({block:'nearest'});}
+function engineError(message){requestedScope=null;if(!ready)engineState('error','起動・接続エラー','下のエラー内容と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-notice-message').textContent=message;$('engine-notice').hidden=false;}
 for(const kind of ['exe','model','config'])$('engine-pick-'+kind).onclick=async()=>{pendingCalls++;controls();try{const picked=await call('pick',{kind});if(picked.path){$('engine-'+kind).value=picked.path;$('engine-error').hidden=true;}}catch(e){engineError(e.message);}finally{pendingCalls--;controls();}};
 async function call(action,payload={}){if(window.KifuRemote)return window.KifuRemote.call(action,payload);if(native())return native()('engine_call',{action,payload});if(!token)throw Error('Windowsの解析用ランチャーまたはTauri版から起動してください。');const response=await fetch('/api/engine',{method:'POST',headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action,payload})});const data=await response.json();if(!data.ok)throw Error(data.error||'接続エラー');return data.result;}
 function uid(){return 'kifu-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);}
@@ -93,15 +94,16 @@ function matches(){const s=snap();return session&&s&&A.identity(s)===A.identity(
 function controls(){
  syncEngineStatus();
  const busy=!!active||live;
- $('analyze-live').disabled=!ready||pendingCalls>0;
+ $('analyze-live').disabled=!available||pendingCalls>0||!!handshake;
  $('analyze-live').textContent=busy?'解析を停止':'解析を開始';$('analyze-live').setAttribute('aria-pressed',String(busy));
  $('analyze-live').title=busy?'実行中の解析を停止します。エンジンの接続は維持します':'時間制限なしで現在の局面を解析し、局面の移動に追従します';
- $('analyze-all').disabled=!ready||busy||pendingCalls>0;$('analyze-all').textContent=active&&!live?'全局解析中…':'全局解析を開始';
+ $('analyze-all').disabled=!available||busy||pendingCalls>0||!!handshake;$('analyze-all').textContent=active&&!live?'全局解析中…':'全局解析を開始';
  $('analysis-pv-length').disabled=busy;$('engine-disconnect').disabled=!running;$('engine-connect').disabled=!available||running||pendingCalls>0;
  for(const key of ['exe','model','config']){$('engine-'+key).disabled=running||pendingCalls>0;$('engine-pick-'+key).disabled=!available||running||pendingCalls>0;}
  for(const id of ['engine-profile','engine-name','engine-profile-new','engine-profile-save'])$(id).disabled=running||pendingCalls>0;
- $('engine-profile-edit').disabled=running||pendingCalls>0||!$('engine-profile').value;$('engine-profile-delete').disabled=running||pendingCalls>0||!$('engine-profile').value;
+ $('engine-profile-edit').disabled=running||pendingCalls>0||!$('engine-profile').value||$('engine-profile').value==='bundled-eigen';$('engine-profile-delete').disabled=running||pendingCalls>0||!$('engine-profile').value||$('engine-profile').value==='bundled-eigen';
  for(const id of ['analysis-rules','analysis-seconds','analysis-custom'])$(id).disabled=busy;
+ if($('engine-profile').value==='bundled-eigen'){for(const key of ['exe','model','config']){$('engine-'+key).disabled=true;$('engine-pick-'+key).disabled=true;}$('engine-name').disabled=true;$('engine-profile-save').disabled=true;}
  $('analysis-save').disabled=!results.size;$('analysis-open').disabled=busy;
  updateVisits();
 }
@@ -171,7 +173,17 @@ function renderResult(){
 $('analysis-seconds').onchange=()=>{$('analysis-custom-label').hidden=$('analysis-seconds').value!=='custom';controls();};
 function progressText(){if(!active)return;if(active.infinite)return;const elapsed=(Date.now()-active.started)/1000,left=active.cursor?elapsed/active.cursor*(active.plan.length-active.cursor):active.seconds*active.plan.length;note('解析済み '+active.cursor+' / '+active.plan.length+'局面 ／ 経過 '+elapsed.toFixed(1)+'秒 ／ 残り約 '+Math.ceil(left)+'秒'+(active.plan[0].reset?'（配置変更前のコウ履歴・アゲハマは含みません）':''));}
 function scoreText(n){return n===0?'互角':(n>0?'黒＋':'白＋')+Math.abs(n).toFixed(1);}
-function renderGraph(){const run=session?.analysisRun;$('analysis-run-info').textContent=run?(run.scope==='all'?'全局':run.scope==='live'?'連続':'現在局面')+'解析 ／ '+(session.rules==='japanese'?'日本ルール':'中国ルール')+' ／ １局面 '+(run.infinite?'無限':run.seconds+'秒')+' ／ 開始 '+new Date(run.started).toLocaleTimeString('ja-JP')+' ／ '+results.size+'局面'+(active?'（更新中）':''):results.size?'保存済み解析（解析開始時刻の記録なし）':'';const svg=$('analysis-graph');svg.replaceChildren();const list=[...results.values()].sort((a,b)=>a.index-b.index),metric=$('analysis-metric').value;const elt=(tag,attrs,text)=>{const e=document.createElementNS(svg.namespaceURI,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.append(e);return e;};
+function renderWorst(){
+ const panel=$('analysis-worst');if(!panel)return;
+ panel.hidden=!session||session.analysisRun?.scope!=='all'||!results.size;
+ if(panel.hidden)return;
+ const rows=A.worstMoves(session.snapshot,[...results.values()]),filter=$('worst-color').value,body=$('worst-rows');body.replaceChildren();
+ $('worst-note').textContent=(active?'全局解析中の暫定順位。':'')+'着手前後の目数評価の低下で比較します。短時間の解析では誤差があるため、気になる手は再解析してください。';
+ rows.filter(r=>!filter||r.color===filter).forEach((r,i)=>{const tr=document.createElement('tr'),button=document.createElement('button');button.textContent=r.move+'手 '+(r.color==='B'?'黒':'白')+' '+(r.point==='pass'?'パス':r.point);button.title='この着手後の局面を表示します';button.disabled=!matches();button.onclick=()=>go(r.index);
+ for(const value of [String(i+1),button,r.loss.toFixed(1)+'目',r.winrateLoss.toFixed(1)+'pt']){const td=document.createElement('td');typeof value==='string'?td.textContent=value:td.append(value);tr.append(td);}body.append(tr);});
+ if(!body.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='比較できる評価低下の手はまだありません。';tr.append(td);body.append(tr);}
+}
+function renderGraph(){renderWorst();const run=session?.analysisRun;$('analysis-run-info').textContent=run?(run.scope==='all'?'全局':run.scope==='live'?'連続':'現在局面')+'解析 ／ '+(session.rules==='japanese'?'日本ルール':'中国ルール')+' ／ １局面 '+(run.infinite?'無限':run.seconds+'秒')+' ／ 開始 '+new Date(run.started).toLocaleTimeString('ja-JP')+' ／ '+results.size+'局面'+(active?'（更新中）':''):results.size?'保存済み解析（解析開始時刻の記録なし）':'';const svg=$('analysis-graph');svg.replaceChildren();const list=[...results.values()].sort((a,b)=>a.index-b.index),metric=$('analysis-metric').value;const elt=(tag,attrs,text)=>{const e=document.createElementNS(svg.namespaceURI,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.append(e);return e;};
 const maxMove=Math.max(1,...list.map(p=>p.move),...(active?.plan||[]).map(p=>p.move)),extent=metric==='winrate'?1:Math.max(10,...list.map(p=>Math.abs(p.result.rootInfo.scoreLead))),low=metric==='winrate'?0:-extent,high=extent;
 const x=m=>44+406*m/maxMove,y=v=>155-125*(v-low)/(high-low);for(const v of [low,(low+high)/2,high]){elt('line',{x1:44,x2:450,y1:y(v),y2:y(v),stroke:'#cedad5','stroke-dasharray':'3 3'});elt('text',{x:38,y:y(v)+4,'text-anchor':'end',fill:'#547067','font-size':11},metric==='winrate'?Math.round(v*100)+'%':v.toFixed(0));}const step=50*Math.max(1,Math.ceil(maxMove/400));
 for(let move=0;move<=maxMove;move+=step){const px=x(move);elt('line',{x1:px,x2:px,y1:30,y2:155,stroke:'#e2e8e4','stroke-dasharray':'2 4'});elt('line',{x1:px,x2:px,y1:155,y2:160,stroke:'#71877b'});if(move===0||move===maxMove||x(maxMove)-px>=34)elt('text',{x:px,y:177,'text-anchor':move===0?'start':move===maxMove?'end':'middle',fill:'#547067','font-size':11},move+'手');}
@@ -182,10 +194,10 @@ if(!list.length)elt('text',{x:245,y:87,'text-anchor':'middle',fill:'#61776d','fo
 async function go(index){if(!matches()){note('表示中の棋譜が異なります。保存した解析を読み直してください。');return;}try{await api.analysisAt(index,session.snapshot.sgf);}catch(e){note(e.message);}}
 $('analysis-seek').oninput=()=>{const list=[...results.values()].sort((a,b)=>a.index-b.index);const item=list[Number($('analysis-seek').value)];if(item)go(item.index);};$('analysis-metric').onchange=renderGraph;
 $('analysis-rules').onchange=displayState;
-async function connect(){note('');$('engine-error').hidden=true;logs=[];$('engine-log').textContent='';pendingCalls++;controls();try{const config=paths();if(!window.KifuRemote&&(!config.exe||!config.model))throw Error('実行ファイルとモデルのフルパスを指定してください。');try{localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(config));}catch{}startupAt=Date.now();startupName=window.KifuRemote?'PCのエンジン':$('engine-name').value.trim()||config.exe.split(/[\\/]/).pop();engineState('starting','エンジンを起動しています','モデルを読み込み、準備しています。CUDA・TensorRT等の初回起動ではチューニングに数分以上かかる場合があります。しばらくお待ちください。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});const r=await call('start',config);running=true;ready=false;timer??=setInterval(poll,50);engineMeta=r.meta;if(window.KifuRemote)startupName=r.meta?.engine||'PCのエンジン';handshake={id:uid(),time:Date.now()};await call('send',{id:handshake.id,action:'query_version'});note('');timer??=setInterval(poll,50);}catch(e){log(e.message);engineError(e.message);}finally{pendingCalls--;controls();}}
-async function disconnect(){endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;note('');engineState('idle','エンジン停止','「起動・接続」で再び起動できます。');$('analysis-progress').hidden=true;controls();}
+async function connect(){if(running||handshake)return;note('');$('engine-error').hidden=true;logs=[];$('engine-log').textContent='';pendingCalls++;controls();try{const config=paths();if(!window.KifuRemote&&(!config.exe||!config.model))throw Error('実行ファイルとモデルのフルパスを指定してください。');try{localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(config));}catch{}startupAt=Date.now();startupName=window.KifuRemote?'PCのエンジン':$('engine-name').value.trim()||config.exe.split(/[\\/]/).pop();engineState('starting','エンジンを起動しています','モデルを読み込み、準備しています。CUDA・TensorRT等の初回起動ではチューニングに数分以上かかる場合があります。しばらくお待ちください。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});const r=await call('start',config);running=true;ready=false;timer??=setInterval(poll,50);engineMeta=r.meta;if(window.KifuRemote)startupName=r.meta?.engine||'PCのエンジン';handshake={id:uid(),time:Date.now()};await call('send',{id:handshake.id,action:'query_version'});note('');timer??=setInterval(poll,50);}catch(e){log(e.message);engineError(e.message);}finally{pendingCalls--;controls();}}
+async function disconnect(){requestedScope=null;endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;note('');engineState('idle','エンジン停止','「起動・接続」で再び起動できます。');$('analysis-progress').hidden=true;controls();}
 async function poll(){startingStatus();if(polling)return;polling=true;try{const r=await call('poll');for(const l of r.logs||[])log(l);for(const event of r.events||[]){if(event.type==='log'){log(event.message);continue;}if(event.type==='exit'){log(event.message);ready=false;engineError(event.message);endLive();active=null;continue;}if(event.type!=='result')continue;const data=event.data;
-if(handshake&&data.id===handshake.id){if(data.error){log(data.error);engineError(data.error);handshake=null;continue;}if(data.version){engineMeta={...engineMeta,version:data.version};ready=true;handshake=null;engineState('ready','起動完了・解析できます',startupName+' ／ KataGo '+data.version+'。「解析を開始」またはスペースキーで連続解析を始められます。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});$('engine-error').hidden=true;note('');}continue;}
+if(handshake&&data.id===handshake.id){if(data.error){log(data.error);engineError(data.error);handshake=null;continue;}if(data.version){engineMeta={...engineMeta,version:data.version};ready=true;handshake=null;engineState('ready','起動完了・解析できます',startupName+' ／ KataGo '+data.version+'。「解析を開始」またはスペースキーで連続解析を始められます。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});$('engine-error').hidden=true;note('');if(requestedScope){const scope=requestedScope;requestedScope=null;setTimeout(()=>scope==='all'?analyze(true):toggleLive(),0);}}continue;}
 if(stopping&&data.id===stopping.id){if(data.rootInfo){const item=stopping.plan[stopping.cursor];results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result:A.normalizedResult(data,session.snapshot.size),queryId:data.id,seconds:stopping.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}if(data.isDuringSearch===false)stopping=null;continue;}if(!active||data.id!==active.id)continue;if(data.error){note('解析エラー：'+data.error);log(JSON.stringify(data));endLive();active=null;continue;}if(data.warning){log('注意：'+data.warning);note('KataGoの注意：'+data.warning);}if(data.rootInfo){const item=active.plan[active.cursor],result=A.normalizedResult(data,session.snapshot.size);results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result,queryId:data.id,seconds:active.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}
 if(data.isDuringSearch===false&&data.rootInfo){active.cursor++;$('analysis-progress').value=active.cursor;if(active.cursor<active.plan.length){progressText();await sendNext();}else{note((live?'連続解析：次の着手・手順移動を待っています。 ':'解析完了：')+active.plan.length+'局面 ／ '+((Date.now()-active.started)/1000).toFixed(1)+'秒。結果を保存できます。');active=null;renderGraph();if(live)scheduleLive(true);}}
 }
@@ -204,14 +216,33 @@ function scheduleLive(force=false){
  followTimer=setTimeout(()=>{followQueue=followQueue.then(async()=>{if(!live||!ready||version!==followVersion)return;await analyze(false,true);}).catch(e=>{endLive();note(e.message);controls();});},120);
  controls();
 }
-function toggleLive(){if(live||active){cancel();return;}if(!ready||active||pendingCalls>0)return;live=true;note('');scheduleLive(true);controls();}
+function toggleLive(){if(!ready){requestAnalysis('live');return;}if(live||active){cancel();return;}if(!ready||active||pendingCalls>0)return;live=true;note('');scheduleLive(true);controls();}
 let spaceReserved=false;
-document.addEventListener('keydown',event=>{if(event.code!=='Space'&&event.key!==' ')return;if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;const target=event.target;if(target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;event.preventDefault();event.stopPropagation();spaceReserved=true;if(event.repeat)return;if(!ready){note('先にエンジン設定から「起動・接続」を押してください。');return;}if(pendingCalls>0)return;if(live||active)cancel();else toggleLive();},true);
+document.addEventListener('keydown',event=>{if(event.code!=='Space'&&event.key!==' ')return;if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;const target=event.target;if(target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;event.preventDefault();event.stopPropagation();spaceReserved=true;if(event.repeat)return;if(!ready){requestAnalysis('live');return;}if(pendingCalls>0)return;if(live||active)cancel();else toggleLive();},true);
 document.addEventListener('keyup',event=>{if((event.code==='Space'||event.key===' ')&&spaceReserved){event.preventDefault();event.stopPropagation();spaceReserved=false;}},true);
 window.addEventListener('blur',()=>spaceReserved=false);
 window.addEventListener('kifu-board-view',()=>{clearPreview();renderResult();});
 $('analyze-live').onclick=toggleLive;
-$('engine-connect').onclick=connect;$('engine-disconnect').onclick=disconnect;$('analyze-all').onclick=()=>analyze(true);
+async function requestAnalysis(scope){
+ if(ready){if(scope==='all')return analyze(true);return toggleLive();}
+ if(!available||pendingCalls>0||handshake)return;requestedScope=scope;await connect();
+}
+async function initBundledEngine(){
+ if(!available||window.KifuRemote)return;
+ try{const d=await call('defaults');if(!d?.exe)return;
+  const selected=$('engine-profile').value;
+  profiles=profiles.filter(x=>x.id!=='bundled-eigen');
+  profiles.unshift({id:'bundled-eigen',name:d.name,exe:d.exe,model:d.model,config:d.config});writeProfiles(profiles);
+  if(!paths().exe||selected==='bundled-eigen'){
+   for(const k of ['exe','model','config'])$('engine-'+k).value=d[k];$('engine-name').value=d.name;renderProfiles('bundled-eigen');
+  }else renderProfiles(selected);
+  defaultsLoaded=true;controls();if($('engine-profile').value==='bundled-eigen'&&d.missing?.length){autoAttempted=true;engineError('同梱エンジンのファイルが不足しています：'+d.missing.join('、')+'。ZIPをすべて展開してください。');return;}autoConnect();
+ }catch(e){log('同梱エンジンの確認：'+e.message);}
+}
+function autoConnect(){if(!defaultsLoaded||autoAttempted||running||pendingCalls||document.querySelector('.inspector')?.dataset.layout!=='analysis')return;autoAttempted=true;connect();}
+window.addEventListener('workspace-layout',autoConnect);
+setTimeout(initBundledEngine,0);
+$('engine-connect').onclick=connect;$('engine-disconnect').onclick=disconnect;$('analyze-all').onclick=()=>requestAnalysis('all');
 $('analysis-save').onclick=async()=>{try{if(!session||!results.size)return;const archive={format:'kifu-katago-analysis',version:1,perspective:'BLACK',...session,results:[...results.values()].sort((a,b)=>a.index-b.index),saved:new Date().toISOString()};await GoExport.save(new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),'棋譜解析.kifu-analysis.json');unsaved=false;note('解析を保存しました。');}catch(e){note('保存できません：'+e.message);}};
 $('analysis-open').onclick=()=>$('analysis-file').click();$('analysis-file').onchange=async()=>{const file=$('analysis-file').files[0];$('analysis-file').value='';if(!file)return;try{if(file.size>32*1024*1024)throw Error('解析ファイルは32MB以内です。');const data=A.validateArchive(JSON.parse(await file.text()));if(unsaved&&!confirm('保存していない解析結果を置き換えますか？'))return;if(!await api.loadAnalysisSnapshot(data.snapshot))return;stopping=null;session={snapshot:api.peekAnalysisSnapshot(),rules:data.rules,engine:data.engine||null,created:data.created||'',timing:data.timing||null,analysisRun:data.analysisRun||null};results=new Map(data.results.map(item=>[item.index,item]));$('analysis-rules').value=data.rules;unsaved=false;selectedCandidate=0;note('保存済み解析を読み込みました。'+results.size+'局面。グラフから局面を選べます。');controls();displayState();}catch(e){note('読み込めません：'+e.message);}};
 window.addEventListener('kifu-position-change',()=>{clearPreview();const s=snap();if(live)scheduleLive();else if(active?.infinite&&s&&(s.index!==active.index||A.identity(s)!==A.identity(session.snapshot)))cancel();displayState();});window.addEventListener('workspace-layout',()=>{clearPreview();overlay.hidden=$('pane-analysis').hidden;displayState();});window.addEventListener('beforeunload',e=>{if(active||live||unsaved){e.preventDefault();e.returnValue='';}});
