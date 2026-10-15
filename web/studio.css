@@ -48,3 +48,13 @@
 #pane-settings #engine-disconnect{background:#fff0ed;color:#8c2d24;font-weight:700;border-color:#cc8d83}
 .engine-running-details{font-size:12px;margin:8px 0}.engine-running-details pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px}
 .worst-side{margin:14px 0;border:1px solid #c6d7cd;border-radius:6px;padding:8px}.worst-side h4{margin:2px 0 8px;font-size:13px}
+
+/* Update24: batch progress follows the graph. */
+#candidate-list>summary{cursor:pointer;font-size:13px;font-weight:700;padding:10px 0}
+#candidate-list .candidate-block{margin-top:0}
+#analysis-batch{scroll-margin-top:110px}
+#batch-progress{padding:8px 0}#batch-progress[hidden]{display:none}
+#batch-progress-label{font-size:13px;font-weight:700;color:#245f57;margin:0 0 6px;font-variant-numeric:tabular-nums}
+#batch-progress #analysis-progress{margin:0;height:12px;display:block}
+#batch-progress[data-state=stopped] #analysis-progress,#batch-progress[data-state=interrupted] #analysis-progress{accent-color:#9e702c}
+@media(max-width:600px){#analysis-batch{scroll-margin-top:12px}}
