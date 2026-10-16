@@ -30,4 +30,8 @@ const toolHeading=q('#pane-tools > h2'),close=q('.close-tools');if(toolHeading&&
 // Match a select to the widest option; no fixed empty space or stretching.
 function sizeSelect(el){const span=document.createElement('span'),style=getComputedStyle(el);span.style.cssText='position:fixed;visibility:hidden;white-space:pre;font:'+style.font;document.body.append(span);let width=0;for(const o of el.options){span.textContent=o.textContent;width=Math.max(width,span.getBoundingClientRect().width);}span.remove();el.style.setProperty('width',Math.ceil(width+36)+'px','important');el.style.setProperty('min-width','0','important');el.style.setProperty('max-width','100%','important');}
 for(const id of ['analysis-seconds','analysis-metric','analysis-pv-length','worst-metric'])sizeSelect($(id));
+
+// Width reset belongs to the draggable separator, not the editing controls.
+$('board-divider').append($('board-fit'));$('board-fit').textContent='';$('board-fit').setAttribute('aria-label','標準幅に戻す');$('board-fit').classList.add('divider-reset');$('board-fit').addEventListener('click',e=>e.stopPropagation());
+$('tab-settings').textContent='エンジン設定';
 })();
