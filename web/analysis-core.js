@@ -18,6 +18,8 @@ function rebaseResults(previous,next,results){
 function identity(snapshot){return JSON.stringify([snapshot.sgf,snapshot.path]);}
 function effectiveRules(ru){const s=String(ru||'').toLowerCase();if(/japan|日本/.test(s))return 'japanese';if(/chinese|中国/.test(s))return 'chinese';if(!s)return null;return null;}
 function stones(state){return state.board.flatMap((c,p)=>c?[[c===1?'B':'W',gtp(p,state.size)]]:[]);}
+function regionPoints(snapshot){let node=S.parse(snapshot.sgf).root,values=node.props.DD;for(let i=0;i<snapshot.index;i++){node=node.children[snapshot.path[i]];if(!node)throw Error('領域の局面が不正です');if(node.props.DD)values=node.props.DD;}return [...new Set(R.expanded(values||[],snapshot.size))].sort((a,b)=>a-b);}
+function validateRegion(points,size){if(!Array.isArray(points)||!points.length||points.length>size*size||points.some(p=>!Number.isInteger(p)||p<0||p>=size*size)||new Set(points).size!==points.length)throw Error('網掛けの解析領域が不正です。対象部分全体を網掛けしてください。');return points;}
 function plan(snapshot,rules,visits,all){
  const options=typeof visits==='object'&&visits?visits:null,infinite=options?.infinite===true,pvLength=options?.pvLength??20;
  if(!Number.isInteger(pvLength)||pvLength<1||pvLength>30)throw Error('読み筋の表示手数は1〜30手で指定してください。');
@@ -45,6 +47,7 @@ function plan(snapshot,rules,visits,all){
  const chosen=all?positions.filter((p,i)=>i===0||p.move!==positions[i-1].move||p.reset!==positions[i-1].reset):[positions[0]];
  if(all&&positions.some(p=>p.reset))throw Error('途中で配置石・手番を変更した棋譜の全局解析には未対応です。現在局面は配置図として解析できます。');
  if(seconds!==null)for(const p of chosen){p.request.maxVisits=1000000000;p.request.overrideSettings={maxTime:infinite?1e20:seconds,maxPlayouts:1000000000};p.request.reportDuringSearchEvery=infinite?0.5:Math.max(0.1,Math.min(1,seconds/2));}
+ if(options?.region){const points=validateRegion(options.region,snapshot.size);if(all)throw Error('領域制限は現在局面の解析に使用してください。');if(!points.some(p=>state.board[p]))throw Error('網掛け領域内に解析対象の石がありません。');const moves=points.map(p=>gtp(p,snapshot.size)).concat('pass');for(const p of chosen)p.request.allowMoves=['B','W'].map(player=>({player,moves: moves.slice(),untilDepth:1000000}));}
  return chosen;
 }
 function normalizedResult(data,size){
@@ -55,6 +58,7 @@ function normalizedResult(data,size){
 function validateArchive(data){
  if(!data||data.format!=='kifu-katago-analysis'||data.version!==1||data.perspective!=='BLACK')throw Error('このツールの解析保存ファイルではありません。');
  if(!data.snapshot||typeof data.snapshot.sgf!=='string'||!Array.isArray(data.snapshot.path))throw Error('保存された棋譜が不正です。');
+ if(data.region!==undefined&&data.region!==null)validateRegion(data.region,data.snapshot.size);
  const positions=plan(data.snapshot,data.rules,100,false);void positions;
  if(!Array.isArray(data.results)||data.results.length>2000)throw Error('解析件数が不正です。');
  let node=S.parse(data.snapshot.sgf).root;const route=[node];for(const x of data.snapshot.path){node=node.children[x];route.push(node);}
@@ -90,5 +94,5 @@ function worstMoves(snapshot,items,metric='score'){
  }
  return out.sort((a,b)=>(metric==='winrate'?b.winrateLoss-a.winrateLoss:b.loss-a.loss)||a.move-b.move);
 }
-const api={worstMoves,positionKeys,rebaseResults,shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
+const api={regionPoints,validateRegion,worstMoves,positionKeys,rebaseResults,shortVisits,candidateColor,positionAt,preview,gtp,point,identity,effectiveRules,plan,normalizedResult,validateArchive};if(typeof module!=='undefined')module.exports=api;else global.KifuAnalysis=api;
 })(globalThis);

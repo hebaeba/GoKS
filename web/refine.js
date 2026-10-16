@@ -34,4 +34,10 @@ for(const id of ['analysis-seconds','analysis-metric','analysis-pv-length','wors
 // Width reset belongs to the draggable separator, not the editing controls.
 $('board-divider').append($('board-fit'));$('board-fit').textContent='';$('board-fit').setAttribute('aria-label','標準幅に戻す');$('board-fit').classList.add('divider-reset');$('board-fit').addEventListener('click',e=>e.stopPropagation());
 $('tab-settings').textContent='エンジン設定';
+
+// Board title and direct operation rows.
+const boardTitle=q('.game-title');q('.board-block').prepend(boardTitle);q('.brand').hidden=true;q('.app-header').classList.add('board-title-moved');
+const displayRow=$('board-display-options').lastElementChild,editRow=$('board-edit-options').lastElementChild;
+const moves=document.createElement('div');moves.className='move-edit-group';moves.append($('pass'),$('delete-move'),$('insert'),$('cancel-insert'));displayRow.append(moves);editRow.append(q('.board-view-tools'));
+$('candidate-settings').before(q('.region-analysis-toggle'));
 })();
