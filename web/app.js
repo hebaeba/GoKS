@@ -202,6 +202,8 @@
     if(keyboardBoard){const {x,y}=displayXY(focusPoint);c.strokeStyle='#006675';c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
   }
   function refresh() {
+    if($('gif-end')){const end=$('gif-end'),start=$('gif-start'),max=frames.at(-1).move,previous=Number(end.dataset.limit||0);if(!end.dataset.limit||Number(end.value)===previous||Number(end.value)>max)end.value=String(max);if(Number(start.value)>max)start.value='0';end.max=start.max=String(max);end.dataset.limit=String(max);}
+
     analysisPreview=null;
     document.body.classList.toggle('editing-mode',editing);queueMicrotask(()=>window.dispatchEvent(new Event('kifu-position-change')));
     syncAuto();invalidateGif();

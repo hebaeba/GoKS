@@ -1,0 +1,33 @@
+/* Update 29: content-sized controls and always-visible board operations. */
+(()=>{'use strict';const $=id=>document.getElementById(id),q=s=>document.querySelector(s);
+// Compact help bubbles become conventional hover descriptions.
+for(const d of document.querySelectorAll('.compact-info')){const text=d.querySelector('.compact-info-content')?.textContent.trim();if(text){const parent=d.parentElement;parent.title=[parent.title,text].filter(Boolean).join('\n');}d.hidden=true;}
+$('board-fit').textContent='標準幅に戻す';$('board-fit').title='ドラッグで変更した幅を、現在のウィンドウに合わせた標準幅へ戻します。棋譜や路数は変わりません。';
+for(const id of ['board-display-options','board-edit-options']){const d=$(id);d.open=true;d.querySelector('summary').hidden=true;d.classList.add('always-open');}
+$('board-edit-options').lastElementChild.append($('board-fit'));
+const history=document.createElement('div');history.className='history-pair';history.setAttribute('role','group');history.setAttribute('aria-label','編集履歴');$('undo').before(history);history.append($('undo'),$('redo'));$('board-edit-options').lastElementChild.prepend(history);
+$('undo').title='直前の編集を取り消します';$('redo').title='取り消した編集をやり直します';
+$('jump-go').textContent='指定手数へ移動';$('jump-go').title='入力した手数の局面へ移動します';const jump=q('.jump');for(const n of [...jump.childNodes])if(n.nodeType===3)n.remove();jump.prepend($('jump-go'));$('jump').setAttribute('aria-label','移動先の手数（３桁）');$('jump').style.width='5ch';
+for(const [id,label]of [['first','|◀'],['back10','◀◀'],['back','◀'],['next','▶'],['next10','▶▶'],['last','▶|']]){$(id).textContent=label;}
+// Remove the focus outline caused by Space on this single toggle; Tab focus remains visible.
+let pointerFocus=false;$('analyze-live').addEventListener('pointerdown',()=>pointerFocus=true);document.addEventListener('keydown',e=>{if(e.key==='Tab')pointerFocus=false;if(e.code==='Space'&&pointerFocus&&document.activeElement===$('analyze-live'))$('analyze-live').blur();},true);
+// Restore history controls beside a mismatch warning without modifying its dynamic message.
+const warning=$('analysis-stale'),recovery=document.createElement('div');recovery.id='analysis-history';recovery.className='history-pair';warning.after(recovery);for(const [source,label]of [['undo','取り消し'],['redo','やり直し']]){const b=document.createElement('button');b.textContent=label;b.id='analysis-'+source;b.onclick=()=>$(source).click();recovery.append(b);}
+function syncHistory(){recovery.hidden=warning.hidden;for(const id of ['undo','redo'])$('analysis-'+id).disabled=$(id).disabled;}
+new MutationObserver(syncHistory).observe(warning,{attributes:true,attributeFilter:['hidden']});for(const id of ['undo','redo'])new MutationObserver(syncHistory).observe($(id),{attributes:true,attributeFilter:['disabled']});syncHistory();
+const list=$('candidate-list'),settings=$('candidate-settings');list.before(settings);const heading=q('.candidate-block > h3');if(heading){settings.title=[settings.title,heading.textContent].filter(Boolean).join('\n');heading.hidden=true;}settings.querySelector('summary').textContent='候補手の表示設定';
+const ranking=$('analysis-worst').querySelector('.compact-heading');ranking.insertBefore($('analysis-save'),q('.worst-metric'));$('analysis-save').textContent='保存';$('analysis-save').title='棋譜と解析結果をまとめて保存します';
+// Keep saving reachable before a full-game ranking exists.
+const archive=document.createElement('button');archive.id='analysis-save-current';archive.textContent='解析を保存';archive.onclick=()=>$('analysis-save').click();q('.analysis-files').prepend(archive);function syncArchive(){archive.disabled=$('analysis-save').disabled;archive.hidden=!$('analysis-worst').hidden;}new MutationObserver(syncArchive).observe($('analysis-save'),{attributes:true});new MutationObserver(syncArchive).observe($('analysis-worst'),{attributes:true});syncArchive();
+const detail=$('compact-analysis-details');detail.open=true;detail.querySelector('summary').hidden=true;
+// Save tab: save the complete record directly and leave specialized options available.
+const tab=$('tab-storage'),old=tab.onclick;tab.onclick=()=>{old();$('save').click();};tab.title='棋譜全体を名前を付けて保存し、その他の保存項目を表示します';$('save').hidden=false;const saves=q('.record-save-row');saves.prepend($('save'));$('save').textContent='棋譜全体を保存';
+$('gif-options').querySelector('summary').click();$('gif-options').open=true;$('gif-options').querySelector('summary').onclick=e=>e.preventDefault();
+for(const h of document.querySelectorAll('#pane-storage > h3'))if(h.textContent==='一時保存')h.hidden=true;
+// Tool descriptions are retained on their related controls.
+for(const p of document.querySelectorAll('#tools p')){if(p.querySelector('input,button,textarea,select')||p.id)continue;const text=p.textContent.trim();if(text){$('tools').title=[$('tools').title,text].filter(Boolean).join('\n');p.hidden=true;}}
+const toolHeading=q('#pane-tools > h2'),close=q('.close-tools');if(toolHeading&&close){const row=document.createElement('div');row.className='tools-heading';toolHeading.before(row);row.append(toolHeading,close);}
+// Match a select to the widest option; no fixed empty space or stretching.
+function sizeSelect(el){const span=document.createElement('span'),style=getComputedStyle(el);span.style.cssText='position:fixed;visibility:hidden;white-space:pre;font:'+style.font;document.body.append(span);let width=0;for(const o of el.options){span.textContent=o.textContent;width=Math.max(width,span.getBoundingClientRect().width);}span.remove();el.style.setProperty('width',Math.ceil(width+36)+'px','important');el.style.setProperty('min-width','0','important');el.style.setProperty('max-width','100%','important');}
+for(const id of ['analysis-seconds','analysis-metric','analysis-pv-length','worst-metric'])sizeSelect($(id));
+})();
