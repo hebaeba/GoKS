@@ -23,13 +23,13 @@
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新24</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新27</span>');
  q('.edit-buttons').append($('score'));
- const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent=document.body.classList.contains('editing-mode')?'編集中':'閲覧中';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
+ const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent='';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
  function activate(id){
   if(id==='analysis')focusLayout='analysis';else if(id==='tools'||id==='sequence')focusLayout='edit';
   const combined=id==='tools'||id==='sequence';
-  if(combined&&!$('edit').disabled&&!$('edit').closest('[inert]'))$('edit').click();
+  
   for(const [key,pane]of Object.entries(panes)){pane.hidden=combined?!['tools','sequence'].includes(key):key!==id;const tab=$('tab-'+key);tab.setAttribute('aria-selected',String(key===id));tab.tabIndex=key===id?0:-1;}
   $('layout-analysis').setAttribute('aria-pressed',String(focusLayout==='analysis'));$('layout-edit').setAttribute('aria-pressed',String(focusLayout==='edit'));panel.dataset.layout=focusLayout;
   if(combined)tools.open=true;if(id==='storage')$('save-options').hidden=false;

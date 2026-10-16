@@ -132,7 +132,7 @@ function hoverCandidate(m,s,i){
  $('analysis-pv').textContent='読み筋 '+result.applied+'手（マウスを外すと戻ります）。クリックすると候補手の１手だけを着手します。'+(result.error?' 再現できる手まで表示しています。':'');
 }
 function leaveCandidate(){clearPreview();}
-function playCandidate(m,s){clearPreview();try{api.playAnalysisMove(A.point(m.move,s.size),s);}catch(e){note(e.message);}displayState();}
+function playCandidate(m,s){if(!document.body.classList.contains('editing-mode')){hoverCandidate(m,s,0);return;}clearPreview();try{api.playAnalysisMove(A.point(m.move,s.size),s);}catch(e){note(e.message);}displayState();}
 function bindCandidate(element,m,s,i){
  element.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')hoverCandidate(m,s,i);});
  element.addEventListener('pointerleave',leaveCandidate);
@@ -150,20 +150,20 @@ function renderResult(){
  if(previewLine&&(previewLine.sgf!==s?.sgf||previewLine.path!==JSON.stringify(s?.path)||previewLine.index!==s?.index||!item||pane.hidden))clearPreview();
  if(previewLine)return; // Keep pointer targets stable while the engine updates results.
  api.clearAnalysisPreview();
- $('analysis-candidates').replaceChildren();overlay.replaceChildren();$('analysis-winrate').textContent='—';$('analysis-score').textContent='—';$('analysis-played').textContent='';$('analysis-pv').textContent='候補手にマウスを重ねると読み筋を表示します。クリック／タップすると編集モードでその１手を着手します。';$('candidate-count-note').textContent='';if(!item)return;
+ $('analysis-candidates').replaceChildren();overlay.replaceChildren();$('analysis-winrate').textContent='—';$('analysis-score').textContent='—';$('analysis-played').textContent='';$('analysis-pv').textContent='候補手にマウスを重ねると読み筋を表示します。ロック解除中のクリック／タップでその１手を着手します。';$('candidate-count-note').textContent='';if(!item)return;
  const r=item.result,position=A.positionAt(s),actual=position.next?.move;
  const viewWhite=display.perspective==='turn'&&position.state.turn===2,side=viewWhite?'白':'黒';const win=m=>((viewWhite?1-m.winrate:m.winrate)*100).toFixed(1);const lead=m=>((viewWhite?-1:1)*m.scoreLead);const leadText=m=>(lead(m)>=0?'+':'−')+Math.abs(lead(m)).toFixed(1);$('analysis-winrate-label').textContent=side+'勝率';$('candidate-winrate-heading').textContent=side+'勝率';$('candidate-perspective-note').textContent=side+'視点：勝率％／目数差（＋は'+side+'有利）';$('analysis-winrate').textContent=win(r.rootInfo)+'%';$('analysis-score').textContent=scoreText(r.rootInfo.scoreLead);
  const moves=r.moveInfos;if(selectedCandidate>=moves.length)selectedCandidate=0;
  const actualRank=r.moveInfos.findIndex(m=>m.move===actual);
  $('analysis-played').textContent=actual?'実戦の次の手：'+(position.next.color==='B'?'黒 ':'白 ')+(actual==='pass'?'パス':actual)+(actualRank<0?'（今回の候補結果にありません）':' ／ 推奨順位 '+(actualRank+1)+'位'):'この局面の後に記録された実戦手はありません。';
- moves.forEach((m,i)=>{const tr=document.createElement('tr'),button=document.createElement('button');button.textContent=m.move==='pass'?'パス':m.move;button.title='マウスオーバーで読み筋、クリックで編集・着手';bindCandidate(button,m,s,i);const cells=[String(i+1),button,win(m)+'%',leadText(m),String(m.visits),m.move===actual?'実戦':'' ];for(const val of cells){const td=document.createElement('td');typeof val==='string'?td.textContent=val:td.append(val);tr.append(td);}tr.classList.toggle('candidate-selected',i===selectedCandidate);tr.classList.toggle('candidate-actual',m.move===actual);$('analysis-candidates').append(tr);});
+ moves.forEach((m,i)=>{const tr=document.createElement('tr'),button=document.createElement('button');button.textContent=m.move==='pass'?'パス':m.move;button.title='マウスオーバーで読み筋、ロック解除中のクリックで着手';bindCandidate(button,m,s,i);const cells=[String(i+1),button,win(m)+'%',leadText(m),String(m.visits),m.move===actual?'実戦':'' ];for(const val of cells){const td=document.createElement('td');typeof val==='string'?td.textContent=val:td.append(val);tr.append(td);}tr.classList.toggle('candidate-selected',i===selectedCandidate);tr.classList.toggle('candidate-actual',m.move===actual);$('analysis-candidates').append(tr);});
  const chosen=moves[selectedCandidate];if(chosen)$('analysis-pv').textContent='候補'+(selectedCandidate+1)+'：'+(chosen.pv.length?chosen.pv.map(v=>v==='pass'?'パス':v).join(' → '):'読み筋なし')+(r.isDuringSearch?'（探索中の結果）':'');
  const shown=moves.filter(m=>m.move!=='pass').slice(0,display.count<0?undefined:display.count);$('candidate-count-note').textContent='盤上 '+shown.length+'手 ／ 取得済み '+moves.length+'候補（一覧はすべて表示）'+(display.count===0?'。候補は非表示。実戦手の枠と直前の着手印は残します。':'。実戦手の枠は表示数に含みません。'+(display.count<0?'無限大は取得済みの全候補です。パスは一覧に表示します。':''));
  const {extent,start,gap}=s.geometry;overlay.setAttribute('viewBox',`0 0 ${extent} ${extent}`);
  const xy=p=>{p=api.displayPoint(p);return {x:start+(p%s.size)*gap,y:start+Math.floor(p/s.size)*gap};};
 
  shown.forEach(m=>{const i=moves.indexOf(m);const p=A.point(m.move,s.size);if(p===null)return;const {x,y}=xy(p),g=svgElement('g',{class:'candidate-mark',role:'button',tabindex:0,'aria-label':'候補'+(i+1)+' '+m.move+' '+side+'勝率'+win(m)+'%' });
- svgElement('title',{},'候補'+(i+1)+' '+m.move+' / '+side+'勝率 '+win(m)+'% / '+side+'視点 '+leadText(m)+'目 / 訪問数 '+m.visits+'回。マウスオーバーで読み筋、クリックで編集・着手',g);
+ svgElement('title',{},'候補'+(i+1)+' '+m.move+' / '+side+'勝率 '+win(m)+'% / '+side+'視点 '+leadText(m)+'目 / 訪問数 '+m.visits+'回。マウスオーバーで読み筋、ロック解除中のクリックで着手',g);
  svgElement('circle',{cx:x,cy:y,r:gap*.49,fill:A.candidateColor(m,moves[0],position.state.turn,i),stroke:i===0?'#045771':'#748839','stroke-width':1},undefined,g);
  const values=display.detail===3?[win(m),A.shortVisits(m.visits),leadText(m)]:[win(m),leadText(m)];const ys=display.detail===3?[-.28,.055,.35]:[-.20,.22];values.forEach((v,row)=>svgElement('text',{x,y:y+gap*ys[row],class:'candidate-value','text-anchor':'middle','dominant-baseline':'central','font-size':gap*(display.detail===3?(row===0?.36:.31):.39),'font-weight':800,fill:i===0?'#ffffff':'#071f18'},v,g));
  for(const text of g.querySelectorAll('.candidate-value'))if(text.getComputedTextLength()>gap*.80){text.setAttribute('textLength',gap*.80);text.setAttribute('lengthAdjust','spacingAndGlyphs');}
@@ -191,13 +191,14 @@ function scoreText(n){return n===0?'互角':(n>0?'黒＋':'白＋')+Math.abs(n).
 function renderWorst(){
  const panel=$('analysis-worst');if(!panel)return;
  panel.hidden=!session||session.analysisRun?.scope!=='all'||!results.size;if(panel.hidden)return;
- const rows=A.worstMoves(session.snapshot,[...results.values()]);
- $('worst-note').textContent=(active?'全局解析中の暫定順位。':'')+'黒と白それぞれ、着手前後の目数評価が低下した順です。短時間の解析では誤差があるため、気になる手は再解析してください。';
+ const metric=$('worst-metric')?.value||'winrate',rows=A.worstMoves(session.snapshot,[...results.values()],metric);
+ $('worst-note').textContent=(active?'全局解析中の暫定順位。':'')+'黒と白それぞれ、着手前後の'+(metric==='winrate'?'勝率':'目数評価')+'が低下した順です。短時間の解析では誤差があるため、気になる手は再解析してください。';
  for(const color of ['B','W']){const body=$('worst-rows-'+color);body.replaceChildren();
  rows.filter(r=>r.color===color).forEach((r,i)=>{const tr=document.createElement('tr'),button=document.createElement('button');button.textContent=r.move+'手 '+(r.point==='pass'?'パス':r.point);button.title='この着手後の局面を表示します';button.disabled=!matches();button.onclick=()=>go(r.index);
  for(const value of [String(i+1),button,r.loss.toFixed(1)+'目',r.winrateLoss.toFixed(1)+'pt']){const td=document.createElement('td');typeof value==='string'?td.textContent=value:td.append(value);tr.append(td);}body.append(tr);});
  if(!body.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='比較できる評価低下の手はまだありません。';tr.append(td);body.append(tr);}}
 }
+window.addEventListener('kifu-ranking-change',renderWorst);
 function renderGraph(){renderWorst();const run=session?.analysisRun;$('analysis-run-info').textContent=run?(run.scope==='all'?'全局':run.scope==='live'?'連続':'現在局面')+'解析 ／ '+(session.rules==='japanese'?'日本ルール':'中国ルール')+' ／ １局面 '+(run.infinite?'無限':run.seconds+'秒')+' ／ 開始 '+new Date(run.started).toLocaleTimeString('ja-JP')+' ／ '+results.size+'局面'+(active?'（更新中）':''):results.size?'保存済み解析（解析開始時刻の記録なし）':'';const svg=$('analysis-graph');svg.replaceChildren();const list=[...results.values()].sort((a,b)=>a.index-b.index),metric=$('analysis-metric').value;const elt=(tag,attrs,text)=>{const e=document.createElementNS(svg.namespaceURI,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.append(e);return e;};
 const maxMove=Math.max(1,...list.map(p=>p.move),...(active?.plan||[]).map(p=>p.move)),extent=metric==='winrate'?1:Math.max(10,...list.map(p=>Math.abs(p.result.rootInfo.scoreLead))),low=metric==='winrate'?0:-extent,high=extent;
 const x=m=>44+406*m/maxMove,y=v=>155-125*(v-low)/(high-low);for(const v of [low,(low+high)/2,high]){elt('line',{x1:44,x2:450,y1:y(v),y2:y(v),stroke:'#cedad5','stroke-dasharray':'3 3'});elt('text',{x:38,y:y(v)+4,'text-anchor':'end',fill:'#547067','font-size':11},metric==='winrate'?Math.round(v*100)+'%':v.toFixed(0));}const step=50*Math.max(1,Math.ceil(maxMove/400));
@@ -255,7 +256,7 @@ async function initBundledEngine(){
   defaultsLoaded=true;controls();if($('engine-profile').value==='bundled-eigen'&&d.missing?.length){autoAttempted=true;engineError('同梱エンジンのファイルが不足しています：'+d.missing.join('、')+'。ZIPをすべて展開してください。');return;}autoConnect();
  }catch(e){log('同梱エンジンの確認：'+e.message);}
 }
-function autoConnect(){if(!defaultsLoaded||autoAttempted||running||pendingCalls||document.querySelector('.inspector')?.dataset.layout!=='analysis')return;autoAttempted=true;connect();}
+function autoConnect(){} // Engines start only through explicit user action.
 window.addEventListener('workspace-layout',autoConnect);
 setTimeout(initBundledEngine,0);
 $('engine-connect').onclick=async()=>{if(pendingCalls)return;if(running||handshake)await disconnect();await connect();};$('engine-disconnect').onclick=disconnect;const quick=document.createElement('button');quick.id='engine-quick';quick.textContent='起動';$('engine-active').append(quick);quick.onclick=()=>running?disconnect():connect();$('analyze-all').onclick=()=>requestAnalysis('all');
