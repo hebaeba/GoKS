@@ -280,7 +280,7 @@
   canvas.addEventListener('click',e=>{if(suppressClick){suppressClick=false;return;}const rect=canvas.getBoundingClientRect(),g=geometry(),x=(e.clientX-rect.left)*g.extent/rect.width,y=(e.clientY-rect.top)*g.extent/rect.height,ix=Math.round((x-g.start)/g.gap),iy=Math.round((y-g.start)/g.gap);if(ix<0||ix>=size||iy<0||iy>=size||Math.hypot(x-g.start-ix*g.gap,y-g.start-iy*g.gap)>g.gap*.6)return;keyboardBoard=false;focusPoint=originalPoint(iy*size+ix);place(focusPoint);});
   canvas.addEventListener('keydown',e=>{let shown=displayPoint(focusPoint),x=shown%size,y=Math.floor(shown/size);if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();keyboardBoard=true;x+=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;y+=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;focusPoint=originalPoint(Math.max(0,Math.min(size-1,y))*size+Math.max(0,Math.min(size-1,x)));draw();}else if(e.key==='Enter'||e.key===' '){e.preventDefault();place(focusPoint);}});
   canvas.addEventListener('blur',()=>{keyboardBoard=false;draw();});
-  document.addEventListener('keydown',e=>{if(e.target===canvas||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();byMoves((e.key==='ArrowRight'?1:-1)*(e.shiftKey?10:1));}});
+  document.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]')||e.target===canvas||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();byMoves((e.key==='ArrowRight'?1:-1)*(e.shiftKey?10:1));}});
   $('open').onclick=()=>{$('file').value='';$('file').click();};
   async function importFile(file){
     if(!file)return false;
@@ -535,7 +535,7 @@
     async analysisAt(target,expected){if(serialized()!==expected)throw Error('棋譜が変更されています。');if(!Number.isInteger(target)||target<0||target>=route.length)throw Error('局面番号が不正です。');await at(target);},
     async loadAnalysisSnapshot(saved){if(!load(saved.sgf,'解析付き棋譜.sgf'))return false;choices=new WeakMap();let n=root;for(const selected of saved.path){if(!n.children[selected])throw Error('保存された変化が不正です。');choices.set(n,selected);n=n.children[selected];}index=saved.index;rebuild();refresh();return true;},
 
-    async loadSgf(text,name,move=100000){if(!load(text,name))return false;const target=Math.max(0,Number(move)||0);let n=frames.findIndex(f=>f.move>=target);await at(n<0?route.length-1:n);return true;}
+    async loadSgf(text,name,move=100000,options={}){if(!load(text,name))return false;if(options.edited){dirty=true;editing=true;}const target=Math.max(0,Number(move)||0);let n=frames.findIndex(f=>f.move>=target);await at(n<0?route.length-1:n);return true;}
   });
 
   function stopAuto(){clearTimeout(autoTimer);autoTimer=null;autoPlaying=false;syncAuto();}
