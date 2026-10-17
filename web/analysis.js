@@ -42,7 +42,6 @@ $('engine-pick-config').after(registration);
 for(const kind of ['exe','model','config']){const input=$('engine-'+kind),label=input.parentElement,row=document.createElement('div');row.className='engine-path-row';label.htmlFor=input.id;label.after(row);row.append(input,$('engine-pick-'+kind));}
 $('engine-settings').after($('engine-connect').parentElement);$('engine-connect').parentElement.classList.add('engine-actions');
 $('engine-connect').parentElement.after($('engine-notice'));
-const firstButton=document.createElement('button');firstButton.id='analysis-first';firstButton.textContent='第一候補を着手';firstButton.title='第一候補を着手します（F2）。棋譜のロックを解除して編集します';firstButton.disabled=true;$('analyze-live').after(firstButton);
 const regionLabel=document.createElement('div');regionLabel.className='region-analysis-toggle';regionLabel.innerHTML='<label><input type="checkbox" id="analysis-region"> 網掛け領域内だけ解析</label><button type="button" id="analysis-shade" title="網掛けを配置します。ドラッグで連続して配置できます">網掛け</button>';regionLabel.title='対象の石と空点を含む部分全体を網掛けしてください。任意の形に対応。外側の石は残し、黒白とも領域内とパスだけを検討します。死活の正解を保証する機能ではありません。';pane.prepend(regionLabel);
 const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.id='analysis-overlay';overlay.setAttribute('aria-hidden','true');document.querySelector('.canvas-wrap').append(overlay);
 let running=false,ready=false,polling=false,session=null,results=new Map(),active=null,engineMeta=null,handshake=null,selectedCandidate=0,logs=[],timer=null,unsaved=false,pendingCalls=0,lastRu=null,previewLine=null;
@@ -148,7 +147,6 @@ function svgElement(tag,attrs,text,parent=overlay){const e=document.createElemen
 function syncSummary(){const s=snap();$('analysis-summary').hidden=!!(active&&session?.analysisRun?.scope==='all')||!s||!matches()||!results.has(s.index);}
 function renderResult(){
  syncSummary();
- firstButton.disabled=!matches()||!results.get(snap()?.index)?.result.moveInfos.length||document.body.classList.contains('scoring-mode');
  const s=snap(),item=matches()?results.get(s.index):null;
  updateVisits();
  if(previewLine&&(previewLine.sgf!==s?.sgf||previewLine.path!==JSON.stringify(s?.path)||previewLine.index!==s?.index||!item||pane.hidden))clearPreview();
@@ -243,7 +241,6 @@ function playFirst(){
  const s=snap(),candidate=results.get(s.index)?.result.moveInfos[0];if(!candidate){note('現在の局面を解析してからF2を押してください。');return;}
  try{clearPreview();api.analysisSnapshot();$('edit').click();api.playAnalysisMove(A.point(candidate.move,s.size),s);}catch(e){note(e.message);}displayState();
 }
-firstButton.onclick=playFirst;
 document.addEventListener('keydown',e=>{if(e.key!=='F2'||e.defaultPrevented||e.isComposing||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;e.preventDefault();e.stopPropagation();if(!e.repeat)playFirst();},true);
 let spaceReserved=false;
 document.addEventListener('keydown',event=>{if(event.code!=='Space'&&event.key!==' ')return;if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;const target=event.target;if(target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;event.preventDefault();event.stopPropagation();spaceReserved=true;if(event.repeat)return;if(!ready){requestAnalysis('live');return;}if(pendingCalls>0)return;if(live||active)cancel();else toggleLive();},true);

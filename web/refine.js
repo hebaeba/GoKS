@@ -39,5 +39,5 @@ $('tab-settings').textContent='エンジン設定';
 const boardTitle=q('.game-title');q('.board-block').prepend(boardTitle);q('.brand').hidden=true;q('.app-header').classList.add('board-title-moved');
 const displayRow=$('board-display-options').lastElementChild,editRow=$('board-edit-options').lastElementChild;
 const moves=document.createElement('div');moves.className='move-edit-group';moves.append($('pass'),$('delete-move'),$('insert'),$('cancel-insert'));displayRow.append(moves);editRow.append(q('.board-view-tools'));
-$('candidate-settings').before(q('.region-analysis-toggle'));
+q('.analysis-primary').append(q('.region-analysis-toggle'));
 })();

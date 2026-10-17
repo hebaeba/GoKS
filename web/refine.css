@@ -13,3 +13,19 @@ body #board-divider #board-fit.divider-reset{position:absolute;top:0;left:50%;tr
 
 /* Region tool shortcut stays beside its scope checkbox. */
 .region-analysis-toggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.region-analysis-toggle label{display:inline-flex;align-items:center;gap:4px}.region-analysis-toggle #analysis-shade{flex:0 0 auto;width:auto}
+
+/* Preserve the original two-column tool order at every inspector width. */
+body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
+.analysis-primary .region-analysis-toggle{margin:0 0 0 auto;flex:0 1 auto;font-size:12px;gap:5px}.analysis-primary .region-analysis-toggle label{white-space:normal}
+
+/* Preserve the original two-column tool order at every inspector width. */
+body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
+.analysis-primary .region-analysis-toggle{margin:0 0 0 auto;flex:0 1 auto;font-size:12px;gap:5px}.analysis-primary .region-analysis-toggle label{white-space:normal}
+
+/* Preserve the original two-column tool order at every inspector width. */
+body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
+.analysis-primary .region-analysis-toggle{margin:0 0 0 auto;flex:0 1 auto;font-size:12px;gap:5px}.analysis-primary .region-analysis-toggle label{white-space:normal}
+
+/* Preserve the original two-column tool order at every inspector width. */
+body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
+.analysis-primary .region-analysis-toggle{margin:0 0 0 auto;flex:0 1 auto;font-size:12px;gap:5px}.analysis-primary .region-analysis-toggle label{white-space:normal}
