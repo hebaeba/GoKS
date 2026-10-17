@@ -42,7 +42,7 @@ $('engine-pick-config').after(registration);
 for(const kind of ['exe','model','config']){const input=$('engine-'+kind),label=input.parentElement,row=document.createElement('div');row.className='engine-path-row';label.htmlFor=input.id;label.after(row);row.append(input,$('engine-pick-'+kind));}
 $('engine-settings').after($('engine-connect').parentElement);$('engine-connect').parentElement.classList.add('engine-actions');
 $('engine-connect').parentElement.after($('engine-notice'));
-const regionLabel=document.createElement('label');regionLabel.className='region-analysis-toggle';regionLabel.innerHTML='<input type="checkbox" id="analysis-region"> 網掛け領域内だけ解析';regionLabel.title='対象の石と空点を含む部分全体を網掛けしてください。任意の形に対応。外側の石は残し、黒白とも領域内とパスだけを検討します。死活の正解を保証する機能ではありません。';pane.prepend(regionLabel);
+const regionLabel=document.createElement('div');regionLabel.className='region-analysis-toggle';regionLabel.innerHTML='<label><input type="checkbox" id="analysis-region"> 網掛け領域内だけ解析</label><button type="button" id="analysis-shade" title="網掛けを配置します。ドラッグで連続して配置できます">網掛け</button>';regionLabel.title='対象の石と空点を含む部分全体を網掛けしてください。任意の形に対応。外側の石は残し、黒白とも領域内とパスだけを検討します。死活の正解を保証する機能ではありません。';pane.prepend(regionLabel);
 const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.id='analysis-overlay';overlay.setAttribute('aria-hidden','true');document.querySelector('.canvas-wrap').append(overlay);
 let running=false,ready=false,polling=false,session=null,results=new Map(),active=null,engineMeta=null,handshake=null,selectedCandidate=0,logs=[],timer=null,unsaved=false,pendingCalls=0,lastRu=null,previewLine=null;
 let stopping=null,live=false,liveTarget='',followVersion=0,followTimer=null,followQueue=Promise.resolve();
@@ -124,7 +124,7 @@ for(const choice of s.path){node=node.children[choice];if(choice>0)branches.push
 $('analysis-context').textContent='解析対象：'+(branches.length?'変化（'+branches.join('・')+'手で分岐）':'本譜')+' ／ 初期局面～'+moves+'手';
 $('analysis-rule-warning').hidden=!(mapped&&mapped!==$('analysis-rules').value);
 
-$('analysis-stale').hidden=!session||matches();$('analysis-stale').textContent='棋譜・変化・解析ルールが保存結果と異なります。盤上の候補手を消しています。解析をやり直すか、保存ファイルを開いてください。';renderResult();renderGraph();}
+if(session&&matches())session.snapshot={...s,index:session.snapshot.index};$('analysis-stale').hidden=!session||matches();$('analysis-stale').textContent='棋譜・変化・解析ルールが保存結果と異なります。盤上の候補手を消しています。解析をやり直すか、保存ファイルを開いてください。';renderResult();renderGraph();}
 function clearPreview(){previewLine=null;api.clearAnalysisPreview();overlay.classList.remove('preview-active');}
 function hoverCandidate(m,s,i){
  if(pane.hidden)return;selectedCandidate=i;
@@ -242,6 +242,7 @@ document.addEventListener('keyup',event=>{if((event.code==='Space'||event.key===
 window.addEventListener('blur',()=>spaceReserved=false);
 window.addEventListener('kifu-board-view',()=>{clearPreview();renderResult();});
 $('analyze-live').onclick=toggleLive;
+$('analysis-shade').onclick=()=>{$('edit').click();if(!document.body.classList.contains('editing-mode'))return;document.querySelector('[data-tool="DD"]')?.click();};
 $('analysis-region').onchange=async()=>{await cancel();clearPreview();controls();displayState();};
 async function requestAnalysis(scope){
  if(ready){if(scope==='all')return analyze(true);return toggleLive();}
@@ -265,6 +266,12 @@ setTimeout(initBundledEngine,0);
 $('engine-connect').onclick=async()=>{if(pendingCalls)return;if(running||handshake)await disconnect();await connect();};$('engine-disconnect').onclick=disconnect;const quick=document.createElement('button');quick.id='engine-quick';quick.textContent='起動';$('engine-active').append(quick);quick.onclick=()=>running?disconnect():connect();$('analyze-all').onclick=()=>requestAnalysis('all');
 $('analysis-save').onclick=async()=>{try{if(!session||!results.size)return;const archive={format:'kifu-katago-analysis',version:1,perspective:'BLACK',...session,results:[...results.values()].sort((a,b)=>a.index-b.index),saved:new Date().toISOString()};await GoExport.save(new Blob([JSON.stringify(archive,null,2)],{type:'application/json'}),'棋譜解析.kifu-analysis.json');unsaved=false;note('解析を保存しました。');}catch(e){note('保存できません：'+e.message);}};
 $('analysis-open').onclick=()=>$('analysis-file').click();$('analysis-file').onchange=async()=>{const file=$('analysis-file').files[0];$('analysis-file').value='';if(!file)return;try{if(file.size>32*1024*1024)throw Error('解析ファイルは32MB以内です。');const data=A.validateArchive(JSON.parse(await file.text()));if(unsaved&&!confirm('保存していない解析結果を置き換えますか？'))return;if(!await api.loadAnalysisSnapshot(data.snapshot))return;$('batch-progress').hidden=true;$('batch-progress').dataset.state='';stopping=null;$('analysis-region').checked=!!data.region;session={snapshot:api.peekAnalysisSnapshot(),region:data.region||null,rules:data.rules,engine:data.engine||null,created:data.created||'',timing:data.timing||null,analysisRun:data.analysisRun||null};results=new Map(data.results.map(item=>[item.index,item]));$('analysis-rules').value=data.rules;unsaved=false;selectedCandidate=0;note('保存済み解析を読み込みました。'+results.size+'局面。グラフから局面を選べます。');controls();displayState();}catch(e){note('読み込めません：'+e.message);}};
+// Replacing a record retires its analysis, including any late engine response.
+window.addEventListener('kifu-record-replaced',()=>{
+ const previous=active;endLive();active=null;stopping=null;session=null;results=new Map();unsaved=false;selectedCandidate=0;lastRu=null;
+ clearPreview();$('analysis-progress').hidden=true;$('analysis-progress').value=0;$('batch-progress').hidden=true;$('batch-progress').dataset.state='';note('');controls();displayState();
+ if(previous?.id)call('send',{id:uid(),action:'terminate',terminateId:previous.id}).catch(e=>log(e.message));
+});
 window.addEventListener('kifu-position-change',()=>{clearPreview();const s=snap();if(live)scheduleLive();else if(active?.infinite&&s&&(s.index!==active.index||A.identity(s)!==A.identity(session.snapshot)))cancel();displayState();});window.addEventListener('workspace-layout',()=>{clearPreview();overlay.hidden=$('pane-analysis').hidden;displayState();});window.addEventListener('beforeunload',e=>{if(active||live||unsaved){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{if(window.KifuRemote)window.KifuRemote.call('stop').catch(()=>{});else if(native())native()('engine_call',{action:'stop',payload:{}}).catch(()=>{});else if(token)fetch('/api/engine',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action:'stop',payload:{}})}).catch(()=>{});});
 controls();displayState();

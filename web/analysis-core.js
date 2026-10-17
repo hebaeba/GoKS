@@ -7,15 +7,18 @@ function gtp(p,size){return p===null?'pass':letters[p%size]+(size-Math.floor(p/s
 function point(move,size){if(/^pass$/i.test(move))return null;const m=/^([A-HJ-T])(\d{1,2})$/.exec(move);if(!m)throw Error('候補手の座標が不正です');const x=letters.indexOf(m[1]),y=size-Number(m[2]);if(x<0||x>=size||y<0||y>=size)throw Error('候補手が盤外です');return y*size+x;}
 // Prefix identities exclude sibling variations: adding a variation preserves shared results.
 function positionKeys(snapshot){
- let node=S.parse(snapshot.sgf).root;const props=[node.props],keys=[JSON.stringify([snapshot.size,snapshot.komi,props])];
- for(const choice of snapshot.path){node=node.children[choice];if(!node)throw Error('変化の経路が不正です');props.push(node.props);keys.push(JSON.stringify([snapshot.size,snapshot.komi,props]));}
+ let node=S.parse(snapshot.sgf).root;const props=[analysisProps(node.props)],keys=[JSON.stringify([snapshot.size,snapshot.komi,props])];
+ for(const choice of snapshot.path){node=node.children[choice];if(!node)throw Error('変化の経路が不正です');props.push(analysisProps(node.props));keys.push(JSON.stringify([snapshot.size,snapshot.komi,props]));}
  return keys;
 }
 function rebaseResults(previous,next,results){
  const oldKeys=positionKeys(previous),newKeys=positionKeys(next),byKey=new Map([...results].map(([i,v])=>[oldKeys[i],v]));
  return new Map(newKeys.flatMap((key,i)=>byKey.has(key)?[[i,{...byKey.get(key),index:i}]]:[]));
 }
-function identity(snapshot){return JSON.stringify([snapshot.sgf,snapshot.path]);}
+// Visual annotations and prose do not change the engine position. DD is checked
+// separately against the selected analysis region by the UI.
+function analysisProps(props){return Object.fromEntries(Object.entries(props).filter(([key])=>!['DD','TR','SQ','CR','MA','LB','C','N'].includes(key)));}
+function identity(snapshot){const root=S.parse(snapshot.sgf).root,stack=[root];while(stack.length){const node=stack.pop();node.props=analysisProps(node.props);stack.push(...node.children);}return JSON.stringify([S.write(root),snapshot.path,snapshot.size,snapshot.komi]);}
 function effectiveRules(ru){const s=String(ru||'').toLowerCase();if(/japan|日本/.test(s))return 'japanese';if(/chinese|中国/.test(s))return 'chinese';if(!s)return null;return null;}
 function stones(state){return state.board.flatMap((c,p)=>c?[[c===1?'B':'W',gtp(p,state.size)]]:[]);}
 function regionPoints(snapshot){let node=S.parse(snapshot.sgf).root,values=node.props.DD;for(let i=0;i<snapshot.index;i++){node=node.children[snapshot.path[i]];if(!node)throw Error('領域の局面が不正です');if(node.props.DD)values=node.props.DD;}return [...new Set(R.expanded(values||[],snapshot.size))].sort((a,b)=>a-b);}
