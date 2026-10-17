@@ -1,9 +1,10 @@
 /* Independent Go Editor: newly implemented raster exports and GIF89a writer. MIT. */
 (function(root){'use strict';
  async function save(blob,name){
-  if(root.__TAURI_INTERNALS__?.invoke){const result=await root.__TAURI_INTERNALS__.invoke("desktop_save",{name,bytes:Array.from(new Uint8Array(await blob.arrayBuffer()))});return result.saved;}
-  if(root.showSaveFilePicker){let handle;try{handle=await root.showSaveFilePicker({suggestedName:name});}catch(error){if(error.name==='AbortError')return false;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name))throw error;}if(handle){const out=await handle.createWritable();await out.write(blob);await out.close();return true;}}
-  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return true;
+  function saved(ok){if(ok&&/\.sgf$/i.test(name)&&root.dispatchEvent)root.dispatchEvent(new Event('kifu-record-saved'));return ok;}
+  if(root.__TAURI_INTERNALS__?.invoke){const result=await root.__TAURI_INTERNALS__.invoke("desktop_save",{name,bytes:Array.from(new Uint8Array(await blob.arrayBuffer()))});return saved(result.saved);}
+  if(root.showSaveFilePicker){let handle;try{handle=await root.showSaveFilePicker({suggestedName:name});}catch(error){if(error.name==='AbortError')return false;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name))throw error;}if(handle){const out=await handle.createWritable();await out.write(blob);await out.close();return saved(true);}}
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return saved(true);
  }
  function raster(canvas,type='png'){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('画像を生成できません。')),type==='jpg'?'image/jpeg':'image/png',.88));}
  function mainOnly(game,clean=false){let first=null,tail=null,current=game;while(current){const props=Object.create(null);for(const [key,value] of Object.entries(current.props))if(!(clean&&['C','GC','N'].includes(key)))props[key]=value.slice();const node={props,children:[]};if(tail)tail.children.push(node);else first=node;tail=node;current=current.children[0];}first.props.CA=['UTF-8'];return first;}

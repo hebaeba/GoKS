@@ -319,8 +319,8 @@
       try{handle=await window.showSaveFilePicker({suggestedName:originalName,types:[{description:'SGF棋譜',accept:{'application/x-go-sgf':['.sgf']}}]});}
       catch(error){if(error.name==='AbortError')return;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name)){report('保存先を開けませんでした：'+error.message,true);return;}}
     }
-    if(!handle){download(content);return;}
-    try{const stream=await handle.createWritable();await stream.write(content);await stream.close();dirty=false;report('SGFファイルを保存しました。');}
+    if(!handle){download(content);window.dispatchEvent(new Event('kifu-record-saved'));return;}
+    try{const stream=await handle.createWritable();await stream.write(content);await stream.close();dirty=false;window.dispatchEvent(new Event('kifu-record-saved'));report('SGFファイルを保存しました。');}
     catch(error){report('保存できませんでした：'+error.message,true);}
   };
   window.addEventListener('beforeunload',e=>{if(dirty||hasCommentDraft()||hasInfoDraft()){e.preventDefault();e.returnValue='';}});

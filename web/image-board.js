@@ -12,8 +12,16 @@ dialog.innerHTML=`<div class="image-title"><h2 id="image-board-title">画像か�
 document.body.append(dialog);
 const open=document.createElement('button');open.id='workspace-image-open';open.textContent='画像から';open.title='写真や碁盤図から石の配置を取り込みます';$('workspace-open').after(open);
 const menu=document.createElement('button');menu.textContent='画像・写真から';menu.type='button';$('load-options').append(menu);
-let image=null,pixels=null,corners=[],result=null,name='',loadToken=0,focus=0;
+let image=null,pixels=null,corners=[],result=null,name='',loadToken=0,focus=0,imported=false,committing=false;
 const source=$('image-source'),review=$('image-review'),ctx=source.getContext('2d'),rc=review.getContext('2d');
+function resetImage(){
+ loadToken++;image=null;pixels=null;corners=[];result=null;name='';focus=0;imported=false;
+ source.width=640;source.height=400;$('image-file').value='';$('image-camera').value='';
+ $('image-turn').value='B';$('image-komi').value='0';options();status('画像を選んでください。');
+}
+window.addEventListener('kifu-record-replaced',()=>{if(!committing)resetImage();});
+window.addEventListener('kifu-record-saved',()=>{if(imported)resetImage();});
+for(const id of ['open','paste-board','import-text','load-text-choice'])$(id)?.addEventListener('click',()=>{if(imported)resetImage();},true);
 function status(text){$('image-status').textContent=text;}
 function bounds(){const size=+$('image-size').value,left=+$('image-left').value,right=+$('image-right').value,top=+$('image-top').value,bottom=+$('image-bottom').value;if(right<=left||bottom<=top)throw Error('横・縦とも２交点以上となる範囲を指定してください。');return {size,left,top,cols:right-left+1,rows:bottom-top+1};}
 function options(){const n=+$('image-size').value;for(const id of ['left','right','top','bottom']){const e=$('image-'+id);e.replaceChildren();for(let i=0;i<n;i++)e.add(new Option(['left','right'].includes(id)?letters[i]:String(n-i),i));e.value=['right','bottom'].includes(id)?n-1:0;}invalidate();}
@@ -26,7 +34,7 @@ function drawReview(){const n=+$('image-size').value,g=440/(n-1),start=30;rc.fil
  if(!result)return;result.board.forEach((v,i)=>{const x=start+(b.left+i%b.cols)*g,y=start+(b.top+Math.floor(i/b.cols))*g;if(v){rc.beginPath();rc.arc(x,y,g*.44,0,Math.PI*2);rc.fillStyle=v===1?'#111':'#fff';rc.fill();rc.strokeStyle='#222';rc.stroke();}if(result.confidence[i]<.5){rc.strokeStyle='#c66300';rc.lineWidth=2;rc.strokeRect(x-g*.44,y-g*.44,g*.88,g*.88);rc.lineWidth=1;}if(document.activeElement===review&&i===focus){rc.strokeStyle='#007a99';rc.strokeRect(x-g*.48,y-g*.48,g*.96,g*.96);}});
 }
 async function readFile(file){if(!file)return;const token=++loadToken;image=null;pixels=null;corners=[];invalidate();status('画像を読み込んでいます…');try{if(file.size>25*1024*1024)throw Error('画像は25MB以下にしてください。');if(!/^image\/(png|jpeg|webp)$/.test(file.type)&&! /\.(png|jpe?g|webp)$/i.test(file.name))throw Error('PNG・JPG・WebP画像を選んでください。');const head=new Uint8Array(await file.slice(0,12).arrayBuffer());if(!(head[0]===137&&head[1]===80&&head[2]===78&&head[3]===71||head[0]===255&&head[1]===216&&head[2]===255||String.fromCharCode(...head.slice(0,4))==='RIFF'&&String.fromCharCode(...head.slice(8,12))==='WEBP'))throw Error('PNG・JPG・WebP形式の画像を選んでください。');const url=URL.createObjectURL(file),im=new Image();try{await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=()=>reject(Error('画像を開けませんでした。'));im.src=url;});}finally{URL.revokeObjectURL(url);}if(token!==loadToken||!dialog.open)return;if(im.width*im.height>40000000)throw Error('画像は4000万画素以下にしてください。');const scale=Math.min(1,1600/Math.max(im.width,im.height));source.width=Math.round(im.width*scale);source.height=Math.round(im.height*scale);image=im;ctx.drawImage(im,0,0,source.width,source.height);pixels=ctx.getImageData(0,0,source.width,source.height);name=file.name.replace(/\.[^.]+$/,'')+'.sgf';drawSource();status('左上の交点をクリックしてください。部分画像は先に範囲を指定してください。');}catch(e){status(e.message);}}
-open.onclick=menu.onclick=()=>{if(document.body.classList.contains('scoring-mode'))return;if(!dialog.open)dialog.showModal();};
+open.onclick=menu.onclick=()=>{if(document.body.classList.contains('scoring-mode'))return;if(imported)resetImage();if(!dialog.open)dialog.showModal();};
 $('image-file-open').onclick=()=>$('image-file').click();$('image-camera-open').onclick=()=>$('image-camera').click();for(const id of ['image-file','image-camera'])$(id).onchange=()=>{const f=$(id).files[0];$(id).value='';readFile(f);};
 $('image-size').onchange=options;for(const id of ['left','right','top','bottom'])$('image-'+id).onchange=invalidate;$('image-full').onclick=options;
 source.onclick=e=>{if(!pixels||corners.length>=4)return;const r=source.getBoundingClientRect();corners.push({x:(e.clientX-r.left)*source.width/r.width,y:(e.clientY-r.top)*source.height/r.height});invalidate();status(corners.length===4?'水色の線が元画像の交点に合っているか確認し、「石を認識する」を押してください。':['左上','右上','右下','左下'][corners.length]+'の交点をクリックしてください。');};
@@ -36,7 +44,7 @@ function change(i){if(!result)return;result.board[i]=(result.board[i]+1)%3;resul
 review.onclick=e=>{if(!result)return;const b=bounds(),r=review.getBoundingClientRect(),g=440/(b.size-1),x=Math.round(((e.clientX-r.left)*500/r.width-30)/g)-b.left,y=Math.round(((e.clientY-r.top)*500/r.height-30)/g)-b.top;if(x<0||y<0||x>=b.cols||y>=b.rows)return;focus=y*b.cols+x;change(focus);};
 review.onkeydown=e=>{if(!result)return;const b=bounds();if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();change(focus);return;}if(e.key.startsWith('Arrow')){e.preventDefault();e.stopPropagation();let x=focus%b.cols,y=Math.floor(focus/b.cols);x+=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;y+=e.key==='ArrowDown'?1:e.key==='ArrowUp'?-1:0;focus=Math.max(0,Math.min(b.rows-1,y))*b.cols+Math.max(0,Math.min(b.cols-1,x));drawReview();}};
 review.onfocus=review.onblur=drawReview;$('image-confirm').onchange=()=>$('image-import').disabled=!result||!$('image-confirm').checked;
-$('image-import').onclick=async()=>{try{if(!result||!$('image-confirm').checked)return;const sgf=C.toSgf({...bounds(),board:result.board,turn:$('image-turn').value,komi:+$('image-komi').value});if(await IndependentGo.loadSgf(sgf,name,0,{edited:true})){dialog.close();$('edit').click();$('rotate-reset').click();}}catch(e){status(e.message);}};
+$('image-import').onclick=async()=>{try{if(!result||!$('image-confirm').checked)return;const sgf=C.toSgf({...bounds(),board:result.board,turn:$('image-turn').value,komi:+$('image-komi').value});committing=true;if(await IndependentGo.loadSgf(sgf,name,0,{edited:true})){imported=true;dialog.close();$('edit').click();$('rotate-reset').click();}}catch(e){status(e.message);}finally{committing=false;}};
 $('image-close').onclick=$('image-cancel').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{loadToken++;});
 document.querySelector('.help ul')?.insertAdjacentHTML('beforeend','<li>「画像から」で写真・盤面図を局面として取り込めます。路数と写っている範囲を指定し、四隅の交点を選びます。認識結果は必ず確認・修正してください。着手順やアゲハマは復元しません。画像は外部へ送信しません。</li><li>解析結果の第一候補はF2キーでも着手できます。ロックは解除されます。文字入力中やダイアログ表示中は作動しません。</li>');
 })();
