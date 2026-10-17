@@ -45,7 +45,7 @@ function plan(snapshot,rules,visits,all){
   const explicitTurn=props.PL&&(!i||!props.B&&!props.W);
   if(i===0&&!props.B&&!props.W||setup||explicitTurn){base=R.copy(state);moves=[];initialPlayer=state.turn===1?'B':'W';if(i>0)reset=true;}
   else if(props.B||props.W){const c=props.B?'B':'W';if(!moves.length)initialPlayer=c;moves.push([c,gtp(R.coordinate(props[c][0],snapshot.size,true),snapshot.size)]);if(props.PL&&props.PL[0]!== (c==='B'?'W':'B')){base=R.copy(state);moves=[];initialPlayer=state.turn===1?'B':'W';reset=true;}}
-  if(all||i===snapshot.index)positions.push({index:i,move:state.move,turn:state.turn===1?'B':'W',reset,request:{boardXSize:snapshot.size,boardYSize:snapshot.size,initialStones:stones(base),initialPlayer,moves:moves.map(m=>m.slice()),komi:snapshot.komi,rules,maxVisits:visits,analysisPVLen:pvLength,includeOwnership:false,reportDuringSearchEvery:1}});
+  if(all||i===snapshot.index)positions.push({index:i,move:state.move,turn:state.turn===1?'B':'W',reset,request:{boardXSize:snapshot.size,boardYSize:snapshot.size,initialStones:stones(base),initialPlayer,moves:moves.map(m=>m.slice()),komi:snapshot.komi+(rules==='japanese'?base.captures[2]-base.captures[1]:0),rules,maxVisits:visits,analysisPVLen:pvLength,includeOwnership:false,reportDuringSearchEvery:1}});
  }
  const chosen=all?positions.filter((p,i)=>i===0||p.move!==positions[i-1].move||p.reset!==positions[i-1].reset):[positions[0]];
  if(all&&positions.some(p=>p.reset))throw Error('途中で配置石・手番を変更した棋譜の全局解析には未対応です。現在局面は配置図として解析できます。');

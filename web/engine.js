@@ -94,6 +94,7 @@
   }
   function apply(state, props, isRoot = false) {
     let next = copy(state);
+    if(isRoot){for(const [key,color] of [['XIGCAPB',WHITE],['XIGCAPW',BLACK]]){if(props[key]){const n=Number(props[key][0]);if(props[key].length!==1||!/^\d+$/.test(props[key][0])||!Number.isInteger(n)||n<0||n>9999)throw Error('取られた石の数が不正です。');next.captures[color]=n;}}}
     const setup = ['AE', 'AB', 'AW'].some(key => props[key]);
     if (props.B && props.W) throw Error('同じ局面に黒と白の着手があります。');
     if (setup && (props.B || props.W)) throw Error('配置石と着手が同じSGFノードにあります。');

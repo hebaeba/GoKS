@@ -209,7 +209,7 @@
     analysisPreview=null;
     document.body.classList.toggle('editing-mode',editing);queueMicrotask(()=>window.dispatchEvent(new Event('kifu-position-change')));
     syncAuto();invalidateGif();
-    const state=frames[index], max=frames.at(-1).move;const title=read(root.props,'GN')||(originalName!=='kifu.sgf'?originalName.replace(/\.sgf$/i,''):'新しい碁盤');firstElement('h1').textContent=title;firstElement('h1').title=title;
+    const state=frames[index], max=frames.at(-1).move;const title=read(root.props,'GN')||(originalName!=='kifu.sgf'?originalName.replace(/\.sgf$/i,''):'新しい碁盤');firstElement('h1').textContent=title;firstElement('h1').title=title;if(read(root.props,'XIGIMAGE')==='1'||title==='画像から取り込んだ局面'){const note=document.createElement('span');note.className='image-position-note';note.textContent='着手順・コウ履歴は不明です。';if(read(root.props,'XIGPARTIAL')==='1')note.title='画像の範囲外は未確認です。';firstElement('h1').append(note);}
     $('view').setAttribute('aria-pressed',String(!editing));$('edit').setAttribute('aria-pressed',String(editing));$('pass').disabled=!editing;$('pass').hidden=false;$('delete-move').hidden=false;$('delete-move').disabled=!editing||!!insertion||index===0;
     $('numbers').setAttribute('aria-pressed',String(numbers));$('numbers').textContent=numbers?'手数無表示':'手数の表示';
     $('first').disabled=$('back').disabled=$('back10').disabled=index===0;
@@ -220,7 +220,7 @@
     $('komi-input').value=String(currentKomi());$('komi-input').disabled=!!insertion||!!scoreSession;
     for(const [id,key,fallback] of [['black-name','PB','黒番'],['white-name','PW','白番']]){$(id).textContent=read(root.props,key,fallback);$(id).title=$(id).textContent;}
     $('black-turn').classList.toggle('active',state.turn===R.BLACK);$('white-turn').classList.toggle('active',state.turn===R.WHITE);
-    const comment=read(route[index].props,'C'),commentBox=$('comment');commentBox.replaceChildren();
+    const comment=read(route[index].props,'C').replace(/^画像から石の配置を取り込みました。着手順・アゲハマ・コウ履歴は不明です。(?:画像の範囲外は未確認です。)?$/, ''),commentBox=$('comment');commentBox.replaceChildren();
     if(index===0){const data=document.createElement('dl');data.className='root-info';for(const [key,label] of [['GN','対局名'],['PB','黒番'],['BR','棋力'],['PW','白番'],['WR','棋力'],['EV','大会'],['RO','回戦'],['DT','日付'],['PC','場所'],['RE','結果'],['GC','対局説明']]){const value=read(root.props,key);if(!value||(key==='GN'&&value==='画像から取り込んだ局面'))continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;data.append(dt,dd);}if(data.childNodes.length)commentBox.append(data);}
     if(comment){const text=document.createElement('p');text.textContent=comment;commentBox.append(text);}$('comment-area').hidden=!commentBox.childNodes.length;
     $('metadata').replaceChildren();for(const [key,label] of [['PB','黒番'],['PW','白番'],['GN','対局名'],['EV','大会'],['DT','日付'],['RE','結果'],['RU','ルール'],['GC','対局説明']]){if(!root.props[key])continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=read(root.props,key);$('metadata').append(dt,dd);}
