@@ -46,7 +46,6 @@ const hideHint=()=>hint.hidden=true;open.addEventListener('mouseenter',()=>hint.
 
 // Focus the board without placing a move before pasting (right-click or keyboard Tab).
 $('board').addEventListener('contextmenu',event=>{event.preventDefault();$('board').focus();paste.click();});
-q('.help ul').insertAdjacentHTML('beforeend','<li>棋譜ファイルを盤面にドラッグして読み込めます。SGFテキストは盤面にフォーカスしてCtrl+V、または「棋譜欄」の「クリップボードから」で読み込めます。</li><li>盤面の回転は表示方向だけを変更します。保存するSGFの座標は変わりません。画像・GIF・印刷には表示方向が反映されます。</li>');
 
 // Compact controls retain the existing elements and their event handlers.
 const controls=q('.controls'),displayBox=document.createElement('details');displayBox.id='board-display-options';displayBox.innerHTML='<summary>盤面表示</summary><div class="compact-options"></div>';controls.append(displayBox);displayBox.lastElementChild.append($('numbers'),q('.recent-label'),rotation);
@@ -59,7 +58,6 @@ let ratio=.59,autoFit=true;try{const saved=Number(localStorage.getItem('kifu-boa
 function resizeBoard(value){ratio=Math.max(.35,Math.min(.76,value));const w=grid.clientWidth,boardWidth=Math.max(380,Math.min(w-352,autoFit?Math.min(w*.59,Math.max(380,innerHeight-295)):w*ratio));grid.style.setProperty('--board-width',boardWidth+'px');divider.setAttribute('aria-valuemin','35');divider.setAttribute('aria-valuemax','76');divider.setAttribute('aria-valuenow',String(Math.round(ratio*100)));}
 function saveWidth(){try{localStorage.setItem('kifu-board-ratio',String(ratio));}catch{}}
 divider.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;divider.setPointerCapture(e.pointerId);autoFit=false;ratio=parseFloat(grid.style.getPropertyValue('--board-width'))/grid.clientWidth;divider.classList.add('dragging');e.preventDefault();};divider.onpointermove=e=>{if(divider.hasPointerCapture(e.pointerId))resizeBoard((e.clientX-grid.getBoundingClientRect().left)/grid.clientWidth);};divider.onpointerup=e=>{if(divider.hasPointerCapture(e.pointerId))divider.releasePointerCapture(e.pointerId);divider.classList.remove('dragging');saveWidth();};divider.onpointercancel=()=>divider.classList.remove('dragging');divider.onkeydown=e=>{if(e.target!==divider)return;if(!['ArrowLeft','ArrowRight','Home'].includes(e.key))return;e.preventDefault();ratio=parseFloat(grid.style.getPropertyValue('--board-width'))/grid.clientWidth;autoFit=e.key==='Home';resizeBoard(e.key==='Home'?.59:ratio+(e.key==='ArrowRight'?.02:-.02));saveWidth();};fit.onclick=()=>{autoFit=true;resizeBoard(.59);try{localStorage.removeItem('kifu-board-ratio');}catch{}};new ResizeObserver(()=>resizeBoard(ratio)).observe(grid);resizeBoard(ratio);
-q('.help ul').insertAdjacentHTML('beforeend','<li>パソコンでは碁盤と右側メニューの境界をドラッグして表示幅を調整できます。「盤面表示」の「画面に合わせる」で標準に戻ります。</li><li>金枠と「実・順位」は実戦の次の手を示します。青色は最有力候補です。「終了」はエンジンを終了し、「解析を停止」はエンジンを残して解析だけ止めます。</li>');
 
 q('.workspace-mode').hidden=true;q('.modes').hidden=true;q('.mode-indicator').hidden=true;
 const lock=document.createElement('label');lock.className='board-lock';lock.innerHTML='<input id="board-lock" type="checkbox"> 棋譜をロック';q('.topline').append(lock);lock.title='ロック中は棋譜を変更せず、手順の移動と解析ができます';
@@ -72,5 +70,4 @@ const name=$('engine-active-name');name.tabIndex=0;name.setAttribute('role','but
 function closePicker(){enginePicker.hidden=true;name.setAttribute('aria-expanded','false');}
 function togglePicker(){if(!enginePicker.hidden){closePicker();return;}enginePicker.replaceChildren();for(const option of $('engine-profile').options){if(!option.value)continue;const b=document.createElement('button');b.textContent=option.textContent;b.disabled=$('engine-connect').disabled;b.onclick=()=>{closePicker();$('engine-profile').value=option.value;$('engine-profile').onchange();$('engine-connect').click();};enginePicker.append(b);}enginePicker.hidden=false;name.setAttribute('aria-expanded','true');}
 name.onclick=togglePicker;name.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePicker();}};document.addEventListener('pointerdown',e=>{if(!enginePicker.contains(e.target)&&!name.contains(e.target))closePicker();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePicker();});
-q('.help ul').insertAdjacentHTML('beforeend','<li>「棋譜をロック」中は着手や削除ができません。読み込んだ棋譜はロックされ、新しい碁盤・置碁では解除されます。タブ切替はロックや解析の状態を変えません。</li><li>エンジン名を押すと登録済みのエンジンを選べます。選択すると現在の解析を停止してエンジンを切り替えます。</li>');
 })();

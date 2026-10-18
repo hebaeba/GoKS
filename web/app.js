@@ -300,7 +300,7 @@
   dropLoad.onclick=async()=>{const file=pendingDrop;pendingDrop=null;dropNotice.hidden=true;if(file){const loaded=await importFile(file);dragStatus(loaded?'':'読込みを中止したか、棋譜の形式が正しくありません。');}};
   dropCancel.onclick=()=>{dropTicket++;pendingDrop=null;dropNotice.hidden=true;dragStatus('読込みを中止しました。');};
 
-  dropZone.title='棋譜ファイルをここへドラッグして読み込めます。盤面にフォーカスしてCtrl+VでSGFを貼り付けできます。';
+  dropZone.removeAttribute('title');
   document.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files'))e.preventDefault();});
   document.addEventListener('drop',e=>{if(e.dataTransfer.files.length)e.preventDefault();dropZone.classList.remove('file-dragover');});
   dropZone.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';dropZone.classList.add('file-dragover');}});

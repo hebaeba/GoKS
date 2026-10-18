@@ -136,13 +136,24 @@ function hoverCandidate(m,s,i){
 function leaveCandidate(){clearPreview();}
 function playCandidate(m,s){if(!document.body.classList.contains('editing-mode')){hoverCandidate(m,s,0);return;}clearPreview();try{api.playAnalysisMove(A.point(m.move,s.size),s);}catch(e){note(e.message);}displayState();}
 function bindCandidate(element,m,s,i){
- element.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')hoverCandidate(m,s,i);});
- element.addEventListener('pointerleave',leaveCandidate);
+ if(element.tagName.toLowerCase()==='button'){element.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')hoverCandidate(m,s,i);});element.addEventListener('pointerleave',leaveCandidate);}
  element.addEventListener('focus',()=>hoverCandidate(m,s,i));element.addEventListener('blur',leaveCandidate);
  element.onclick=e=>{e.stopPropagation();playCandidate(m,s);};
  if(element.tagName.toLowerCase()!=='button')element.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();playCandidate(m,s);}};
 }
-window.addEventListener('blur',clearPreview);
+let boardHover=null,boardTargets=[],hoveredMove=null;
+const hoverBoard=document.querySelector('.canvas-wrap');
+function showBoardHover(){
+ if(!boardHover||pane.hidden||document.querySelector('dialog[open]')||document.body.classList.contains('scoring-mode'))return;
+ const rect=overlay.getBoundingClientRect(),box=overlay.viewBox.baseVal;if(!rect.width||!box.width)return;
+ const x=(boardHover.x-rect.left)*box.width/rect.width,y=(boardHover.y-rect.top)*box.height/rect.height;
+ const hit=boardTargets.find(t=>Math.hypot(x-t.x,y-t.y)<=t.r);
+ if(hit){if(hoveredMove!==hit.m.move||!previewLine){hoveredMove=hit.m.move;hoverCandidate(hit.m,hit.s,hit.i);}}
+ else if(hoveredMove!==null){hoveredMove=null;clearPreview();}
+}
+hoverBoard.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;boardHover={x:e.clientX,y:e.clientY};showBoardHover();});
+hoverBoard.addEventListener('pointerleave',()=>{boardHover=null;hoveredMove=null;clearPreview();});
+window.addEventListener('blur',()=>{boardHover=null;hoveredMove=null;clearPreview();});
 function svgElement(tag,attrs,text,parent=overlay){const e=document.createElementNS(overlay.namespaceURI,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;parent.append(e);return e;}
 function syncSummary(){const s=snap();$('analysis-summary').hidden=!!(active&&session?.analysisRun?.scope==='all')||!s||!matches()||!results.has(s.index);}
 function renderResult(){
@@ -152,7 +163,7 @@ function renderResult(){
  if(previewLine&&(previewLine.sgf!==s?.sgf||previewLine.path!==JSON.stringify(s?.path)||previewLine.index!==s?.index||!item||pane.hidden))clearPreview();
  if(previewLine)return; // Keep pointer targets stable while the engine updates results.
  api.clearAnalysisPreview();
- $('analysis-candidates').replaceChildren();overlay.replaceChildren();$('analysis-winrate').textContent='—';$('analysis-score').textContent='—';$('analysis-played').textContent='';$('analysis-pv').textContent='候補手にマウスを重ねると読み筋を表示します。ロック解除中のクリック／タップでその１手を着手します。';$('candidate-count-note').textContent='';if(!item)return;
+ boardTargets=[];$('analysis-candidates').replaceChildren();overlay.replaceChildren();$('analysis-winrate').textContent='—';$('analysis-score').textContent='—';$('analysis-played').textContent='';$('analysis-pv').textContent='候補手にマウスを重ねると読み筋を表示します。ロック解除中のクリック／タップでその１手を着手します。';$('candidate-count-note').textContent='';if(!item)return;
  const r=item.result,position=A.positionAt(s),actual=position.next?.move;
  const viewWhite=display.perspective==='turn'&&position.state.turn===2,side=viewWhite?'白':'黒';const win=m=>((viewWhite?1-m.winrate:m.winrate)*100).toFixed(1);const lead=m=>((viewWhite?-1:1)*m.scoreLead);const leadText=m=>(lead(m)>=0?'+':'−')+Math.abs(lead(m)).toFixed(1);$('analysis-winrate-label').textContent=side+'勝率';$('candidate-winrate-heading').textContent=side+'勝率';$('candidate-perspective-note').textContent=side+'視点：勝率％／目数差（＋は'+side+'有利）';$('analysis-winrate').textContent=win(r.rootInfo)+'%';$('analysis-score').textContent=scoreText(r.rootInfo.scoreLead);
  const moves=r.moveInfos;if(selectedCandidate>=moves.length)selectedCandidate=0;
@@ -171,9 +182,10 @@ function renderResult(){
  const badgeText=m.move===actual?'実・'+(i+1):String(i+1),badgeWidth=gap*(m.move===actual?.85:i>=99?.50:i>=9?.38:.28);
  svgElement('rect',{class:'candidate-rank-badge',x:x+gap*.32,y:y-gap*.65,width:badgeWidth,height:gap*.30,rx:gap*.07,fill:'#fff',stroke:'#31554a','stroke-width':.5},undefined,g);
  svgElement('text',{class:'candidate-rank',x:x+gap*.32+badgeWidth/2,y:y-gap*.50,'text-anchor':'middle','dominant-baseline':'central','font-size':gap*.24,fill:'#154b43'},badgeText,g);
- bindCandidate(g,m,s,i);
+ boardTargets.push({m,s,i,x,y,r:gap*.52});bindCandidate(g,m,s,i);
  });
  if(actual&&actual!=='pass'){const p=A.point(actual,s.size);if(p!==null){const {x,y}=xy(p);const frame=svgElement('g',{class:'actual-move-frame','pointer-events':'none'});for(const [stroke,width]of [['#493600',.13],['#ffd447',.065]])svgElement('rect',{x:x-gap*.47,y:y-gap*.47,width:gap*.94,height:gap*.94,rx:gap*.15,fill:'none',stroke,'stroke-width':gap*width},undefined,frame);}}
+ showBoardHover();
  // app.js already renders the latest move number or mark; do not cover it with another ring.
 
 }
