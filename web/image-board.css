@@ -26,3 +26,5 @@ body #image-board-dialog #image-captured-black,body #image-board-dialog #image-c
 .about-open{display:block;margin:12px auto 0;font-size:12px}
 #analysis-overlay .candidate-mark{pointer-events:all}#analysis-overlay .candidate-mark>*{pointer-events:all}
 @media(pointer:coarse),(max-width:650px){html body :is(#numeric-sizing #numeric-field,input[type=number]){font-size:16px!important;line-height:24px!important;min-height:32px!important;height:32px!important;padding:4px!important}body #image-board-dialog #image-handicap,body #image-board-dialog #image-turn{font-size:16px;min-height:40px;height:40px}body #image-board-dialog .image-komi-stepper button{width:32px;min-width:32px;height:40px;min-height:40px;font-size:16px}body #image-board-dialog .image-game-info{gap:8px;flex-wrap:wrap}}
+
+footer .about-open{display:block;width:max-content;max-width:100%;margin:6px auto 0;padding:0;border:0;background:transparent;box-shadow:none;font-weight:700;color:#17676a;cursor:pointer}footer .about-open:hover{text-decoration:underline}
