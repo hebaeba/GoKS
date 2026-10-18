@@ -3,3 +3,11 @@
 #image-stone-count{font-weight:700;color:#163e32;background:#e4efe9;padding:4px 8px;border-radius:4px}.image-confirm-label{display:block;font-weight:700;color:#183e32;padding:8px;background:#fff3c8;border-radius:4px}
 
 .image-captured{flex-basis:100%;display:flex;align-items:center;gap:4px;flex-wrap:wrap}.image-captured input{width:5em}.game-title .image-position-note{display:inline-block;font-weight:400;font-size:.85em;margin-left:1em}
+
+.image-game-info{border-top:1px solid #b8ccc4;padding-top:8px;font-size:12px;gap:8px}
+#image-board-dialog .image-game-info input[type=number]{box-sizing:content-box;min-width:0;padding:3px 5px;appearance:textfield;font:inherit;height:1.5em}
+.image-game-info input::-webkit-inner-spin-button{appearance:none}
+#image-board-dialog #image-handicap{width:1.5ch}#image-board-dialog #image-komi{width:6ch}
+#image-board-dialog #image-captured-black,#image-board-dialog #image-captured-white{width:4ch}
+#image-board-dialog #image-turn{min-width:0;width:auto;padding:3px 5px;font:inherit}
+#guide-dialog{width:min(880px,94vw);height:88dvh;max-width:94vw;max-height:94dvh;padding:12px;border:1px solid #527c74;border-radius:8px}#guide-dialog::backdrop{background:#0008}.guide-top{display:flex;align-items:center;justify-content:space-between;gap:10px}#guide-frame{display:block;width:100%;height:calc(100% - 45px);border:0;margin-top:8px}

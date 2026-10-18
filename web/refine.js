@@ -41,3 +41,5 @@ const displayRow=$('board-display-options').lastElementChild,editRow=$('board-ed
 const moves=document.createElement('div');moves.className='move-edit-group';moves.append($('pass'),$('delete-move'),$('insert'),$('cancel-insert'));displayRow.append(moves);editRow.append(q('.board-view-tools'));
 q('.analysis-primary').append(q('.region-analysis-toggle'));
 })();
+
+;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();d.querySelector('strong').textContent=a.textContent;frame.src=a.href;d.showModal();};});frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();

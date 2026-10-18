@@ -32,11 +32,12 @@ function recognize(image,corners,cols,rows,{black=90,white=16,offset='auto'}={})
  }
  return {board,confidence,stats};
 }
-function toSgf({size,left,top,cols,rows,board,turn='B',komi=0,capturedBlack=0,capturedWhite=0}){
+function toSgf({size,left,top,cols,rows,board,turn='B',komi=0,capturedBlack=0,capturedWhite=0,handicap=0}){
  if(!Number.isInteger(size)||size<4||size>19||![left,top,cols,rows].every(Number.isInteger)||left<0||top<0||cols<2||rows<2||left+cols>size||top+rows>size||board.length!==cols*rows||board.some(v=>![0,1,2].includes(v))||!['B','W'].includes(turn)||!Number.isFinite(komi)||Math.abs(komi)>100)throw Error('取り込み範囲・石の配置・コミを確認してください。');
  if(![capturedBlack,capturedWhite].every(n=>Number.isInteger(n)&&n>=0&&n<=9999))throw Error('取られた石は0〜9999の整数で入力してください。');
+ if(!Number.isInteger(handicap)||handicap<0||handicap>9)throw Error('置き石は0〜9の整数で入力してください。');
  const at=(x,y)=>String.fromCharCode(97+x,97+y),stones=c=>board.flatMap((v,i)=>v===c?['['+at(left+i%cols,top+Math.floor(i/cols))+']']:[]).join('');
- return '(;GM[1]FF[4]CA[UTF-8]SZ['+size+']KM['+komi+']PL['+turn+']GN[画像から取り込んだ局面]'+(board.includes(1)?'AB'+stones(1):'')+(board.includes(2)?'AW'+stones(2):'')+'XIGIMAGE[1]XIGCAPB['+capturedBlack+']XIGCAPW['+capturedWhite+']'+(cols<size||rows<size?'XIGPARTIAL[1]':'')+')';
+ return '(;GM[1]FF[4]CA[UTF-8]SZ['+size+']KM['+komi+']HA['+handicap+']PL['+turn+']GN[画像から取り込んだ局面]'+(board.includes(1)?'AB'+stones(1):'')+(board.includes(2)?'AW'+stones(2):'')+'XIGIMAGE[1]XIGCAPB['+capturedBlack+']XIGCAPW['+capturedWhite+']'+(cols<size||rows<size?'XIGPARTIAL[1]':'')+')';
 }
 const api={transform,recognize,toSgf};if(typeof module!=='undefined')module.exports=api;else global.GoImageBoard=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
