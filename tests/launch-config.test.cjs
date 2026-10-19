@@ -3,6 +3,10 @@ const {launchConfig}=require('../backend/launch-config.cjs');
 test('KataGo, Leela and generic GTP get distinct argument sets; model files accept any extension',()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'kifu profile '));try{for(const f of ['engine.exe','weights-no-extension','weights.gz','default.cfg'])fs.writeFileSync(path.join(dir,f),'');const exe=path.join(dir,'engine.exe'),model=path.join(dir,'weights-no-extension'),cfg=path.join(dir,'default.cfg');
 const kata=launchConfig({exe,model},cfg);assert.deepEqual(kata.args.slice(0,5),['gtp','-model',model,'-config',cfg]);
 const leela=launchConfig({kind:'leelaz',exe,model,workdir:dir},cfg);assert.deepEqual(leela.args,['--gtp','--weights',model]);assert.equal(leela.cfg,null);assert.equal(leela.cwd,dir);
+for(const flag of ['-g','--gtp'])assert.deepEqual(launchConfig({kind:'leelaz',exe,model,extraArgs:[flag]},cfg).args,[flag,'--weights',model]);
+for(const flags of [['-g','-w',model],['--gtp','--weights',model],['-g','--weights='+model],['-g','-w'+model]])assert.deepEqual(launchConfig({kind:'leelaz',exe,model,extraArgs:flags},cfg).args,flags);
+assert.deepEqual(launchConfig({kind:'leelaz',exe,model,extraArgs:['--threads','2']},cfg).args,['--gtp','--threads','2','--weights',model]);
+
 const generic=launchConfig({kind:'gtp',exe,extraArgs:['--mode','gtp']},cfg);assert.equal(generic.model,null);assert.equal(generic.cfg,null);assert.deepEqual(generic.args,['--mode','gtp']);
 const params=launchConfig({kind:'gtp',exe,model,config:cfg,extraArgs:['--net={model}','--cfg','{config}']},cfg);assert.deepEqual(params.args,['--net='+model,'--cfg',cfg]);assert.throws(()=>launchConfig({kind:'gtp',exe,extraArgs:['{model}']},cfg));assert.throws(()=>launchConfig({kind:'gtp',exe,extraArgs:['x\nquit']},cfg));
 }finally{fs.rmSync(dir,{recursive:true,force:true});}});

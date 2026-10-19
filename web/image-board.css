@@ -37,3 +37,6 @@ footer{width:100%;max-width:none!important;align-items:center;justify-content:sp
 
 footer .footer-links a,footer .footer-links .about-open{text-decoration:underline;text-underline-offset:2px;font-weight:700}
 .engine-kind-note{font-size:12px;line-height:1.6;color:#71531c}.engine-kind-row{display:flex;gap:8px;align-items:center}.engine-kind-row select{width:auto;max-width:100%}#engine-settings [hidden]{display:none!important}
+
+#engine-order.expanded{max-height:none}
+.engine-list-footer{display:flex;align-items:center;gap:10px;font-size:12px}.engine-list-footer button{width:auto;padding:2px 8px;min-height:26px}

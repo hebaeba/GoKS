@@ -37,7 +37,10 @@ impl Engine {
         let model_meta=if model.as_os_str().is_empty(){None}else{Some(fs::metadata(&model).map_err(|e|e.to_string())?)};
         let mut extra:Vec<String>=match payload.get("extraArgs"){None|Some(Value::Null)=>Vec::new(),Some(v)=>serde_json::from_value(v.clone()).map_err(|_|"追加引数が不正です")?};
         if extra.len()>100||extra.iter().any(|a|a.contains(['\r','\n','\0'])){return Err("追加引数が不正です".into());}
-        if kind=="leelaz"&&extra.is_empty(){extra=vec!["--gtp".into(),"--weights".into(),"{model}".into()];}
+        if kind=="leelaz"{
+            if !extra.iter().any(|a|a=="-g"||a=="--gtp"){extra.insert(0,"--gtp".into());}
+            if !extra.iter().any(|a|a=="-w"||a=="--weights"||a.starts_with("--weights=")||(a.starts_with("-w")&&a.len()>2)){extra.extend(["--weights".into(),"{model}".into()]);}
+        }
         for arg in &mut extra{if arg.contains("{model}")&&model.as_os_str().is_empty(){return Err("モデルを指定してください".into());}if arg.contains("{config}")&&cfg.as_os_str().is_empty(){return Err("設定ファイルを指定してください".into());}*arg=arg.replace("{model}",&model.to_string_lossy()).replace("{config}",&cfg.to_string_lossy());}
         let workdir=payload["workdir"].as_str().filter(|s|!s.trim().is_empty()).map(PathBuf::from).unwrap_or_else(||exe.parent().unwrap().to_path_buf());
         if !workdir.is_dir(){return Err("作業フォルダーが見つかりません".into());}
