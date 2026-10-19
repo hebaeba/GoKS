@@ -4,7 +4,7 @@ use tauri::Manager;
 use serde_json::{Value,json};
 use kifu_katago_backend::Engine;
 use kifu_lan_server::Share;
-struct Desktop{engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf}
+struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf}
 #[tauri::command]
 async fn engine_call(action:String,payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
  if action=="defaults" {
@@ -12,7 +12,7 @@ async fn engine_call(action:String,payload:Value,state:tauri::State<'_,Desktop>)
   let missing:Vec<String>=["katago.exe","model.bin.gz","default_gtp.cfg","z.dll","zip.dll","libssl-3-x64.dll","libcrypto-3-x64.dll"].iter().filter(|n|!base.join(n).is_file()).map(|n|n.to_string()).collect();
   return Ok(json!({"name":"KataGo Eigen（CPU・標準）","exe":base.join("katago.exe"),"model":base.join("model.bin.gz"),"config":base.join("default_gtp.cfg"),"missing":missing}));
  }
- let engine=state.engine.clone();tauri::async_runtime::spawn_blocking(move||engine.lock().map_err(|_|"エンジンの状態を取得できません".to_string())?.call(&action,&payload)).await.map_err(|e|e.to_string())?
+ let engine=match payload["session"].as_str(){None=>state.engine.clone(),Some("black")=>state.black.clone(),Some("white")=>state.white.clone(),_=>return Err("対局セッションが不正です".into())};tauri::async_runtime::spawn_blocking(move||engine.lock().map_err(|_|"エンジンの状態を取得できません".to_string())?.call(&action,&payload)).await.map_err(|e|e.to_string())?
 }
 #[tauri::command]
 async fn mobile_share(action:String,payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
@@ -71,7 +71,7 @@ fn main(){
  }
  }).setup(|app|{
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
- app.manage(Desktop{engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
+ app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
  }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
- app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){if let Ok(mut engine)=state.engine.lock(){engine.stop();}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
+ app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){for engine in [&state.engine,&state.black,&state.white]{if let Ok(mut engine)=engine.lock(){engine.stop();}}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
 }

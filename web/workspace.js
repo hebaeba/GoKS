@@ -12,7 +12,7 @@
  const tabs=document.createElement('nav');tabs.className='workspace-tabs';tabs.setAttribute('aria-label','編集パネル');tabs.setAttribute('role','tablist');panel.prepend(tabs);
  let focusLayout='analysis';
  const modeBar=document.createElement('div');modeBar.className='workspace-mode';modeBar.innerHTML='<button id="layout-analysis" aria-pressed="true" title="候補手とグラフを中心に表示します">解析中心</button><button id="layout-edit" aria-pressed="false" title="手順と編集ツールを表示し、碁盤を編集モードにします">編集中心</button>';panel.prepend(modeBar);
- const panes={};for(const [id,text] of [['analysis','解析'],['sequence','手順'],['tools','ツール'],['record','棋譜'],['storage','保存'],['settings','設定']]){
+ const panes={};for(const [id,text] of [['analysis','解析'],['match','対局'],['sequence','手順'],['tools','ツール'],['record','棋譜'],['storage','保存'],['settings','設定']]){
   const button=document.createElement('button');button.id='tab-'+id;button.textContent=text;button.type='button';button.setAttribute('role','tab');button.setAttribute('aria-controls','pane-'+id);button.onclick=()=>activate(id);tabs.append(button);
   const pane=document.createElement('section');pane.id='pane-'+id;pane.className='inspector-pane';pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);panel.append(pane);panes[id]=pane;
  }
@@ -23,7 +23,7 @@
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新42</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新43</span>');
  q('.edit-buttons').append($('score'));
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent='';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
  function activate(id){

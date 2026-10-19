@@ -249,7 +249,9 @@
   }
 
   function byMoves(delta){const target=Math.max(0,frames[index].move+delta);let next=index;do{next+=Math.sign(delta);}while(next>0&&next<frames.length-1&&(delta>0?frames[next].move<target:frames[next].move>target));at(next);}
+  let matchMutation=false;
   function place(point){
+    if(!matchMutation&&window.KifuMatch?.locked){window.KifuMatch.humanMove(point);return;}
     if(scoreSession){scoreClick(point);return;}
     if(!editing){if(point!==null&&!frames[index].board[point]&&route[index].children.length>1){const child=route[index].children.find(child=>(child.props.B?.[0]??child.props.W?.[0])===R.encode(point,size));if(child){chooseLine(lineEntry(child),child);return;}}if(point!==null&&frames[index].board[point]){const move=numberFrames[index][point];if(move){const next=frames.findIndex(f=>f.move===move);at(next);}else report('初期配置の石です。着手番号はありません。');}else report('石を打つには「編集」に切り替えてください。');return;}
     if(point!==null&&tool!=='play'&&!insertion){annotate(point);return;}
@@ -263,6 +265,7 @@
   }
   function okayToReplace(){if(insertion||!canLeave())return false;return !dirty||confirm('保存していない変更があります。現在の棋譜を置き換えますか？');}
   function load(text,name='kifu.sgf'){
+    if(window.KifuMatch?.locked){report('対局を中断してから棋譜を開いてください。',true);return false;}
     try{const game=GoImport.parse(text,name);validate(game.root,game.size);if(!okayToReplace())return false;
       clearTimeout(recoveryTimer);root=game.root;size=game.size;choices=new WeakMap();index=0;dirty=false;editing=false;focusPoint=0;originalName=name.replace(/\.(?:sgf|ngf|ugf|ugi|gib|mgt)$/i,'')+'.sgf';
       $('sgf').value='';$('size').value=String(size);resetHistory();rebuild();index=route.length-1;window.dispatchEvent(new Event('kifu-record-replaced'));refresh();$('load-menu').open=false;$('load-options').hidden=true;dragStatus('');report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
@@ -502,6 +505,18 @@
 
   // Explicit same-origin interface for the bulletin board. No legacy player shim.
   window.IndependentGo=Object.freeze({
+    matchInfo(info){
+      if(insertion||scoreSession||exportBusy||!canLeave())throw Error('編集中の操作を終了してください。');
+      const before=snapshot();for(const [key,value] of Object.entries(info)){if(!['PB','PW','RU','RE','DT'].includes(key))continue;if(value)root.props[key]=[String(value)];else delete root.props[key];}
+      remember(before);infoTarget=null;editing=true;tool='play';$('tool').value='play';refresh();
+    },
+    matchPlay(point,expected){
+      if(insertion||scoreSession||exportBusy)throw Error('盤面を変更できません。');
+      if(serialized()!==expected.sgf||index!==expected.index||JSON.stringify(route.slice(1).map((n,i)=>route[i].children.indexOf(n)))!==JSON.stringify(expected.path))throw Error('対局中に局面が変更されました。');
+      R.play(frames[index],point);analysisPreview=null;tool='play';$('tool').value='play';editing=true;
+      const oldIndex=index;matchMutation=true;try{place(point);}finally{matchMutation=false;}
+      if(index===oldIndex)throw Error('着手を反映できませんでした。');
+    },
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
     rotateBoard,displayPoint,
     importFile,nativeDrag,
