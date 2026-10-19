@@ -1,0 +1,2 @@
+// Minimal test engine: intentionally has no KataGo analysis extension.
+require('node:readline').createInterface({input:process.stdin}).on('line',line=>{const [id,command]=line.split(' ');const values={protocol_version:'2',name:'Generic fixture',version:'1',list_commands:'protocol_version\nname\nversion\nlist_commands\nquit'};if(command==='quit')process.exit();if(command in values)process.stdout.write('='+id+' '+values[command]+'\n\n');else process.stdout.write('?'+id+' unknown command\n\n');});

@@ -34,3 +34,6 @@ footer .about-open{display:block;width:max-content;max-width:100%;margin:6px aut
 #engine-advanced{margin:8px 0}#engine-advanced textarea{width:100%;min-height:70px;font-size:12px}#engine-advanced input{width:100%}.engine-protocol{font-size:12px}
 footer{width:100%;max-width:none!important;align-items:center;justify-content:space-between;flex-wrap:wrap}footer .release-label{margin-right:auto}footer .footer-links{display:flex;align-items:center;gap:14px;margin-left:auto}footer .footer-links .about-open{display:inline-block;margin:0;font-size:inherit}footer .footer-links a{margin:0}
 @media(pointer:coarse){#engine-order button{min-height:36px}}
+
+footer .footer-links a,footer .footer-links .about-open{text-decoration:underline;text-underline-offset:2px;font-weight:700}
+.engine-kind-note{font-size:12px;line-height:1.6;color:#71531c}.engine-kind-row{display:flex;gap:8px;align-items:center}.engine-kind-row select{width:auto;max-width:100%}#engine-settings [hidden]{display:none!important}

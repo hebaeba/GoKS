@@ -70,7 +70,7 @@ fn main(){
   });
  }
  }).setup(|app|{
- let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("analysis_cpu.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/analysis_cpu.cfg"))?;}
+ let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
  app.manage(Desktop{engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
  }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
  app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){if let Ok(mut engine)=state.engine.lock(){engine.stop();}if let Ok(mut share)=state.share.lock(){*share=None;}}}});

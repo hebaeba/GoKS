@@ -42,7 +42,7 @@ function analyzeCommand(q){
  }return cmd;
 }
 class Bridge{
- constructor(raw){this.raw=raw;this.seq=0;this.pending=new Map();this.events=[];this.queue=Promise.resolve();this.epoch=0;this.jobs=new Map();this.response=null;this.current=null;}
+ constructor(raw){this.kind='katago';this.raw=raw;this.seq=0;this.pending=new Map();this.events=[];this.queue=Promise.resolve();this.epoch=0;this.jobs=new Map();this.response=null;this.current=null;}
  reset(){this.epoch++;for(const p of this.pending.values()){clearTimeout(p.timeout);p.reject(Error('エンジンを停止しました'));}this.pending.clear();if(this.current)clearTimeout(this.current.timer);this.current=null;this.jobs.clear();this.response=null;this.events=[];this.queue=Promise.resolve();}
  commands(commands,stream=null){
   const lines=[],promises=[];
@@ -71,10 +71,11 @@ class Bridge{
     if(q.action==='query_version'){
      const values=await this.commands(['protocol_version','name','version','list_commands']);
      const available=new Set(values[3].split(/\s+/));const missing=['kata-analyze','kata-set-rules','set_position','clear_cache','stop'].filter(x=>!available.has(x));
-     if(values[0].trim()!=='2'||missing.length)throw Error('対応するKataGo GTPが必要です。不足する命令：'+missing.join('、'));
-     this.events.push({type:'result',data:{id:q.id,version:values[2],name:values[1],protocol:'GTP',commands:[...available]}});return;
+     if(values[0].trim()!=='2'||(this.kind==='katago'&&missing.length))throw Error('対応するKataGo GTPが必要です。不足する命令：'+missing.join('、'));
+     this.events.push({type:'result',data:{id:q.id,version:values[2],name:values[1],supportsAnalysis:this.kind==='katago'&&!missing.length,protocol:'GTP',commands:[...available]}});return;
     }
     if(q.action)throw Error('未対応のGTP操作です：'+q.action);
+    if(this.kind!=='katago')throw Error('このエンジンの解析には未対応です。');
     this.current=job;
     await this.commands(positionCommands(q));if(epoch!==this.epoch||job.cancelled)return;
     await this.commands([analyzeCommand(q)],job);
@@ -85,7 +86,7 @@ class Bridge{
   });return {accepted:true};
  }
  async call(action,payload={}){
-  if(action==='start'){this.reset();return this.raw(action,payload);}
+  if(action==='start'){this.reset();const r=await this.raw(action,payload);this.kind=r.meta?.kind||payload.kind||'katago';return r;}
   if(action==='stop'){this.reset();return this.raw(action,payload);}
   if(action==='send')return this.send(payload);
   if(action==='poll'){const r=await this.raw(action,payload);const other=[];for(const e of r.events||[]){if(e.type==='gtp')this.line(e.line);else other.push(e);}return {...r,events:[...other,...this.events.splice(0)]};}
