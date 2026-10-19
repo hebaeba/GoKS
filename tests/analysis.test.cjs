@@ -13,3 +13,16 @@ test('candidate color uses player score loss, not winrate or display perspective
 test('all available candidates retained beyond previous 30 cap',()=>{const moves=Array.from({length:40},(_,i)=>({move:A.gtp(i,19),order:i,winrate:.5,scoreLead:0,visits:1,pv:[]}));assert.equal(A.normalizedResult({rootInfo:{winrate:.5,scoreLead:0,visits:40},moveInfos:moves},19).moveInfos.length,40);});
 
 test('infinite current analysis uses finite JSON limits and requested PV length',()=>{const p=A.plan(base,'japanese',{infinite:true,pvLength:10},false)[0].request;assert.equal(p.analysisPVLen,10);assert.equal(p.overrideSettings.maxTime,1e20);assert.equal(p.reportDuringSearchEvery,.5);assert.deepEqual(JSON.parse(JSON.stringify(p)),p);assert.throws(()=>A.plan(base,'japanese',{infinite:true},true));assert.throws(()=>A.plan(base,'japanese',{seconds:1,pvLength:31},false));});
+
+test('live results follow shared history, never another branch or komi',()=>{
+ const old={sgf:'(;SZ[9]KM[0];B[aa];W[bb];B[cc])',size:9,komi:0,index:3,path:[0,0,0]};
+ const next={...old,sgf:'(;SZ[9]KM[0];B[aa](;W[bb];B[cc])(;W[dd]))',index:2,path:[0,1]};
+ const data=new Map([0,1,2,3].map(i=>[i,{index:i,move:i,result:{marker:i}}]));
+ const kept=A.rebaseResults(old,next,data);assert.deepEqual([...kept.keys()],[0,1]);
+ assert.equal(kept.get(1).result.marker,1);assert.equal(data.size,4);
+ assert.equal(A.rebaseResults(old,{...next,komi:.5,sgf:next.sgf.replace('KM[0]','KM[0.5]')},data).size,0);
+ const pass={...old,sgf:'(;SZ[9]KM[0];B[];W[])',path:[0,0],index:2};
+ assert.notEqual(A.positionKeys(pass)[0],A.positionKeys(pass)[2]);
+});
+
+test('imported prisoners adjust Japanese analysis only',()=>{const s={sgf:'(;SZ[9]KM[6.5]XIGCAPB[3]XIGCAPW[7]AB[aa])',size:9,komi:6.5,index:0,path:[]};assert.equal(A.plan(s,'japanese',50,false)[0].request.komi,2.5);assert.equal(A.plan(s,'chinese',50,false)[0].request.komi,6.5);});

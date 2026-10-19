@@ -2,5 +2,5 @@
 https://github.com/lightvector/KataGo
 提供された配布ZIPのEXE・DLL・READMEを収録しています。解析ログは含めていません。
 モデル: g170e-b10c128-s1141046784-d204142634.bin.gz（収録名 model.bin.gz）
-設定: 提供されたanalysis_example(2).cfg（収録名 analysis_example.cfg）
+設定: 今回提供されたdefault_gtp(1).cfg（収録名 default_gtp.cfg、内容変更なし）
 Windows x64向けです。ARMや32bit環境での動作を保証するものではありません。

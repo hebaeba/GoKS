@@ -9,8 +9,8 @@ struct Desktop{engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default
 async fn engine_call(action:String,payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
  if action=="defaults" {
   let base=std::env::current_exe().map_err(|e|e.to_string())?.parent().ok_or("実行場所を取得できません")?.join("engines/eigen");
-  let missing:Vec<String>=["katago.exe","model.bin.gz","analysis_example.cfg","z.dll","zip.dll","libssl-3-x64.dll","libcrypto-3-x64.dll"].iter().filter(|n|!base.join(n).is_file()).map(|n|n.to_string()).collect();
-  return Ok(json!({"name":"KataGo Eigen（CPU・標準）","exe":base.join("katago.exe"),"model":base.join("model.bin.gz"),"config":base.join("analysis_example.cfg"),"missing":missing}));
+  let missing:Vec<String>=["katago.exe","model.bin.gz","default_gtp.cfg","z.dll","zip.dll","libssl-3-x64.dll","libcrypto-3-x64.dll"].iter().filter(|n|!base.join(n).is_file()).map(|n|n.to_string()).collect();
+  return Ok(json!({"name":"KataGo Eigen（CPU・標準）","exe":base.join("katago.exe"),"model":base.join("model.bin.gz"),"config":base.join("default_gtp.cfg"),"missing":missing}));
  }
  let engine=state.engine.clone();tauri::async_runtime::spawn_blocking(move||engine.lock().map_err(|_|"エンジンの状態を取得できません".to_string())?.call(&action,&payload)).await.map_err(|e|e.to_string())?
 }

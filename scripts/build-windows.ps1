@@ -10,7 +10,7 @@ if (Test-Path dist/engines) { Remove-Item dist/engines -Recurse -Force }
 Copy-Item engines dist/engines -Recurse -Force
 node scripts/check-bundled-engine.cjs
 if ($LASTEXITCODE -ne 0) { throw 'Bundled KataGo startup or analysis check failed.' }
-if (Test-Path dist/engines/eigen/analysis_logs) { Remove-Item dist/engines/eigen/analysis_logs -Recurse -Force }
+if (Test-Path dist/engines/eigen/gtp_logs) { Remove-Item dist/engines/eigen/gtp_logs -Recurse -Force }
 Copy-Item WINDOWS-TEST.md dist/README.txt -Force
 Copy-Item web/LICENSE.txt dist/LICENSE.txt -Force
 Copy-Item web/licenses.html dist/licenses.html -Force

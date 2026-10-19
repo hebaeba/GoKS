@@ -10,15 +10,14 @@ fn reply(req:Request,status:u16,body:Vec<u8>,mime:&str){let mut r=Response::from
 fn header(req:&Request,name:&str)->String{req.headers().iter().find(|h|h.field.as_str().as_str().eq_ignore_ascii_case(name)).map(|h|h.value.to_string()).unwrap_or_default()}
 fn json_reply(req:Request,result:Result<Value,String>){let (status,body)=match result{Ok(v)=>(200,json!({"ok":true,"result":v})),Err(e)=>(400,json!({"ok":false,"error":e}))};reply(req,status,body.to_string().into_bytes(),"application/json; charset=utf-8");}
 pub fn check_query(v:&Value)->Result<(),String>{
- if let Some(action)=v["action"].as_str(){return if ["query_version","terminate","terminate_all"].contains(&action){Ok(())}else{Err("許可されていない操作です".into())};}
- for key in ["boardXSize","boardYSize"]{if !matches!(v[key].as_u64(),Some(4..=19)){return Err("盤サイズが不正です".into());}}
- let time=v["overrideSettings"]["maxTime"].as_f64().unwrap_or(0.0);if !(0.1..=60.0).contains(&time){return Err("スマホ接続の解析時間は0.1〜60秒です。無限解析はPCで実行してください。".into());}
- if !["japanese","chinese"].contains(&v["rules"].as_str().unwrap_or("")){return Err("ルールが不正です".into());}
- if !matches!(v["analysisPVLen"].as_u64(),Some(1..=30)){return Err("読み筋は30手以内です".into());}
- let allowed=["id","boardXSize","boardYSize","initialStones","initialPlayer","moves","komi","rules","maxVisits","analysisPVLen","includeOwnership","reportDuringSearchEvery","overrideSettings"];
- if v.as_object().ok_or("要求が不正です")?.keys().any(|k|!allowed.contains(&k.as_str())){return Err("未対応の解析設定です".into());}
- if v["overrideSettings"].as_object().ok_or("設定が不正です")?.keys().any(|k|!["maxTime","maxPlayouts"].contains(&k.as_str())){return Err("未対応の上書き設定です".into());}
- if v["moves"].as_array().map_or(true,|a|a.len()>2000){return Err("手順が長すぎます".into());}Ok(())
+ let commands=v["commands"].as_array().ok_or("GTP命令が不正です")?;
+ if commands.is_empty()||commands.len()>2005{return Err("GTP命令数が不正です".into());}
+ for value in commands{let text=value.as_str().ok_or("GTP命令が不正です")?;
+ if text.len()>32000||text.contains(['\r','\n','\0']){return Err("GTP命令が不正です".into());}
+ let mut words=text.split_whitespace();let id=words.next().unwrap_or("");let cmd=words.next().unwrap_or("");
+ if id.is_empty()||!id.bytes().all(|b|b.is_ascii_digit())||!["protocol_version","name","version","list_commands","boardsize","clear_board","kata-set-rules","komi","set_position","set_free_handicap","play","clear_cache","kata-analyze","stop"].contains(&cmd){return Err("許可されていないGTP命令です".into());}
+ if cmd=="boardsize"&&!matches!(words.next().and_then(|s|s.parse::<u32>().ok()),Some(4..=19)){return Err("盤サイズが不正です".into());}
+ }Ok(())
 }
 impl Share{
  pub fn start(ip:&str,port:u16,approved:Value,default:PathBuf)->Result<Self,String>{
@@ -27,8 +26,9 @@ impl Share{
  let actual_port=server.server_addr().to_ip().ok_or("待受に失敗しました")?.port();let origin=format!("http://{}:{}",addr,actual_port);
  let token=rand::random::<[u8;32]>().iter().map(|b|format!("{:02x}",b)).collect::<String>();let url=format!("{}/#token={}",origin,token);
  let stop=Arc::new(AtomicBool::new(false));let flag=stop.clone();
- let worker=thread::spawn(move||{let mut engine=Engine::new(default);let born=Instant::now();let mut owner=String::new();let mut last=Instant::now();
+ let worker=thread::spawn(move||{let mut engine=Engine::new(default);let born=Instant::now();let mut owner=String::new();let mut last=Instant::now();let mut analysis_started:Option<Instant>=None;
  while !flag.load(Ordering::Relaxed)&&born.elapsed()<Duration::from_secs(8*3600){
+ if analysis_started.is_some_and(|t|t.elapsed()>Duration::from_secs(65)){let _=engine.send(&json!({"commands":["999999999 stop"]}));analysis_started=None;}
  if !owner.is_empty()&&last.elapsed()>Duration::from_secs(45){engine.stop();owner.clear();}
  let req=match server.recv_timeout(Duration::from_millis(150)){Ok(Some(r))=>r,_=>continue};
  if header(&req,"Host")!=origin.trim_start_matches("http://")||(!header(&req,"Origin").is_empty()&&header(&req,"Origin")!=origin){reply(req,403,b"Forbidden".to_vec(),"text/plain");continue;}
@@ -42,7 +42,7 @@ impl Share{
  let v:Value=match serde_json::from_slice(&buf){Ok(v)=>v,Err(e)=>{json_reply(req,Err(e.to_string()));continue}};
  let action=v["action"].as_str().unwrap_or("");let payload=&v["payload"];
  // Only the PC-approved executable/model/config can be launched. Remote paths are ignored.
- let result=match action{"start"=>{if !owner.is_empty(){Err("接続済みです".into())}else{match engine.start(&approved){Ok(r)=>{owner=client.clone();Ok(r)},Err(e)=>Err(e)}}},"poll"=>engine.poll(),"stop"=>{let r=engine.stop();owner.clear();Ok(r)},"send"=>check_query(payload).and_then(|_|engine.send(payload)),_=>Err("スマホからはこの操作を実行できません".into())};last=Instant::now();json_reply(req,result);continue;
+ let result=match action{"start"=>{if !owner.is_empty(){Err("接続済みです".into())}else{match engine.start(&approved){Ok(r)=>{owner=client.clone();Ok(r)},Err(e)=>Err(e)}}},"poll"=>engine.poll(),"stop"=>{let r=engine.stop();owner.clear();Ok(r)},"send"=>check_query(payload).and_then(|_|{for line in payload["commands"].as_array().unwrap(){let cmd=line.as_str().unwrap().split_whitespace().nth(1).unwrap_or("");if cmd=="kata-analyze"{analysis_started=Some(Instant::now());}else if cmd=="stop"{analysis_started=None;}}engine.send(payload)}),_=>Err("スマホからはこの操作を実行できません".into())};last=Instant::now();json_reply(req,result);continue;
  }
  if req.method()!=&Method::Get{reply(req,405,vec![],"text/plain");continue;}
  let file=if path=="/"{"index.html"}else{path.trim_start_matches('/')};
@@ -52,4 +52,4 @@ impl Share{
  }engine.stop();});Ok(Self{stop,thread:Some(worker),url})
  }
 }
-#[cfg(test)]mod tests{use super::*;#[test]fn no_remote_commands(){assert!(check_query(&json!({"action":"query_version"})).is_ok());assert!(check_query(&json!({"action":"start"})).is_err());}#[test]fn no_public_listener(){assert!(Share::start("8.8.8.8",0,json!({}),PathBuf::new()).is_err());}}
+#[cfg(test)]mod tests{use super::*;#[test]fn no_remote_commands(){assert!(check_query(&json!({"commands":["1 protocol_version"]})).is_ok());assert!(check_query(&json!({"commands":["2 loadsgf /secret.sgf"]})).is_err());}#[test]fn no_public_listener(){assert!(Share::start("8.8.8.8",0,json!({}),PathBuf::new()).is_err());}}

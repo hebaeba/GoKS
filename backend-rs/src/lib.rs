@@ -33,20 +33,29 @@ impl Engine {
         for (kind,file) in [("exe",&exe),("model",&model),("config",&cfg)]{Self::validate_extension(kind,file)?;}
         let config_text=fs::read_to_string(&cfg).map_err(|e|e.to_string())?;
         let model_meta=fs::metadata(&model).map_err(|e|e.to_string())?;
+        let extra:Vec<String>=match payload.get("extraArgs"){None|Some(Value::Null)=>Vec::new(),Some(v)=>serde_json::from_value(v.clone()).map_err(|_|"追加引数が不正です")?};
+        if extra.len()>100||extra.iter().any(|a|a.contains(['\r','\n','\0'])){return Err("追加引数が不正です".into());}
+        let workdir=payload["workdir"].as_str().filter(|s|!s.trim().is_empty()).map(PathBuf::from).unwrap_or_else(||exe.parent().unwrap().to_path_buf());
+        if !workdir.is_dir(){return Err("作業フォルダーが見つかりません".into());}
         self.stop();
-        let mut cmd=Command::new(&exe);cmd.args(["analysis","-model"]).arg(&model).arg("-config").arg(&cfg).args(["-override-config","reportAnalysisWinratesAs=BLACK"]).current_dir(exe.parent().unwrap()).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
+        let mut cmd=Command::new(&exe);cmd.args(["gtp","-model"]).arg(&model).arg("-config").arg(&cfg).args(&extra).args(["-override-config","reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false"]).current_dir(&workdir).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
         #[cfg(windows)]{use std::os::windows::process::CommandExt;cmd.creation_flags(0x08000000);}
         let mut child=cmd.spawn().map_err(|e|format!("KataGoを起動できません：{}",e))?;
         let stdout=child.stdout.take().unwrap();let stderr=child.stderr.take().unwrap();let (tx,rx)=sync_channel(5000);let errtx=tx.clone();
-        thread::spawn(move||{for line in BufReader::new(stdout).lines(){let Ok(line)=line else {break};if line.len()>4*1024*1024{let _=tx.send(json!({"type":"log","message":"解析応答が長すぎます"}));break;}let event=match serde_json::from_str::<Value>(&line){Ok(data)=>json!({"type":"result","data":data}),Err(_)=>json!({"type":"log","message":line.chars().take(1000).collect::<String>()})};if tx.send(event).is_err(){break;}}});
+        thread::spawn(move||{for line in BufReader::new(stdout).lines(){let Ok(line)=line else {break};if line.len()>4*1024*1024{let _=tx.send(json!({"type":"log","message":"解析応答が長すぎます"}));break;}let event=json!({"type":"gtp","line":line});if tx.send(event).is_err(){break;}}});
         thread::spawn(move||{for line in BufReader::new(stderr).lines(){let Ok(line)=line else{break};if errtx.send(json!({"type":"log","message":line.chars().take(4000).collect::<String>()})).is_err(){break;}}});
-        self.meta=json!({"engine":exe.file_name().unwrap().to_string_lossy(),"model":model.file_name().unwrap().to_string_lossy(),"modelBytes":model_meta.len(),"modelModifiedUnix":model_meta.modified().ok().and_then(|t|t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d|d.as_secs()),"config":cfg.file_name().unwrap().to_string_lossy(),"configText":config_text.chars().take(100000).collect::<String>(),"perspective":"BLACK"});
+        self.meta=json!({"engine":exe.file_name().unwrap().to_string_lossy(),"model":model.file_name().unwrap().to_string_lossy(),"modelBytes":model_meta.len(),"modelModifiedUnix":model_meta.modified().ok().and_then(|t|t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d|d.as_secs()),"config":cfg.file_name().unwrap().to_string_lossy(),"configText":config_text.chars().take(100000).collect::<String>(),"protocol":"GTP","perspective":"BLACK"});
         self.receiver=Some(rx);self.child=Some(child);Ok(json!({"running":true,"meta":self.meta}))
     }
     pub fn send(&mut self,query:&Value)->Result<Value,String>{
-        let id=query["id"].as_str().ok_or("解析IDが不正です")?;if id.len()>160{return Err("解析IDが長すぎます".into());}
-        if let Some(action)=query["action"].as_str(){if !["query_version","query_models","terminate","terminate_all"].contains(&action){return Err("未対応の操作です".into());}}
-        let line=serde_json::to_string(query).map_err(|e|e.to_string())?;if line.len()>2*1024*1024{return Err("リクエストが大きすぎます".into());}
+        let commands=query["commands"].as_array().ok_or("GTP命令が不正です")?;
+        if commands.is_empty()||commands.len()>20001{return Err("GTP命令数が不正です".into());}
+        let mut lines=Vec::new();
+        for v in commands{let line=v.as_str().ok_or("GTP命令が不正です")?;
+          let (id,command)=line.split_once(' ').ok_or("GTP命令が不正です")?;
+          if id.is_empty()||!id.bytes().all(|b|b.is_ascii_digit())||command.is_empty()||!command.as_bytes()[0].is_ascii_alphabetic()||line.contains(['\r','\n','\0']){return Err("GTP命令が不正です".into());}lines.push(line);
+        }
+        let line=lines.join("\n");if line.len()>2*1024*1024{return Err("リクエストが大きすぎます".into());}
         let input=self.child.as_mut().and_then(|c|c.stdin.as_mut()).ok_or("KataGoを起動してください")?;
         writeln!(input,"{}",line).and_then(|_|input.flush()).map_err(|e|e.to_string())?;Ok(json!({"accepted":true}))
     }

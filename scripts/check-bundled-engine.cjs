@@ -1,11 +1,8 @@
-// Runs on the Windows build machine, against the actual packaged engine.
-const {spawn}=require('node:child_process'),path=require('node:path'),readline=require('node:readline');
-const base=path.resolve(__dirname,'../dist/engines/eigen');
+// Windows CI smoke test against the actual bundled Eigen executable, config and model.
+const path=require('node:path'),{Engine}=require('../backend/engine.cjs'),{Bridge}=require('../web/gtp.js');
 if(process.platform!=='win32'){console.error('This check requires Windows.');process.exit(1);}
-const child=spawn(path.join(base,'katago.exe'),['analysis','-model',path.join(base,'model.bin.gz'),'-config',path.join(base,'analysis_example.cfg'),'-override-config','reportAnalysisWinratesAs=BLACK'],{cwd:base,windowsHide:true});
-let version=false,answer=false,logs='',done=false;
-const timeout=setTimeout(()=>finish('KataGo startup/analysis timed out: '+logs),90000);
-function finish(error){if(done)return;done=true;clearTimeout(timeout);child.kill();if(error){console.error(error);process.exitCode=1;}else console.log('PASS: bundled Eigen version handshake and real 9x9 analysis');}
-child.on('error',e=>finish(e.message));child.stdin.on('error',e=>finish(e.message));child.stderr.on('data',x=>{logs=(logs+x).slice(-6000);});child.on('exit',(code)=>{if(!done)finish('KataGo exited '+code+' '+logs);});
-const lines=readline.createInterface({input:child.stdout});lines.on('line',line=>{let d;try{d=JSON.parse(line);}catch{return;}if(d.error)return finish(d.error);if(d.id==='version'&&d.version){version=true;child.stdin.write(JSON.stringify({id:'smoke',boardXSize:9,boardYSize:9,initialStones:[],moves:[],rules:'japanese',komi:0,maxVisits:10,overrideSettings:{maxTime:1}})+'\n');}if(d.id==='smoke'&&d.rootInfo&&Number.isFinite(d.rootInfo.scoreLead)&&d.isDuringSearch===false){answer=true;if(version&&answer)finish();}});
-child.stdin.write(JSON.stringify({id:'version',action:'query_version'})+'\n');
+(async()=>{const base=path.resolve(__dirname,'../dist/engines/eigen'),engine=new Engine(),bridge=new Bridge((a,p)=>engine.call(a,p));let done=false,logs='';
+try{await bridge.call('start',{exe:path.join(base,'katago.exe'),model:path.join(base,'model.bin.gz'),config:path.join(base,'default_gtp.cfg')});await bridge.call('send',{id:'version',action:'query_version'});
+const deadline=Date.now()+90000;while(!done&&Date.now()<deadline){await new Promise(r=>setTimeout(r,50));const r=await bridge.call('poll');logs=(logs+(r.logs||[]).join('\n')).slice(-6000);if(!r.running)throw Error('KataGo exited: '+logs);
+for(const e of r.events||[]){if(e.type!=='result')continue;const d=e.data;if(d.error)throw Error(d.error+'\n'+logs);if(d.version)await bridge.call('send',{id:'smoke',boardXSize:9,boardYSize:9,initialStones:[],initialPlayer:'B',moves:[],rules:'japanese',komi:0,analysisPVLen:10,overrideSettings:{maxTime:1}});if(d.id==='smoke'&&d.isDuringSearch===false&&d.rootInfo?.visits>0)await bridge.call('send',{id:'region',boardXSize:9,boardYSize:9,initialStones:[['B','D4'],['W','F6']],initialPlayer:'W',moves:[],rules:'japanese',komi:0,analysisPVLen:10,overrideSettings:{maxTime:1},allowMoves:['B','W'].map(player=>({player,moves:['D4','D5','E4','E5','F4','pass']}))});if(d.id==='region'&&d.isDuringSearch===false&&d.rootInfo?.visits>0){const allowed=new Set(['D4','D5','E4','E5','F4','pass']);for(const move of d.moveInfos){if(!allowed.has(move.move)||move.pv.some(v=>!allowed.has(v)))throw Error('GTP region/PV escaped its mask');}done=true;}}}
+if(!done)throw Error('GTP startup/analysis timed out: '+logs);console.log('PASS: bundled Eigen GTP handshake and real timed analysis and irregular region');}finally{await bridge.call('stop');}})().catch(e=>{console.error(e);process.exitCode=1});
