@@ -1,4 +1,20 @@
-# 棋譜編集ツール：Windows・スマホ接続 検証準備版
+更新22：dist内を全部展開し、kifu-editor.exeとenginesフォルダーを隣に置いてください。標準Eigenが解析中心画面で自動起動します。エンジン名横の赤丸を確認してください。
+
+更新19：画面下部の更新番号、起動・接続ボタン、ドラッグ時の盤面上部の状態表示、OSからの棋譜読込みを確認してください。
+
+更新18：背面のツールへ棋譜をドラッグし、前面化・読込み・未保存確認が行えるかを確認してください。
+
+更新17の追加確認：
+- ExplorerからSGFを盤面へドロップして読み込める。
+- 保存・印刷 → 盤面を印刷 → 印刷する、でWindows印刷画面が開く。
+- プレビューからPNG/JPG画像を保存できる。
+- 盤面のCtrl+V、右クリックからSGFを読み込める。
+- 起動直後、10手進むボタンにフォーカスしてSpaceを押しても手数は進まない。
+
+# 棋譜編集ツール：Windows検証版（更新16）
+
+更新16の操作とGitHub更新方法は「今回の変更と更新方法.txt」を参照してください。
+更新14のWindowsビルド・画面起動は利用者から報告されています。更新16のWindows実機動作は未確認です。
 
 このパッケージはソースコードです。検証済みのWindows実行ファイルではありません。
 従来のNode.js版も残していますが、新しいスマホ接続の開始操作とネイティブ保存はTauri版専用です。
@@ -13,7 +29,7 @@ KataGo本体・モデル・DLLは含めていません。
 3. 成功した実行のArtifactsから `kifu-editor-windows-test` をダウンロードします。
 4. ZIPを展開し `kifu-editor.exe` を起動します。ビルド失敗の場合、exeができたとは扱わないでください。
 
-このワークフローはまだこちらから実行していません。GitHubへのアップロードも行っていません。
+GitHubの操作とビルドは利用者の環境で行います。
 生成されたexeは未署名のテスト版です。Windows上で下の確認を行ってから配布してください。
 
 ### Windows開発用PCでビルド
@@ -21,10 +37,10 @@ Rust（MSVC版）とVisual Studio C++ Build Tools／Windows SDKを準備したPC
 
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 
-結果は `dist/kifu-editor.exe`。このビルドにNode.jsは使いません。
+結果は `dist/kifu-editor.exe`。ビルド後の同梱エンジン検証にNode.jsを使います（GitHub Actionsには設定済み）。
 実行する利用者にはRust・Node.js・Visual Studioは不要です。Microsoft Edge WebView2 Runtimeは必要です。
 
-## Windows実機での確認項目（すべて未確認）
+## Windows実機での確認項目（更新16では要確認）
 
 - Node.jsのないWindows 11でexeをダブルクリックし、碁盤と各タブが表示される。
 - SGFのファイル読込み、文字コードの異なる棋譜、編集・取り消し、変化手順が動く。
