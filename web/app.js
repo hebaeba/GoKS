@@ -8,6 +8,7 @@
   let root = S.create(), size = 19, choices = new WeakMap(), route = [], frames = [], numberFrames = [], issues = [], index = 0;
   let editing = true, numbers = false, dirty = false, focusPoint = 0, keyboardBoard = false, originalName = 'kifu.sgf';
   let autoTimer=null,autoPlaying=false,analysisPreview=null,boardRotation=0;
+  let showCoordinates=true;try{showCoordinates=localStorage.getItem("kifu-coordinates")!=="off";}catch{}
   const canvas = $('board'), context = canvas.getContext('2d');
   const read = (props, key, fallback = '') => props[key]?.[0] ?? fallback;
   // Explicit KM takes priority; HA is the SGF handicap count, AB alone may be a problem diagram.
@@ -149,8 +150,10 @@
   function rotateBoard(turns){boardRotation=(boardRotation+turns+4)%4;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));}
   function geometry() {
     const extent = size <= 9 ? 390 : size <= 13 ? 430 : 460;
-    const gap = (extent - 72) / size, start = 36 + gap / 2;
-    return {extent, gap, start, wood: 36, span: extent - 72};
+    const pixel=extent/(canvas.clientWidth||extent);
+    const wood=showCoordinates?Math.max(18,36-10*pixel):pixel;
+    const span=extent-2*wood, gap=span/size, start=wood+gap/2;
+    return {extent,gap,start,wood,span};
   }
   function starPoints(n) {
     // Display coordinates: skip I, and count rows upward from the bottom.
@@ -174,14 +177,15 @@
     canvas.width = Math.round(width * ratio); canvas.height = canvas.width;
     context.setTransform(canvas.width / extent, 0, 0, canvas.height / extent, 0, 0);
     const marks=pv?new Map():markupMap();const c = context; c.clearRect(0,0,extent,extent);
-    c.fillStyle = 'silver'; c.fillRect(0,0,extent,extent); c.strokeStyle = '#1d2926'; c.lineWidth = 1.5; c.strokeRect(.75,.75,extent-1.5,extent-1.5);
+    c.fillStyle = 'silver'; c.fillRect(0,0,extent,extent); c.strokeStyle = '#1d2926'; c.lineWidth = extent/width; c.strokeRect(c.lineWidth/2,c.lineWidth/2,extent-c.lineWidth,extent-c.lineWidth);
     c.fillStyle = '#ebc365'; c.fillRect(wood,wood,span,span);
+    c.strokeStyle='#564424';c.lineWidth=extent/width;c.strokeRect(wood,wood,span,span);
     c.strokeStyle = '#564424'; c.lineWidth = .85; c.beginPath();
     for (let n=0;n<size;n++) { const pos=start+n*gap; c.moveTo(start,pos); c.lineTo(start+(size-1)*gap,pos); c.moveTo(pos,start); c.lineTo(pos,start+(size-1)*gap); } c.stroke();
     c.fillStyle='#4a3a21'; for (const [x,y] of starPoints(size)) { c.beginPath(); c.arc(start+x*gap,start+y*gap,Math.max(2,gap*.08),0,Math.PI*2); c.fill(); }
-    c.fillStyle='#24332e'; c.textAlign='center'; c.textBaseline='middle'; c.font=Math.min(16,Math.max(11,gap*.43))+'px system-ui,sans-serif';
+    c.fillStyle='#24332e'; c.textAlign='center'; c.textBaseline='middle'; c.font=Math.min(16,wood*.65,Math.max(11,gap*.43))+'px system-ui,sans-serif';
     const letters='ABCDEFGHJKLMNOPQRST';
-    for(let n=0;n<size;n++) { const pos=start+n*gap,top=originalPoint(n),left=originalPoint(n*size);const a=boardRotation%2?String(size-Math.floor(top/size)):letters[top%size],b=boardRotation%2?letters[left%size]:String(size-Math.floor(left/size));c.fillText(a,pos,19);c.fillText(a,pos,extent-19);c.fillText(b,19,pos);c.fillText(b,extent-19,pos); }
+    if(showCoordinates)for(let n=0;n<size;n++) { const pos=start+n*gap,top=originalPoint(n),left=originalPoint(n*size);const a=boardRotation%2?String(size-Math.floor(top/size)):letters[top%size],b=boardRotation%2?letters[left%size]:String(size-Math.floor(left/size));c.fillText(a,pos,wood/2);c.fillText(a,pos,extent-wood/2);c.fillText(b,wood/2,pos);c.fillText(b,extent-wood/2,pos); }
     state.board.forEach((color,point)=>{
       if(!color)return;
       const {x,y}=displayXY(point),r=gap*.46;
@@ -518,7 +522,7 @@
       if(index===oldIndex)throw Error('着手を反映できませんでした。');
     },
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
-    rotateBoard,displayPoint,getRotation(){return boardRotation;},
+    rotateBoard,displayPoint,getCoordinates(){return showCoordinates;},setCoordinates(value){showCoordinates=!!value;try{localStorage.setItem("kifu-coordinates",showCoordinates?"on":"off");}catch{}analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event("kifu-board-view"));},getRotation(){return boardRotation;},
     importFile,nativeDrag,
     async nativeDrop(payload){
       nativeDrag('drop');
@@ -642,5 +646,5 @@
   const boardTop=firstElement('.topline');boardTop.before(boardBlock);
   for(const selector of ['.topline','#drop-status','.canvas-wrap','.players','.statusline','#comment-area'])boardBlock.append(firstElement(selector));
   window.addEventListener('workspace-layout',()=>{drawMoveStrip();draw();});
-  setupAuto();new ResizeObserver(()=>draw()).observe(canvas);rebuild();refresh();recoveryReady=true;recoverySignature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));
+  setupAuto();new ResizeObserver(()=>{draw();window.dispatchEvent(new Event("kifu-board-view"));}).observe(canvas);rebuild();refresh();recoveryReady=true;recoverySignature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));
 })();

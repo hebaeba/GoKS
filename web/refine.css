@@ -29,3 +29,14 @@ body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
 /* Preserve the original two-column tool order at every inspector width. */
 body .inspector .tool-table{grid-template-columns:repeat(2,minmax(0,1fr))}
 .analysis-primary .region-analysis-toggle{margin:0 0 0 auto;flex:0 1 auto;font-size:12px;gap:5px}.analysis-primary .region-analysis-toggle label{white-space:normal}
+
+/* Update45: file actions share the board heading, coordinate visibility. */
+body .app-header[hidden]{display:none!important}
+.board-heading{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 7px;min-width:0}
+.board-heading>.game-title{flex:1 1 120px;min-width:0;text-align:left;font-size:13px;font-weight:700;margin:0}
+.board-heading>.header-actions{flex:0 1 auto;max-width:100%;flex-wrap:wrap;justify-content:flex-start}
+.coordinate-choice{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px}
+.coordinate-choice label{display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.coordinate-choice input{margin:0;width:13px;height:13px;min-height:0;padding:0;accent-color:#245f57}
+body .board-block .topline{flex-wrap:wrap}
+@media(pointer:coarse){.coordinate-choice label{min-height:36px;padding:0 3px}}
