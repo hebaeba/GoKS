@@ -509,6 +509,11 @@
 
   // Explicit same-origin interface for the bulletin board. No legacy player shim.
   window.IndependentGo=Object.freeze({
+    matchReset(){
+      if(insertion||scoreSession||exportBusy||!canLeave())throw Error('編集中の操作を終了してください。');
+      const komi=currentKomi();editing=true;if(!transaction(()=>{root=S.create(size);root.props.KM=[String(komi)];originalName='kifu.sgf';choices=new WeakMap();index=0;commentTarget=null;infoTarget=null;analysisPreview=null;},'新しい対局用に盤面をクリアしました。'))throw Error('盤面をクリアできませんでした。');
+      window.dispatchEvent(new Event('kifu-record-replaced'));
+    },
     matchInfo(info){
       if(insertion||scoreSession||exportBusy||!canLeave())throw Error('編集中の操作を終了してください。');
       const before=snapshot();for(const [key,value] of Object.entries(info)){if(!['PB','PW','GN','RU','RE','DT'].includes(key))continue;if(value)root.props[key]=[String(value)];else delete root.props[key];}

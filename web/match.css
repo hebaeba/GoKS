@@ -17,3 +17,12 @@
 #pane-match .match-resign-rule{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}#pane-match .match-resign-rule input[type=number]{width:3.8em}#pane-match .match-resign-rule input[type=checkbox]{width:auto}
 #match-sgf{box-sizing:border-box;width:100%;font:12px/1.5 monospace;resize:vertical}#match-clock{font-weight:700;color:#8b320c;margin:6px 0}#match-evaluation{font-size:12px;margin:6px 0}
 @media(max-width:600px){#pane-match .match-player{grid-template-columns:48px minmax(0,1fr)}#pane-match .match-time-label{grid-column:2}#pane-match .match-name-label{grid-column:1/3}}
+
+/* Update46: use the same warm yellow as the engine preparation notice. */
+#match-status[data-emphasis=starting],#match-status[data-emphasis=finished]{background:#fff1cc;color:#65430c;border:2px solid #b77918;border-radius:6px}
+#match-status[data-emphasis=finished]{cursor:pointer}
+#match-start-choice{box-sizing:border-box;max-width:min(540px,94vw);color:#213d39;background:white;border:1px solid #72978a;border-radius:8px;padding:16px}
+#match-start-choice h2{font-size:16px;margin:0 0 10px}#match-start-choice p{font-size:13px}#match-start-choice form{display:flex;gap:8px;flex-wrap:wrap}
+@media(min-width:900px) and (pointer:fine){
+ body .header-actions button,body .inspector-pane button:not(.tool-table button):not(.engine-pick):not(.engine-order-row button),body .engine-dock button,body .controls .actions button,body .controls .compact-options button,body .controls .edit-buttons button,body #match-start-choice button{padding:3px!important;min-height:0!important;height:auto!important;line-height:1.4}
+}
