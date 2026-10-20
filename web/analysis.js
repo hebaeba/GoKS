@@ -49,9 +49,9 @@ let stopping=null,live=false,liveTarget='',followVersion=0,followTimer=null,foll
 let engineEpoch=0,dismissedRunEpoch=-1,runningConfig=null;
 let requestedScope=null,defaultsLoaded=false,autoAttempted=false;
 let startupAt=0,startupPhase='idle',startupName='';
-const displayKey='kifu-candidate-display-v1';
-let display={count:5,detail:2,perspective:'black'};
-try{const saved=JSON.parse(localStorage.getItem(displayKey)||'null');if(saved){if([0,5,10,20,50,100,-1].includes(saved.count))display.count=saved.count;if([2,3].includes(saved.detail))display.detail=saved.detail;if(['black','turn'].includes(saved.perspective))display.perspective=saved.perspective;}}catch{}
+const displayKey='kifu-candidate-display-v2';
+let display={count:5,detail:2,perspective:'turn'};
+try{const current=localStorage.getItem(displayKey),saved=JSON.parse(current||localStorage.getItem('kifu-candidate-display-v1')||'null');if(saved){if([0,5,10,20,50,100,-1].includes(saved.count))display.count=saved.count;if([2,3].includes(saved.detail))display.detail=saved.detail;if(current&&['black','turn'].includes(saved.perspective))display.perspective=saved.perspective;}}catch{}
 for(const name of ['count','detail','perspective']){const e=$('candidate-'+name);e.value=String(display[name]);e.onchange=()=>{display[name]=name==='perspective'?e.value:Number(e.value);try{localStorage.setItem(displayKey,JSON.stringify(display));}catch{}clearPreview();renderResult();};}
 
 const native=()=>window.__TAURI_INTERNALS__?.invoke,token=document.querySelector('meta[name="kifu-local-token"]')?.content;
@@ -72,7 +72,7 @@ function profileMessage(text){$('engine-profile-message').textContent=text;}
 function paths(){return {kind:$('engine-kind').value,...Object.fromEntries(['exe','model','config','workdir'].map(k=>[k,$('engine-'+k).value.trim().replace(/^"|"$/g,'')])),extraArgs:$('engine-extraArgs').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)};}
 function renderProfiles(selected=''){$('engine-settings').classList.remove('profile-editing');$('engine-profile').replaceChildren(new Option('新しく登録する',''));for(const p of profiles)$('engine-profile').append(new Option(p.name,p.id));$('engine-profile').value=selected;$('engine-profile-save').textContent=selected?'登録を更新':'リストに追加';$('engine-profile-delete').disabled=!selected;renderOrder(selected);}
 function renderOrder(selected){
- const list=$('engine-order');list.replaceChildren();$('engine-profile-count').textContent='登録 '+profiles.length+' 件';$('engine-order-expand').hidden=profiles.length<=5;
+ const list=$('engine-order');list.replaceChildren();$('engine-profile-count').textContent='登録 '+profiles.length+' 件';$('engine-order-expand').hidden=true;
  const move=(from,to)=>{if(from===to)return;const next=profiles.slice(),i=next.findIndex(p=>p.id===from),j=next.findIndex(p=>p.id===to);if(i<0||j<0)return;next.splice(j,0,next.splice(i,1)[0]);if(writeProfiles(next)){renderProfiles(selected);profileMessage('エンジンの並び順を保存しました。');}};
  for(const [i,p] of profiles.entries()){const row=document.createElement('div');row.className='engine-order-row';row.draggable=true;row.dataset.id=p.id;row.dataset.selected=String(p.id===selected);
  const choose=document.createElement('button');choose.type='button';choose.textContent='☰ '+p.name;choose.title='上下にドラッグして並べ替え。クリックで選択';choose.onclick=()=>{$('engine-profile').value=p.id;$('engine-profile').onchange();};row.append(choose);
@@ -80,7 +80,7 @@ function renderOrder(selected){
  row.ondragstart=e=>{e.dataTransfer.setData('text/x-kifu-engine',p.id);e.dataTransfer.effectAllowed='move';};row.ondragover=e=>{if([...e.dataTransfer.types].includes('text/x-kifu-engine')){e.preventDefault();e.dataTransfer.dropEffect='move';}};row.ondrop=e=>{const id=e.dataTransfer.getData('text/x-kifu-engine');if(id){e.preventDefault();e.stopPropagation();move(id,p.id);}};list.append(row);}
 }
 $('engine-order-expand').onclick=()=>{const expanded=$('engine-order').classList.toggle('expanded');$('engine-order-expand').setAttribute('aria-expanded',String(expanded));$('engine-order-expand').textContent=expanded?'一覧を縮める':'すべて表示';};
-function writeProfiles(next){try{localStorage.setItem(profileKey,JSON.stringify(next));profiles=next;return true;}catch{profileMessage('保存できませんでした。ブラウザーの保存容量や設定を確認してください。');return false;}}
+function writeProfiles(next){try{localStorage.setItem(profileKey,JSON.stringify(next));profiles=next;window.dispatchEvent(new Event('kifu-engine-profiles'));return true;}catch{profileMessage('保存できませんでした。ブラウザーの保存容量や設定を確認してください。');return false;}}
 function saveProfile(){const config=paths(),name=$('engine-name').value.trim();if(!name){profileMessage('エンジンの名前を入力してください。');$('engine-name').focus();return false;}if(!config.exe||(config.kind!=='gtp'&&!config.model)){profileMessage('実行ファイルとモデルを指定してください。cfgは省略できます。');return false;}
 const selected=$('engine-profile').value,duplicate=profiles.find(p=>p.name===name&&p.id!==selected);if(duplicate){profileMessage('同じ名前が登録されています。別の名前にするか、リストからその設定を選んで更新してください。');return false;}
 const entry={id:selected||uid(),name,...config},next=selected?profiles.map(p=>p.id===selected?entry:p):[...profiles,entry];if(!writeProfiles(next))return false;renderProfiles(entry.id);profileMessage('「'+name+'」を保存しました。次回もリストから選べます。');controls();return true;}
@@ -190,7 +190,7 @@ function renderResult(){if(window.KifuMatch?.locked){overlay.replaceChildren();r
  api.clearAnalysisPreview();
  boardTargets=[];$('analysis-candidates').replaceChildren();overlay.replaceChildren();$('analysis-winrate').textContent='—';$('analysis-score').textContent='—';$('analysis-played').textContent='';$('analysis-pv').textContent='候補手にマウスを重ねると読み筋を表示します。ロック解除中のクリック／タップでその１手を着手します。';$('candidate-count-note').textContent='';if(!item)return;
  const r=item.result,position=A.positionAt(s),actual=position.next?.move;
- const viewWhite=display.perspective==='turn'&&position.state.turn===2,side=viewWhite?'白':'黒';const win=m=>((viewWhite?1-m.winrate:m.winrate)*100).toFixed(1);const lead=m=>((viewWhite?-1:1)*m.scoreLead);const leadText=m=>(lead(m)>=0?'+':'−')+Math.abs(lead(m)).toFixed(1);$('analysis-winrate-label').textContent=side+'勝率';$('candidate-winrate-heading').textContent=side+'勝率';$('candidate-perspective-note').textContent=side+'視点：勝率％／目数差（＋は'+side+'有利）';$('analysis-winrate').textContent=win(r.rootInfo)+'%';$('analysis-score').textContent=scoreText(r.rootInfo.scoreLead);
+ const viewWhite=display.perspective==='turn'&&position.state.turn===2,side=viewWhite?'白':'黒';const win=m=>((viewWhite?1-m.winrate:m.winrate)*100).toFixed(1);const lead=m=>((viewWhite?-1:1)*m.scoreLead);const leadText=m=>(lead(m)>=0?'+':'−')+Math.abs(lead(m)).toFixed(1);$('analysis-winrate-label').textContent=side+'勝率';$('candidate-winrate-heading').textContent=side+'勝率';$('candidate-perspective-note').textContent=side+'視点：勝率％／目数差（＋は'+side+'有利）';$('analysis-winrate').textContent=win(r.rootInfo)+'%';$('analysis-score').textContent=side+' '+leadText(r.rootInfo)+'目';
  const moves=r.moveInfos;if(selectedCandidate>=moves.length)selectedCandidate=0;
  const actualRank=r.moveInfos.findIndex(m=>m.move===actual);
  $('analysis-played').textContent=actual?'実戦の次の手：'+(position.next.color==='B'?'黒 ':'白 ')+(actual==='pass'?'パス':actual)+(actualRank<0?'（今回の候補結果にありません）':' ／ 推奨順位 '+(actualRank+1)+'位'):'この局面の後に記録された実戦手はありません。';

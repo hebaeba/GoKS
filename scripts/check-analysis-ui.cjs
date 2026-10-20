@@ -95,7 +95,7 @@ for(let i=0;i<10;i++){
 const registeredTotal42=await page.evaluate(()=>JSON.parse(localStorage.getItem('kifu-engine-profiles-v1')).length);
 assert(registeredTotal42>=12);assert.equal(await page.locator('#engine-order .engine-order-row').count(),registeredTotal42);
 assert.equal(await page.locator('#engine-profile-count').textContent(),'登録 '+registeredTotal42+' 件');
-await page.locator('#engine-order-expand').click();
+assert.equal(await page.locator('#engine-order-expand').isVisible(),false);
 assert.equal(await page.locator('#engine-order').evaluate(e=>getComputedStyle(e).maxHeight),'none');
 assert.doesNotMatch(await page.locator('#engine-exe').getAttribute('placeholder'),/katago/i);
 assert.doesNotMatch(await page.locator('#engine-model').getAttribute('placeholder'),/katago/i);

@@ -8,3 +8,12 @@
 @media(pointer:coarse){#pane-match button,#pane-match select,#pane-match input{min-height:40px}}
 .match-running .engine-dock{display:none}
 .match-running [data-tool],.match-running #undo,.match-running #redo,.match-running #insert,.match-running #delete-move,.match-running #analyze-live,.match-running #analyze-all{opacity:.45;cursor:not-allowed}
+#engine-order{max-height:none!important;overflow:visible}#engine-order-expand{display:none!important}
+#pane-match fieldset{min-width:0}#pane-match .match-player{display:grid;grid-template-columns:48px minmax(90px,1fr) auto;gap:6px 8px;padding-bottom:8px;border-bottom:1px solid #dce7e1}
+#pane-match .match-player>select{width:100%;min-width:0}#pane-match label{width:auto;margin:0;display:flex;align-items:center;gap:4px;font-size:12px}
+#pane-match .match-time-label select{flex:none;min-width:0;width:auto;padding:2px 4px}#pane-match .match-time-label input{width:4.5em}
+#pane-match .match-name-label{grid-column:2/4}#pane-match .match-name-label input{flex:1;width:100%;min-width:0}
+#pane-match .match-rules{align-items:center}#pane-match .match-rules select{width:auto}#pane-match .match-game-name{flex:1;min-width:160px}#pane-match .match-game-name input{min-width:0;width:100%;flex:1}
+#pane-match .match-resign-rule{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}#pane-match .match-resign-rule input[type=number]{width:3.8em}#pane-match .match-resign-rule input[type=checkbox]{width:auto}
+#match-sgf{box-sizing:border-box;width:100%;font:12px/1.5 monospace;resize:vertical}#match-clock{font-weight:700;color:#8b320c;margin:6px 0}#match-evaluation{font-size:12px;margin:6px 0}
+@media(max-width:600px){#pane-match .match-player{grid-template-columns:48px minmax(0,1fr)}#pane-match .match-time-label{grid-column:2}#pane-match .match-name-label{grid-column:1/3}}

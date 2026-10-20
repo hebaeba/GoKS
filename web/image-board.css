@@ -29,7 +29,7 @@ body #image-board-dialog #image-captured-black,body #image-board-dialog #image-c
 
 footer .about-open{display:block;width:max-content;max-width:100%;margin:6px auto 0;padding:0;border:0;background:transparent;box-shadow:none;font-weight:700;color:#17676a;cursor:pointer}footer .about-open:hover{text-decoration:underline}
 /* GTP settings and footer — update 40 */
-#engine-profile{display:none}#engine-order{display:flex;flex-direction:column;gap:3px;max-height:190px;overflow-y:auto;margin:5px 0}
+#engine-profile{display:none}#engine-order{display:flex;flex-direction:column;gap:3px;max-height:none;overflow-y:visible;margin:5px 0}
 #engine-order .engine-order-row{display:flex;gap:4px;align-items:center}#engine-order button{min-height:27px;width:auto;flex:0 0 auto;padding:3px 8px;font-size:12px}#engine-order button:first-child{flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:grab}#engine-order [data-selected=true] button:first-child{background:#d7eee6;border-color:#398371;font-weight:700}
 #engine-advanced{margin:8px 0}#engine-advanced textarea{width:100%;min-height:70px;font-size:12px}#engine-advanced input{width:100%}.engine-protocol{font-size:12px}
 footer{width:100%;max-width:none!important;align-items:center;justify-content:space-between;flex-wrap:wrap}footer .release-label{margin-right:auto}footer .footer-links{display:flex;align-items:center;gap:14px;margin-left:auto}footer .footer-links .about-open{display:inline-block;margin:0;font-size:inherit}footer .footer-links a{margin:0}

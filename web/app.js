@@ -507,7 +507,7 @@
   window.IndependentGo=Object.freeze({
     matchInfo(info){
       if(insertion||scoreSession||exportBusy||!canLeave())throw Error('編集中の操作を終了してください。');
-      const before=snapshot();for(const [key,value] of Object.entries(info)){if(!['PB','PW','RU','RE','DT'].includes(key))continue;if(value)root.props[key]=[String(value)];else delete root.props[key];}
+      const before=snapshot();for(const [key,value] of Object.entries(info)){if(!['PB','PW','GN','RU','RE','DT'].includes(key))continue;if(value)root.props[key]=[String(value)];else delete root.props[key];}
       remember(before);infoTarget=null;editing=true;tool='play';$('tool').value='play';refresh();
     },
     matchPlay(point,expected){
@@ -518,7 +518,7 @@
       if(index===oldIndex)throw Error('着手を反映できませんでした。');
     },
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
-    rotateBoard,displayPoint,
+    rotateBoard,displayPoint,getRotation(){return boardRotation;},
     importFile,nativeDrag,
     async nativeDrop(payload){
       nativeDrag('drop');
