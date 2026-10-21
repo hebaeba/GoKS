@@ -40,3 +40,6 @@ body .app-header[hidden]{display:none!important}
 .coordinate-choice input{margin:0;width:13px;height:13px;min-height:0;padding:0;accent-color:#245f57}
 body .board-block .topline{flex-wrap:wrap}
 @media(pointer:coarse){.coordinate-choice label{min-height:36px;padding:0 3px}}
+
+/* Update47: keep board lock separate from coordinates. */
+body .topline .board-lock{margin-left:auto;padding-left:16px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}body .statusline #move{color:inherit}
