@@ -26,3 +26,5 @@
 @media(min-width:900px) and (pointer:fine){
  body .header-actions button,body .inspector-pane button:not(.tool-table button):not(.engine-pick):not(.engine-order-row button),body .engine-dock button,body .controls .actions button,body .controls .compact-options button,body .controls .edit-buttons button,body #match-start-choice button{padding:3px!important;min-height:0!important;height:auto!important;line-height:1.4}
 }
+
+#pane-match #match-start{background:#245f57;color:white;border-color:#245f57}

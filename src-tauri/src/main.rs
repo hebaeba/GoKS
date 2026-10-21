@@ -42,13 +42,13 @@ fn main(){
   tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop{..})=>Some("drop"),
   _=>None,
  };
- if let Some(phase)=phase{let _=webview.eval(format!("window.IndependentGo?.nativeDrag({});",json!(phase)));}
+ if let Some(phase)=phase{let _=webview.eval(format!("window.KifuImageImport?.nativeDrag({0}) || window.IndependentGo?.nativeDrag({0});",json!(phase)));}
  // Activate the destination during an external record drag, without permanent
  // always-on-top. This also makes a later replacement confirmation interactive.
  let activate=match event {
   tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Enter{paths,..})|
   tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop{paths,..})=>
-    paths.len()==1 && paths[0].extension().and_then(|v|v.to_str()).map(|v|["sgf","ngf","ugf","ugi","gib","mgt"].contains(&v.to_ascii_lowercase().as_str())).unwrap_or(false),
+    paths.len()==1 && paths[0].extension().and_then(|v|v.to_str()).map(|v|["sgf","ngf","ugf","ugi","gib","mgt","png","jpg","jpeg","webp"].contains(&v.to_ascii_lowercase().as_str())).unwrap_or(false),
   _=>false,
  };
  if activate {if let Some(window)=webview.get_webview_window("main"){let _=window.unminimize();let _=window.show();let _=window.set_focus();}let _=webview.set_focus();}
@@ -57,16 +57,17 @@ fn main(){
   let paths=paths.clone();let x=position.x;let y=position.y;let view=webview.clone();
   std::thread::spawn(move||{
    let result=(||->Result<Value,String>{
-    if paths.len()!=1{return Err("棋譜ファイルは１つずつ読み込んでください".into());}
+    if paths.len()!=1{return Err("ファイルは１つずつ読み込んでください".into());}
     let path=&paths[0];let ext=path.extension().and_then(|v|v.to_str()).unwrap_or("").to_ascii_lowercase();
-    if !["sgf","ngf","ugf","ugi","gib","mgt"].contains(&ext.as_str()){return Err("対応する棋譜ファイルをドロップしてください".into());}
+    if !["sgf","ngf","ugf","ugi","gib","mgt","png","jpg","jpeg","webp"].contains(&ext.as_str()){return Err("対応する棋譜または画像ファイルをドロップしてください".into());}
     if !path.is_file(){return Err("棋譜ファイルを指定してください".into());}
-    use std::io::Read;let file=std::fs::File::open(path).map_err(|e|e.to_string())?;let mut bytes=Vec::new();file.take(2*1024*1024+1).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
-    if bytes.len()>2*1024*1024{return Err("棋譜ファイルは2MB以内にしてください".into());}
+    let limit=if ["png","jpg","jpeg","webp"].contains(&ext.as_str()){25*1024*1024}else{2*1024*1024};
+    use std::io::Read;let file=std::fs::File::open(path).map_err(|e|e.to_string())?;let mut bytes=Vec::new();file.take(limit+1).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
+    if bytes.len() as u64>limit{return Err("棋譜は2MB、画像は25MB以内にしてください".into());}
     Ok(json!({"name":path.file_name().and_then(|v|v.to_str()).unwrap_or("kifu.sgf"),"bytes":bytes,"x":x,"y":y}))
    })();
    let payload=result.unwrap_or_else(|error|json!({"error":error,"x":x,"y":y}));
-   let _=view.eval(format!("window.IndependentGo?.nativeDrop({});",payload));
+   let _=view.eval(format!("(()=>{{const p={0};window.KifuImageImport?.nativeDrop(p) || window.IndependentGo?.nativeDrop(p);}})();",payload));
   });
  }
  }).setup(|app|{
