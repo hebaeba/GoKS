@@ -34,3 +34,26 @@
 #pane-match .match-visits-label select{flex:none;width:auto;min-width:0}
 #pane-match .match-visits-label input{width:7ch;max-width:100%;flex:none}
 @media(max-width:600px){#pane-match .match-visits-label{grid-column:2}}
+
+/* Update52: compact right-aligned match limits and full-height inspector. */
+#pane-match .match-player>.match-time-label{grid-column:3;grid-row:1;justify-self:end}
+#pane-match .match-player>.match-visits-label{grid-column:3;grid-row:2;justify-self:end}
+#pane-match .match-player>.match-name-label{grid-column:1/3;grid-row:2;min-width:0}
+body #pane-match .match-time-label select,body #pane-match .match-visits-label select,
+body #pane-match .match-time-label input,body #pane-match .match-visits-label input{
+ padding:3px!important;min-height:0!important;height:auto!important;line-height:1.4;font-size:12px;box-sizing:content-box;min-width:0;flex:none
+}
+#pane-match .match-time-label select,#pane-match .match-visits-label select{field-sizing:content;width:auto;max-width:100%}
+body .engine-dock #engine-state{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;font-size:11px!important;line-height:1.4;padding:3px 6px;border:1px solid transparent;min-height:0}
+body .engine-dock #engine-quick{box-sizing:border-box;font-size:11px!important;line-height:1.4!important;padding:3px 6px!important;border-width:1px;min-height:0!important;height:auto!important}
+@media(min-width:900px){
+ body .inspector,body.editing-mode .inspector{display:flex;flex-direction:column;top:14px;height:calc(100dvh - 28px);max-height:calc(100dvh - 28px);box-sizing:border-box}
+ .inspector>.inspector-navigation,.inspector>.engine-dock{flex:0 0 auto}
+ .inspector>.inspector-pane{flex:1 0 auto;box-sizing:border-box}
+}
+@media(max-width:600px){
+ #pane-match .match-player{grid-template-columns:40px minmax(0,1fr) auto}
+ #pane-match .match-player>.match-name-label{grid-column:1/-1;grid-row:3}
+ #pane-match .match-player>.match-time-label{grid-column:3;grid-row:1}
+ #pane-match .match-player>.match-visits-label{grid-column:3;grid-row:2}
+}
