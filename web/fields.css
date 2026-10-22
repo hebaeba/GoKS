@@ -27,3 +27,12 @@ body input[type=number]::-webkit-inner-spin-button{appearance:none}
  font-size:16px!important;line-height:24px!important;height:24px!important;min-height:24px!important;max-height:24px!important;
  }
 }
+
+/* コミは常時見えるネイティブ上下矢印。文字の3px余白＋矢印幅を確保。 */
+html body :is(#field-policy #field-policy #field-policy,#komi-input,#match-komi){
+ appearance:auto!important;width:calc(var(--number-ch,4) * 1ch + 16px)!important;
+}
+html body :is(#field-policy #field-policy #field-policy,#komi-input,#match-komi)::-webkit-inner-spin-button{
+ appearance:auto!important;opacity:1!important;
+}
+.match-komi-label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
