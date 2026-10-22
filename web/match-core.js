@@ -6,9 +6,9 @@ function view(e,color){return {winrate:color==='W'?1-e.winrate:e.winrate,scoreLe
 function streak(previous,e,color,threshold){return e&&view(e,color).winrate<=threshold+1e-12?previous+1:0;}
 function sgf(snapshot,S){const parsed=S.parse(snapshot.sgf);let node=parsed.root;const first={props:{...node.props,CA:['UTF-8']},children:[]};let tail=first;for(let i=0;i<snapshot.index;i++){node=node.children[snapshot.path[i]];if(!node)throw Error('対局の経路が不正です');const copy={props:{...node.props},children:[]};tail.children=[copy];tail=copy;}return S.write(first);}
 function limits(seconds,visits){
- if(!Number.isFinite(seconds)||seconds<0.1||seconds>600)throw Error('指定時間は0.1〜600秒で入力してください。');
+ if(!Number.isFinite(seconds)||seconds<0||(seconds!==0&&seconds<0.1))throw Error('時間は0.1秒以上で入力するか、無制限を選んでください。');
  if(!Number.isSafeInteger(visits)||visits<1||visits>1000000000)throw Error('訪問数は1〜1000000000の整数で入力してください。');
- return ['time_settings 0 0 0','kata-set-param maxVisits '+visits,'kata-set-param maxPlayouts 1000000000','kata-set-param maxTime '+seconds];
+ return ['time_settings 0 0 0','kata-set-param maxVisits '+visits,'kata-set-param maxPlayouts 1000000000','kata-set-param maxTime '+(seconds===0?1e20:seconds)];
 }
 const api={limits,parseMove,view,streak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
 })(globalThis);

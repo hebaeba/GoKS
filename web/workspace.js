@@ -21,9 +21,9 @@
  const tools=$('tools');panes.tools.append(tools);tools.querySelector('summary').hidden=true;tools.open=true;tools.addEventListener('click',event=>{if(event.target.closest('[data-tool]')){tools.open=true;if(matchMedia('(max-width:899px)').matches)q('.canvas-wrap').scrollIntoView({behavior:'smooth',block:'start'});}});new MutationObserver(()=>{if(!panes.tools.hidden&&!tools.open)tools.open=true;}).observe(tools,{attributes:true,attributeFilter:['open']});const toolHeading=document.createElement('h2');toolHeading.textContent='碁石・記号・文字の配置';panes.tools.prepend(toolHeading);
  tools.querySelector('.close-tools').textContent='配置を終了';tools.querySelector('.close-tools').addEventListener('click',()=>{tools.open=true;activate('sequence');});
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
- const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・テキスト';files.prepend(recordHeading);
+ const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・書き込み';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新52</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新53</span>');
  q('.edit-buttons').append($('score'));
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent='';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
  function activate(id){
@@ -67,3 +67,8 @@
 
  panel.prepend(modeBar);$('tab-tools').hidden=true;$('tab-sequence').textContent='手順・ツール';$('tab-record').textContent='棋譜欄';window.KifuWorkspace={activate};activate('analysis');
 })();
+
+window.addEventListener('DOMContentLoaded',()=>{
+ const menu=document.getElementById('load-menu'),encoding=document.querySelector('.encoding-menu');
+ if(menu&&encoding){document.querySelector('#pane-record .files-panel h2').after(encoding);menu.hidden=true;}
+});

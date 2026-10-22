@@ -8,3 +8,9 @@ test('match limits independently set both colors, reject invalid visits, and pre
  assert.ok(M.limits(2,200).includes('kata-set-param maxVisits 200'));assert.ok(M.limits(1,1000).includes('kata-set-param maxVisits 1000'));
  for(const v of [0,-1,1.5,NaN,Infinity,1000000001])assert.throws(()=>M.limits(1,v));
 });
+
+test('match time may exceed 600 seconds or be unlimited while visits stay capped',()=>{
+ assert.ok(M.limits(3600,500).includes('kata-set-param maxTime 3600'));
+ const unlimited=M.limits(0,200);assert.ok(unlimited.includes('kata-set-param maxTime 100000000000000000000'));assert.ok(unlimited.includes('kata-set-param maxVisits 200'));
+ for(const seconds of [-1,NaN,Infinity,0.01])assert.throws(()=>M.limits(seconds,500));
+});

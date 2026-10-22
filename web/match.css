@@ -57,3 +57,11 @@ body .engine-dock #engine-quick{box-sizing:border-box;font-size:11px!important;l
  #pane-match .match-player>.match-time-label{grid-column:3;grid-row:1}
  #pane-match .match-player>.match-visits-label{grid-column:3;grid-row:2}
 }
+
+/* Fixed outer height also avoids native Windows button metrics. */
+body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active #engine-state{
+ appearance:none!important;box-sizing:border-box!important;height:24px!important;min-height:24px!important;max-height:24px!important;
+ display:inline-flex!important;align-items:center;justify-content:center;line-height:16px!important;font-size:11px!important;padding:3px 6px!important;border-width:1px!important;box-shadow:none
+}
+#analysis-visits-state{display:none!important}
+#load-menu[hidden]{display:none!important}

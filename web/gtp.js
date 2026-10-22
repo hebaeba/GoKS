@@ -46,7 +46,7 @@ class Bridge{
  reset(){this.epoch++;for(const p of this.pending.values()){clearTimeout(p.timeout);p.reject(Error('エンジンを停止しました'));}this.pending.clear();if(this.current)clearTimeout(this.current.timer);this.current=null;this.jobs.clear();this.response=null;this.events=[];this.queue=Promise.resolve();}
  commands(commands,stream=null){
   const lines=[],promises=[];
-  for(const command of commands){const id=String(++this.seq);lines.push(id+' '+command);promises.push(new Promise((resolve,reject)=>{const p={id,command,resolve,reject,lines:[],stream};p.timeout=setTimeout(()=>{this.pending.delete(id);reject(Error('GTP応答がありません：'+command.split(' ')[0]));},stream?3600000:600000);p.timeout.unref?.();this.pending.set(id,p);}));}
+  for(const command of commands){const id=String(++this.seq);lines.push(id+' '+command);promises.push(new Promise((resolve,reject)=>{const p={id,command,resolve,reject,lines:[],stream};if(!/^kata-genmove_analyze\s/.test(command)){p.timeout=setTimeout(()=>{this.pending.delete(id);reject(Error('GTP応答がありません：'+command.split(' ')[0]));},stream?3600000:600000);p.timeout.unref?.();}this.pending.set(id,p);}));}
   this.raw('send',{commands:lines}).catch(e=>{for(const line of lines){const id=line.split(' ')[0],p=this.pending.get(id);if(p){clearTimeout(p.timeout);this.pending.delete(id);p.reject(e);}}});
   return Promise.all(promises);
  }
