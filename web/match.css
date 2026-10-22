@@ -28,3 +28,9 @@
 }
 
 #pane-match #match-start{background:#245f57;color:white;border-color:#245f57}
+
+#pane-match .match-visits-label{grid-column:2/4;display:flex;gap:4px;align-items:center}
+#pane-match .match-visits-label[hidden]{display:none!important}
+#pane-match .match-visits-label select{flex:none;width:auto;min-width:0}
+#pane-match .match-visits-label input{width:7ch;max-width:100%;flex:none}
+@media(max-width:600px){#pane-match .match-visits-label{grid-column:2}}
