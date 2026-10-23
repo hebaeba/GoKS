@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 Add-Type -AssemblyName System.Windows.Forms
 $filters = @{
- exe = 'Go engine executable (*.exe)|*.exe'
+ exe = 'All files (*.*)|*.*'
  model = 'All files (*.*)|*.*'
  config = 'All files (*.*)|*.*'
 }

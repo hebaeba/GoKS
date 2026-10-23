@@ -36,3 +36,5 @@ html body :is(#field-policy #field-policy #field-policy,#komi-input,#match-komi)
  appearance:auto!important;opacity:1!important;
 }
 .match-komi-label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+
+#engine-extraArgs{white-space:pre;overflow-x:auto;overflow-wrap:normal;word-break:normal}#engine-extraArgs::placeholder{white-space:pre}

@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process');
 function validateFile(kind,file,windows=process.platform==='win32'){
- const patterns={exe:/\.exe$/i,model:/./s,config:/./s};
+ const patterns={exe:/./s,model:/./s,config:/./s};
  if(!patterns[kind])throw Error('ファイルの種類が不正です。');
  if((kind!=='exe'||windows)&&!patterns[kind].test(file))throw Error(({exe:'エンジンは .exe',model:'モデルは .bin.gz / .bin / .txt.gz / .txt',config:'設定は .cfg'})[kind]+' を選択してください。');
  if(!fs.existsSync(file)||!fs.statSync(file).isFile())throw Error('ファイルが見つかりません：'+file);

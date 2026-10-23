@@ -13,7 +13,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <label>実行ファイル（フルパス）<input id="engine-exe" placeholder="実行ファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-exe" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
 <label>モデルファイル<input id="engine-model" placeholder="モデルファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-model" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
 <label>GTP設定.cfg（省略すると同梱のCPU向け設定）<input id="engine-config" placeholder="空欄で標準設定" spellcheck="false"></label><button type="button" id="engine-pick-config" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
-<details id="engine-advanced"><summary>追加引数・作業フォルダー</summary><label>追加引数（１行に１引数。パスの引用符は不要）<textarea id="engine-extraArgs" rows="3" spellcheck="false" placeholder="例：-human-model&#10;C:/models/human.bin.gz"></textarea></label><label>作業フォルダー（空欄なら実行ファイルのフォルダー）<input id="engine-workdir" spellcheck="false"></label></details><div class="analysis-buttons"><button id="engine-connect">起動・接続</button><button id="engine-disconnect" disabled>エンジン終了</button></div>
+<details id="engine-advanced"><summary>追加引数・作業フォルダー</summary><label>追加引数（空白を含む値は半角の引用符で囲みます）<textarea id="engine-extraArgs" rows="3" spellcheck="false" placeholder="例：-human-model C:/models/human.bin.gz&#10;例：-override-config maxVisits=2000"></textarea></label><label>作業フォルダー（空欄なら実行ファイルのフォルダー）<input id="engine-workdir" spellcheck="false"></label></details><div class="analysis-buttons"><button id="engine-connect">起動・接続</button><button id="engine-disconnect" disabled>エンジン終了</button></div>
 <p id="engine-platform" class="analysis-note"></p></details>
 <div class="analysis-conditions"><label>ルール<select id="analysis-rules"><option value="japanese">日本ルール</option><option value="chinese">中国ルール</option></select></label><label>読み筋の表示手数<select id="analysis-pv-length" title="候補手の読み筋を取得・表示する最大手数です。探索の深さを制限する設定ではありません。"><option value="5">5手</option><option value="10">10手</option><option value="15">15手</option><option value="20" selected>20手</option><option value="30">30手</option></select></label><span class="analysis-visits" title="現在表示している局面の解析結果に含まれる総訪問数です。候補手１つの訪問数ではありません。">訪問数 <output id="analysis-visits">—</output><small id="analysis-visits-state">未解析</small></span></div>
 
@@ -63,13 +63,13 @@ const profileKey='kifu-engine-profiles-v1';
 let profiles=[];
 try{const data=JSON.parse(localStorage.getItem(profileKey)||'[]');if(Array.isArray(data))profiles=data.filter(p=>p&&(!p.kind||p.kind==='katago')&&typeof p.id==='string'&&typeof p.name==='string'&&['exe','model','config'].every(k=>typeof p[k]==='string'));}catch{}
 function engineKindUI(){
- $('engine-kind').value='katago';$('engine-model').placeholder='モデルファイルを選択（全ファイル表示）';$('engine-config').placeholder='空欄で同梱のGTP設定';
+ $('engine-kind').value='katago';$('engine-model').placeholder='モデルファイルを選択';$('engine-config').placeholder='空欄で同梱のGTP設定';
  $('engine-extraArgs').parentElement.firstChild.textContent='追加引数（１行に１引数。通常は空欄）';
 }
 $('engine-kind').onchange=()=>{engineKindUI();clearConfigurationError();controls();};
 engineKindUI();
 function profileMessage(text){$('engine-profile-message').textContent=text;}
-function paths(){return {kind:$('engine-kind').value,...Object.fromEntries(['exe','model','config','workdir'].map(k=>[k,$('engine-'+k).value.trim().replace(/^"|"$/g,'')])),extraArgs:$('engine-extraArgs').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)};}
+function paths(){return {kind:$('engine-kind').value,...Object.fromEntries(['exe','model','config','workdir'].map(k=>[k,$('engine-'+k).value.trim().replace(/^"|"$/g,'')])),extraArgs:KifuEngineArgs.parse($('engine-extraArgs').value)};}
 function renderProfiles(selected=''){$('engine-settings').classList.remove('profile-editing');$('engine-profile').replaceChildren(new Option('新しく登録する',''));for(const p of profiles)$('engine-profile').append(new Option(p.name,p.id));$('engine-profile').value=selected;$('engine-profile-save').textContent=selected?'登録を更新':'リストに追加';$('engine-profile-delete').disabled=!selected;renderOrder(selected);}
 function renderOrder(selected){
  const list=$('engine-order');list.replaceChildren();$('engine-profile-count').textContent='登録 '+profiles.length+' 件';$('engine-order-expand').hidden=true;

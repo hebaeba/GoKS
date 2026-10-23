@@ -23,8 +23,8 @@ impl Engine {
         #[cfg(not(windows))]Err("選択ボタンはWindows用です。パスを直接入力してください。".into())
     }
     fn validate_extension(kind:&str,path:&Path)->Result<(),String>{
-        let text=path.to_string_lossy().to_lowercase();
-        let valid=match kind{"exe"=>!cfg!(windows)||text.ends_with(".exe"),"model"|"config"=>true,_=>false};
+        let _=path;
+        let valid=match kind{"exe"|"model"|"config"=>true,_=>false};
         if valid{Ok(())}else{Err(format!("{} の拡張子が対応していません（exe / bin.gz・bin・txt.gz・txt / cfg）",kind))}
     }
     pub fn start(&mut self,payload:&Value)->Result<Value,String>{
