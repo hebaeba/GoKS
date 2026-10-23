@@ -7,7 +7,7 @@
   const allElements=selector=>[...new Set([...document.querySelectorAll(selector),...(toolRoot?toolRoot.querySelectorAll(selector):[])])];
   let root = S.create(), size = 19, choices = new WeakMap(), route = [], frames = [], numberFrames = [], issues = [], index = 0;
   let editing = true, numbers = false, dirty = false, focusPoint = 0, keyboardBoard = false, originalName = 'kifu.sgf';
-  let autoTimer=null,autoPlaying=false,analysisPreview=null,boardRotation=0;
+  let autoTimer=null,autoPlaying=false,analysisPreview=null,boardRotation=0,boardMirror=false;
   let showCoordinates=true;try{showCoordinates=localStorage.getItem("kifu-coordinates")!=="off";}catch{}
   const canvas = $('board'), context = canvas.getContext('2d');
   const read = (props, key, fallback = '') => props[key]?.[0] ?? fallback;
@@ -144,8 +144,8 @@
   $('apply-comment').onclick=()=>{const value=$('comment-edit').value;transaction(()=>{if(value)route[index].props.C=[value];else delete route[index].props.C;},'コメントを反映しました。');};
   $('apply-info').onclick=()=>{if(!$('info-edit').querySelector('input[data-prop=KM]').checkValidity()){report('コミを0.5刻みの数値で入力してください。',true);return;}transaction(()=>{allElements('[data-prop]').forEach(input=>{if(input.value)root.props[input.dataset.prop]=[input.value];else delete root.props[input.dataset.prop];});},'対局情報を反映しました。');};
 
-  function displayPoint(point,turns=boardRotation){let x=point%size,y=Math.floor(point/size);for(let n=0;n<(turns+4)%4;n++){[x,y]=[size-1-y,x];}return y*size+x;}
-  function originalPoint(point){return displayPoint(point,4-boardRotation);}
+  function displayPoint(point,turns=boardRotation,mirror=boardMirror){let x=point%size,y=Math.floor(point/size);if(mirror)x=size-1-x;for(let n=0;n<(turns+4)%4;n++){[x,y]=[size-1-y,x];}return y*size+x;}
+  function originalPoint(point){const p=displayPoint(point,4-boardRotation,false);return boardMirror?Math.floor(p/size)*size+size-1-p%size:p;}
   function displayXY(point,g=geometry()){const p=displayPoint(point);return {x:g.start+p%size*g.gap,y:g.start+Math.floor(p/size)*g.gap};}
   function rotateBoard(turns){boardRotation=(boardRotation+turns+4)%4;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));}
   function geometry() {
@@ -322,7 +322,7 @@
     a.href=url;a.download=originalName;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     report('SGFをダウンロードしました。保存先はブラウザーの設定に従います。');
   }
-  function exportSgf(){return S.write(GoExport.rotated(S.parse(serialized()).root,size,boardRotation));}
+  function exportSgf(){return S.write(GoExport.rotated(S.parse(serialized()).root,size,boardRotation,boardMirror));}
   $('save').onclick=async()=>{
     if(insertion||!canLeave())return;if(!GoExport.hasRecord(root)){report('保存する棋譜がありません。');return;}const content=exportSgf();let handle;if(window.__TAURI_INTERNALS__?.invoke){try{if(await GoExport.save(new Blob([content],{type:'application/x-go-sgf'}),originalName)){dirty=false;report('SGFファイルを保存しました。');}}catch(e){report('保存できません：'+e.message,true);}return;}
     if(window.showSaveFilePicker){
@@ -534,6 +534,26 @@
       if(index===oldIndex)throw Error('着手を反映できませんでした。');
     },
     getSgf(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
+    mirrorBoard(){boardMirror=!boardMirror;boardRotation=(4-boardRotation)%4;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));},
+    resetOrientation(){boardMirror=false;boardRotation=0;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));},
+    flipColors(){
+      if(insertion||scoreSession||exportBusy||document.body.classList.contains('match-running')||!canLeave())return false;
+      editing=true;
+      return transaction(()=>{
+        const initialTurn=frames[0].turn;
+        visitTree(node=>{
+          const p=node.props;
+          for(const [a,b] of [['B','W'],['AB','AW'],['TB','TW'],['PB','PW'],['BR','WR'],['BT','WT'],['BL','WL'],['OB','OW'],['XIGCAPB','XIGCAPW']]){
+            const av=p[a],bv=p[b];delete p[a];delete p[b];if(bv)p[a]=bv;if(av)p[b]=av;
+          }
+          if(p.PL)p.PL=[p.PL[0]==='B'?'W':'B'];
+          if(p.KM&&Number.isFinite(Number(p.KM[0])))p.KM=[String(-Number(p.KM[0]))];
+          if(p.RE)p.RE=p.RE.map(v=>v.replace(/^[BW](?=\+)/,c=>c==='B'?'W':'B'));
+        });
+        if(!root.props.PL)root.props.PL=[initialTurn===R.BLACK?'W':'B'];
+        analysisPreview=null;infoTarget=null;
+      },'白黒を反転しました。対局者・コミ・結果も入れ替えました。');
+    },
     rotateBoard,displayPoint,getCoordinates(){return showCoordinates;},setCoordinates(value){showCoordinates=!!value;try{localStorage.setItem("kifu-coordinates",showCoordinates?"on":"off");}catch{}analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event("kifu-board-view"));},getRotation(){return boardRotation;},
     importFile,nativeDrag,
     async nativeDrop(payload){

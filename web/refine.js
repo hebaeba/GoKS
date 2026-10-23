@@ -49,10 +49,13 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
 ;(()=>{
  const tools=document.querySelector('.board-view-tools');
  const group=document.createElement('span');group.className='reflection-controls';
- group.innerHTML='<label title="表示中の盤面を左右に反転します。棋譜は表示中の向きで保存します"><input id="mirror-board" type="checkbox">鏡像反転</label><label title="全手順の白黒・対局者・コミ・結果を入れ替えます。取り消しできます"><input id="color-flip" type="checkbox">白黒反転</label>';
+ group.innerHTML='<button id="mirror-board" type="button" title="表示中の盤面を左右に反転します。2回押すと元に戻ります">鏡像反転</button><button id="color-flip" type="button" title="全手順の白黒・対局者・コミ・結果を入れ替えます。取り消しできます">白黒反転</button>';
  tools.append(group);
- document.getElementById('mirror-board').onchange=e=>IndependentGo.setMirror(e.target.checked);
- document.getElementById('color-flip').onchange=e=>{if(!IndependentGo.flipColors(e.target.checked))e.target.checked=!e.target.checked;};
+ document.getElementById('mirror-board').onclick=()=>IndependentGo.mirrorBoard();
+ document.getElementById('color-flip').onclick=()=>IndependentGo.flipColors();
+ document.getElementById('rotate-reset').onclick=()=>IndependentGo.resetOrientation();
+ window.addEventListener('kifu-board-view',()=>{document.getElementById('rotation-state').textContent=IndependentGo.getRotation()*90+'°';});
+ window.addEventListener('kifu-record-replaced',()=>IndependentGo.resetOrientation());
  const recent=document.querySelector('.recent-label'),turn=document.getElementById('turn');
  recent.after(turn);turn.classList.add('turn-after-recent');
 })();

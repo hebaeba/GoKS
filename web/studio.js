@@ -31,7 +31,7 @@ $('analysis-status').after(rank);
 
 const rotation=document.createElement('div');rotation.className='board-view-tools';rotation.innerHTML='<span>盤面の向き</span><button id="rotate-left" title="左へ90度回転します。棋譜は表示中の向きで保存します">↶ 左回転</button><button id="rotate-right" title="右へ90度回転します。棋譜は表示中の向きで保存します">↷ 右回転</button><button id="rotate-reset" title="元の表示方向に戻します">元に戻す</button><output id="rotation-state">0°</output>';
 rotation.querySelector('span').textContent='回転';q('.position-settings').insertBefore(rotation,q('.jump'));let angle=0;
-function turn(n){angle=(angle+n+4)%4;api.rotateBoard(n);$('rotation-state').textContent=angle*90+'°';}
+function turn(n){api.rotateBoard(n);angle=api.getRotation();$('rotation-state').textContent=angle*90+'°';}
 $('rotate-left').textContent='↶';$('rotate-left').setAttribute('aria-label','左へ90度回転');$('rotate-right').textContent='↷';$('rotate-right').setAttribute('aria-label','右へ90度回転');$('rotate-reset').textContent='元の向き';
 $('rotate-left').onclick=()=>turn(-1);$('rotate-right').onclick=()=>turn(1);$('rotate-reset').onclick=()=>turn(-angle);window.addEventListener('kifu-record-replaced',()=>turn(-angle));
 // Fixed-size vector glyphs avoid font-dependent symbol sizes.
