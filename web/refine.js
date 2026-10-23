@@ -45,3 +45,14 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
 })();
 
 ;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;function openGuide(title,url){d.querySelector('strong').textContent=title;frame.src=url;d.showModal();}document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();openGuide(a.textContent,a.href);};});const about=document.getElementById('about-open');if(about){const help=about.closest('.help');help.remove();const footer=document.querySelector('footer'),links=document.createElement('span');links.className='footer-links';footer.append(links);links.append(about,...footer.querySelectorAll('a'));about.className='about-open';about.onclick=()=>openGuide('このKifu-Editorについて','README.html?v=46');}frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();
+
+;(()=>{
+ const tools=document.querySelector('.board-view-tools');
+ const group=document.createElement('span');group.className='reflection-controls';
+ group.innerHTML='<label title="表示中の盤面を左右に反転します。棋譜は表示中の向きで保存します"><input id="mirror-board" type="checkbox">鏡像反転</label><label title="全手順の白黒・対局者・コミ・結果を入れ替えます。取り消しできます"><input id="color-flip" type="checkbox">白黒反転</label>';
+ tools.append(group);
+ document.getElementById('mirror-board').onchange=e=>IndependentGo.setMirror(e.target.checked);
+ document.getElementById('color-flip').onchange=e=>{if(!IndependentGo.flipColors(e.target.checked))e.target.checked=!e.target.checked;};
+ const recent=document.querySelector('.recent-label'),turn=document.getElementById('turn');
+ recent.after(turn);turn.classList.add('turn-after-recent');
+})();
