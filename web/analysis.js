@@ -13,7 +13,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <label>実行ファイル（フルパス）<input id="engine-exe" placeholder="実行ファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-exe" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
 <label>モデルファイル<input id="engine-model" placeholder="モデルファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-model" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
 <label>GTP設定.cfg（省略すると同梱のCPU向け設定）<input id="engine-config" placeholder="空欄で標準設定" spellcheck="false"></label><button type="button" id="engine-pick-config" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
-<details id="engine-advanced"><summary>追加引数・作業フォルダー</summary><label>追加引数（空白を含む値は半角の引用符で囲みます）<textarea id="engine-extraArgs" rows="3" spellcheck="false" placeholder="例：-human-model C:/models/human.bin.gz&#10;例：-override-config maxVisits=2000"></textarea></label><label>作業フォルダー（空欄なら実行ファイルのフォルダー）<input id="engine-workdir" spellcheck="false"></label></details><div class="analysis-buttons"><button id="engine-connect">起動・接続</button><button id="engine-disconnect" disabled>エンジン終了</button></div>
+<details id="engine-advanced"><summary>追加引数・作業フォルダー</summary><label>追加引数（空白を含む値は半角の引用符で囲みます）<textarea id="engine-extraArgs" rows="3" spellcheck="false" placeholder="例：-human-model ./models/human.bin.gz&#10;例：-override-config maxVisits=2000"></textarea></label><label>作業フォルダー（空欄なら実行ファイルのフォルダー）<input id="engine-workdir" spellcheck="false"></label></details><div class="analysis-buttons"><button id="engine-connect">起動・接続</button><button id="engine-disconnect" disabled>エンジン終了</button></div>
 <p id="engine-platform" class="analysis-note"></p></details>
 <div class="analysis-conditions"><label>ルール<select id="analysis-rules"><option value="japanese">日本ルール</option><option value="chinese">中国ルール</option></select></label><label>読み筋の表示手数<select id="analysis-pv-length" title="候補手の読み筋を取得・表示する最大手数です。探索の深さを制限する設定ではありません。"><option value="5">5手</option><option value="10">10手</option><option value="15">15手</option><option value="20" selected>20手</option><option value="30">30手</option></select></label><span class="analysis-visits" title="現在表示している局面の解析結果に含まれる総訪問数です。候補手１つの訪問数ではありません。">訪問数 <output id="analysis-visits">—</output><small id="analysis-visits-state">未解析</small></span></div>
 
@@ -47,7 +47,7 @@ const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overl
 let running=false,ready=false,polling=false,session=null,results=new Map(),active=null,engineMeta=null,handshake=null,selectedCandidate=0,logs=[],timer=null,unsaved=false,pendingCalls=0,lastRu=null,previewLine=null;
 let stopping=null,live=false,liveTarget='',followVersion=0,followTimer=null,followQueue=Promise.resolve();
 let engineEpoch=0,dismissedRunEpoch=-1,runningConfig=null;
-let requestedScope=null,defaultsLoaded=false,autoAttempted=false;
+let requestedScope=null,defaultsLoaded=false,autoAttempted=false,bundledStartup=null;
 let startupAt=0,startupPhase='idle',startupName='';
 const displayKey='kifu-candidate-display-v2';
 let display={count:5,detail:2,perspective:'turn'};
@@ -294,17 +294,29 @@ async function initBundledEngine(){
  if(!available||window.KifuRemote)return;
  try{const d=await call('defaults');if(!d?.exe)return;
   const selected=$('engine-profile').value;
-  const bundled={id:'bundled-eigen',kind:'katago',name:d.name,exe:d.exe,model:d.model,config:d.config},idx=profiles.findIndex(x=>x.id==='bundled-eigen');
+  bundledStartup=d;const bundled={id:'bundled-eigen',kind:'katago',name:d.name,exe:d.exe,model:d.model,config:d.config},idx=profiles.findIndex(x=>x.id==='bundled-eigen');
   let hidden=false;try{hidden=localStorage.getItem('kifu-bundled-hidden')==='1';}catch{}
   if(idx<0&&!hidden)profiles.unshift(bundled);else if(idx>=0&&!profiles[idx].userEdited)profiles[idx]={...profiles[idx],...bundled};writeProfiles(profiles);
   const currentBundled=profiles.find(p=>p.id==='bundled-eigen');
   if(currentBundled&&(!paths().exe||selected==='bundled-eigen'||(/[/\\]engines[/\\]eigen[/\\]katago\.exe$/i.test(paths().exe)&&/analysis_example\.cfg$/i.test(paths().config)))){
    $('engine-kind').value='katago';engineKindUI();for(const k of ['exe','model','config'])$('engine-'+k).value=currentBundled[k];$('engine-name').value=currentBundled.name;$('engine-workdir').value=currentBundled.workdir||'';$('engine-extraArgs').value=(currentBundled.extraArgs||[]).join('\n');renderProfiles('bundled-eigen');
   }else renderProfiles(selected);
-  defaultsLoaded=true;controls();if($('engine-profile').value==='bundled-eigen'&&!currentBundled?.userEdited&&d.missing?.length){autoAttempted=true;engineError('同梱エンジンのファイルが不足しています：'+d.missing.join('、')+'。ZIPをすべて展開してください。');return;}autoConnect();
+  defaultsLoaded=true;controls();if(d.missing?.length){autoAttempted=true;engineError('同梱エンジンのファイルが不足しています：'+d.missing.join('、')+'。ZIPをすべて展開してください。');return;}autoConnect();
  }catch(e){log('同梱エンジンの確認：'+e.message);}
 }
-function autoConnect(){} // Engines start only through explicit user action.
+function autoConnect(){
+ if(autoAttempted||!defaultsLoaded||!bundledStartup||!available||window.KifuRemote)return;
+ autoAttempted=true;
+ // Once per application launch. An explicit start/stop takes precedence.
+ if(engineEpoch||running||handshake||pendingCalls)return;
+ const d=bundledStartup;
+ $('engine-kind').value='katago';engineKindUI();
+ for(const k of ['exe','model','config'])$('engine-'+k).value=d[k]||'';
+ $('engine-name').value=d.name||'KataGo Eigen（CPU・標準）';
+ $('engine-workdir').value='';$('engine-extraArgs').value='';
+ renderProfiles(profiles.some(p=>p.id==='bundled-eigen')?'bundled-eigen':'');
+ connect();
+}
 window.addEventListener('workspace-layout',autoConnect);
 setTimeout(initBundledEngine,0);
 $('engine-connect').onclick=async()=>{if(pendingCalls)return;if(running||handshake)await disconnect();await connect();};$('engine-disconnect').onclick=disconnect;const quick=document.createElement('button');quick.id='engine-quick';quick.textContent='起動';$('engine-active').append(quick);quick.onclick=()=>running?disconnect():connect();$('analyze-all').onclick=()=>requestAnalysis('all');
