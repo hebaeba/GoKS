@@ -27,6 +27,6 @@ jobs:
       - name: Collect Windows executable
         uses: actions/upload-artifact@v4
         with:
-          name: kifu-editor-windows-test
+          name: GoKifuStudio-Windows
           path: dist/*
           if-no-files-found: error
