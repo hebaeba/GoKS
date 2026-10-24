@@ -1,0 +1,38 @@
+
+/* Desktop density and height policy; fields.css remains last for 3px inputs. */
+@media(min-width:900px) and (pointer:fine){
+ html,body{height:100%;overflow:hidden}
+ body main,body.editing-mode main{height:100dvh;box-sizing:border-box;padding:6px 12px;display:flex;flex-direction:column;max-width:none}
+ body .workspace{flex:1;min-height:0;margin:0;align-items:start}
+ body .board-panel,body.editing-mode .board-panel{height:100%;min-height:0;overflow:auto;scrollbar-width:thin}
+ body .board-block,body.editing-mode .board-block{padding:6px;margin:0 0 6px;border-radius:7px}
+ body .board-heading{min-height:26px;margin:0 0 3px;gap:6px}
+ body .game-title{font-size:13px!important}
+ body .board-block .topline{min-height:26px;margin:0 0 4px;gap:6px}
+ body .board-panel .board-block .canvas-wrap{width:var(--fit-board-size,100%)!important;max-width:100%!important;margin:0 auto}
+ body #board{display:block;width:100%;height:auto}
+ body .players{min-height:22px;height:22px;margin:3px 0 0;padding:0}
+ body .statusline{min-height:24px;margin:2px 0 0;padding:0}
+ body #comment-area{margin:4px 0 0;padding-top:3px;max-height:70px;overflow:auto}
+ body #comment-area h2{display:none}
+ body .board-panel .controls{padding:6px;border-radius:7px;margin:0}
+ body .controls .compact-options{gap:4px;min-height:24px;flex-wrap:wrap}
+ body .controls details{margin:3px 0 0;padding:3px 0 0}
+ body button,body summary{font-size:12px!important;line-height:16px!important}
+ body button{box-sizing:border-box!important;padding:3px!important;height:24px!important;min-height:24px!important}
+ body .controls .navigation button{height:26px!important;min-height:26px!important;font-size:14px!important}
+ body #analyze-live,body #match-start{height:26px!important;font-size:13px!important;font-weight:700}
+ body .workspace-tabs button{height:28px!important;min-height:28px!important}
+ body .board-view-tools{font-size:12px;gap:4px}
+ body .board-view-tools button{font-size:12px!important;min-width:26px}
+ body .controls #auto-play{height:26px!important}
+ body #board-fit{width:14px!important;height:14px!important;min-height:14px!important;padding:0!important}
+ body .inspector,body.editing-mode .inspector{position:relative;top:0;height:100%!important;max-height:100%!important;min-height:0;overflow:auto;scrollbar-width:thin}
+ body .inspector-pane{padding:10px}
+ body .engine-dock{padding:6px 10px}
+ body .engine-dock #engine-active{margin:3px 0;padding:4px 8px}
+ body .engine-dock .analysis-primary{margin:4px 0}
+ body .inspector .tool-table button{height:auto!important;min-height:24px!important}
+ body .inspector h2,body .inspector h3{font-size:13px!important}
+ body footer{overflow:hidden;flex:0 0 20px;height:20px;line-height:20px;margin:0;padding:0;font-size:11px}
+}

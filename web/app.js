@@ -151,7 +151,7 @@
   function geometry() {
     const extent = size <= 9 ? 390 : size <= 13 ? 430 : 460;
     const pixel=extent/(canvas.clientWidth||extent);
-    const wood=showCoordinates?Math.max(18,36-10*pixel):pixel;
+    const wood=showCoordinates?23*pixel:pixel;
     const span=extent-2*wood, gap=span/size, start=wood+gap/2;
     return {extent,gap,start,wood,span};
   }
@@ -183,7 +183,7 @@
     c.strokeStyle = '#564424'; c.lineWidth = .85; c.beginPath();
     for (let n=0;n<size;n++) { const pos=start+n*gap; c.moveTo(start,pos); c.lineTo(start+(size-1)*gap,pos); c.moveTo(pos,start); c.lineTo(pos,start+(size-1)*gap); } c.stroke();
     c.fillStyle='#4a3a21'; for (const [x,y] of starPoints(size)) { c.beginPath(); c.arc(start+x*gap,start+y*gap,Math.max(2,gap*.08),0,Math.PI*2); c.fill(); }
-    c.fillStyle='#24332e'; c.textAlign='center'; c.textBaseline='middle'; c.font=Math.min(16,wood*.65,Math.max(11,gap*.43))+'px system-ui,sans-serif';
+    c.fillStyle='#24332e'; c.textAlign='center'; c.textBaseline='middle'; c.font=(12*extent/(canvas.clientWidth||extent))+'px system-ui,sans-serif';
     const letters='ABCDEFGHJKLMNOPQRST';
     if(showCoordinates)for(let n=0;n<size;n++) { const pos=start+n*gap,top=originalPoint(n),left=originalPoint(n*size);const a=boardRotation%2?String(size-Math.floor(top/size)):letters[top%size],b=boardRotation%2?letters[left%size]:String(size-Math.floor(left/size));c.fillText(a,pos,wood/2);c.fillText(a,pos,extent-wood/2);c.fillText(b,wood/2,pos);c.fillText(b,extent-wood/2,pos); }
     state.board.forEach((color,point)=>{

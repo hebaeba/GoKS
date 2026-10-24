@@ -71,6 +71,19 @@ fn main(){
   });
  }
  }).setup(|app|{
+ // Account for Windows decorations in physical pixels; keep the initial outer height <= 980.
+ if let Some(window)=app.get_webview_window("main"){
+   if let (Ok(outer),Ok(inner),Ok(Some(monitor)))=(window.outer_size(),window.inner_size(),window.current_monitor()){
+     let border_h=outer.height.saturating_sub(inner.height);
+     let border_w=outer.width.saturating_sub(inner.width);
+     let target_h=980u32.min(monitor.size().height.saturating_sub(80));
+     let target_w=outer.width.min(monitor.size().width.saturating_sub(40));
+     let _=window.set_min_size(Some(tauri::PhysicalSize::new(360u32,500u32)));
+     let _=window.set_size(tauri::PhysicalSize::new(target_w.saturating_sub(border_w),target_h.saturating_sub(border_h)));
+     let _=window.center();
+   }
+ }
+
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
  app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
  }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");

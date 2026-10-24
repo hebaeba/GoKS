@@ -1,4 +1,4 @@
-更新22：dist内を全部展開し、kifu-editor.exeとenginesフォルダーを隣に置いてください。標準Eigenが解析中心画面で自動起動します。エンジン名横の赤丸を確認してください。
+更新22：dist内を全部展開し、GoKifuStudio.exeとenginesフォルダーを隣に置いてください。標準Eigenが解析中心画面で自動起動します。エンジン名横の赤丸を確認してください。
 
 更新19：画面下部の更新番号、起動・接続ボタン、ドラッグ時の盤面上部の状態表示、OSからの棋譜読込みを確認してください。
 
@@ -27,7 +27,7 @@ KataGo本体・モデル・DLLは含めていません。
    `.github/workflows/windows.yml`も含めてください。秘密の設定や個人の棋譜を入れる必要はありません。
 2. Actionsで「Windows test build」を選び、Run workflowを実行します。
 3. 成功した実行のArtifactsから `kifu-editor-windows-test` をダウンロードします。
-4. ZIPを展開し `kifu-editor.exe` を起動します。ビルド失敗の場合、exeができたとは扱わないでください。
+4. ZIPを展開し `GoKifuStudio.exe` を起動します。ビルド失敗の場合、exeができたとは扱わないでください。
 
 GitHubの操作とビルドは利用者の環境で行います。
 生成されたexeは未署名のテスト版です。Windows上で下の確認を行ってから配布してください。
@@ -37,7 +37,7 @@ Rust（MSVC版）とVisual Studio C++ Build Tools／Windows SDKを準備したPC
 
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 
-結果は `dist/kifu-editor.exe`。ビルド後の同梱エンジン検証にNode.jsを使います（GitHub Actionsには設定済み）。
+結果は `dist/GoKifuStudio.exe`。ビルド後の同梱エンジン検証にNode.jsを使います（GitHub Actionsには設定済み）。
 実行する利用者にはRust・Node.js・Visual Studioは不要です。Microsoft Edge WebView2 Runtimeは必要です。
 
 ## Windows実機での確認項目（更新16では要確認）
