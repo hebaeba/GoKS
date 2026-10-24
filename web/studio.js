@@ -42,7 +42,17 @@ const dlg=document.createElement('dialog');dlg.id='paste-dialog';dlg.innerHTML='
 paste.onclick=async()=>{try{const text=await navigator.clipboard.readText();if(text.trim()){api.pasteRecord(text);return;}}catch{}dlg.showModal();$('paste-text').focus();};
 $('paste-load').onclick=async()=>{const text=$('paste-text').value;dlg.close();if(!await api.pasteRecord(text))dlg.showModal();};$('paste-close').onclick=()=>dlg.close();
 const open=$('workspace-open'),hint=document.createElement('div');hint.id='open-record-hint';hint.className='open-record-hint';hint.hidden=true;hint.setAttribute('role','tooltip');hint.textContent='クリック：棋譜ファイルを選択\nドラッグ：棋譜ファイルを盤面へ\n貼り付け：盤面にフォーカスしてCtrl+V、または盤面を右クリック';q('.header-actions').append(hint);open.setAttribute('aria-describedby',hint.id);open.removeAttribute('title');
-const hideHint=()=>hint.hidden=true;open.addEventListener('mouseenter',()=>hint.hidden=false);open.addEventListener('mouseleave',hideHint);open.addEventListener('focus',()=>hint.hidden=false);open.addEventListener('blur',hideHint);open.addEventListener('click',hideHint);window.addEventListener('blur',hideHint);document.addEventListener('keydown',e=>{if(e.key==='Escape')hideHint();});
+let hintSuppressed=false,keyboardFocus=false;
+const hideHint=()=>hint.hidden=true;
+const suppressHint=()=>{hintSuppressed=true;hideHint();};
+open.addEventListener('pointerdown',suppressHint);
+open.addEventListener('mouseenter',()=>{if(!hintSuppressed)hint.hidden=false;});
+open.addEventListener('mouseleave',()=>{hintSuppressed=false;hideHint();});
+open.addEventListener('focus',()=>{if(keyboardFocus&&!hintSuppressed)hint.hidden=false;keyboardFocus=false;});
+open.addEventListener('blur',hideHint);open.addEventListener('click',suppressHint);
+window.addEventListener('blur',hideHint);window.addEventListener('kifu-record-replaced',suppressHint);
+document.addEventListener('keydown',e=>{keyboardFocus=e.key==='Tab';if(keyboardFocus)hintSuppressed=false;if(e.key==='Escape')hideHint();},true);
+
 
 // Focus the board without placing a move before pasting (right-click or keyboard Tab).
 $('board').addEventListener('contextmenu',event=>{event.preventDefault();$('board').focus();paste.click();});

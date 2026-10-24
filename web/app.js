@@ -284,7 +284,7 @@
     if(recordLoadPending)return false;recordLoadPending=true;
     try{const game=GoImport.parse(text,name);validate(game.root,game.size);
       if(insertion||scoreSession)return false;
-      if((dirty||hasCommentDraft()||hasInfoDraft())&&!await confirmRecordReplace())return false;
+      if((dirty&&KifuRecordState.hasContent(root)||hasCommentDraft()||hasInfoDraft())&&!await confirmRecordReplace())return false;
       if(window.KifuMatch?.locked||scoreSession||insertion)return false;
       clearDrafts();
       clearTimeout(recoveryTimer);root=game.root;size=game.size;choices=new WeakMap();index=0;dirty=false;editing=false;focusPoint=0;originalName=name.replace(/\.(?:sgf|ngf|ugf|ugi|gib|mgt)$/i,'')+'.sgf';

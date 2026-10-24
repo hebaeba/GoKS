@@ -46,3 +46,8 @@ body #image-board-dialog .image-adjustments small{flex-basis:100%}
 body #image-board-dialog .image-footer{position:sticky;bottom:-10px;background:#f8faf9;padding:8px 0 2px;z-index:2}
 #engine-list-disclosure>summary{cursor:pointer;margin:6px 0}
 body #image-board-dialog #image-source{aspect-ratio:auto!important}
+
+/* Recognition controls stay below the original image, always visible. */
+body #image-board-dialog .image-work>section:first-child .image-adjustments{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:6px 0}
+body #image-board-dialog .image-adjustments small{flex-basis:auto}
+body #image-board-dialog .image-work canvas{max-height:min(360px,max(120px,calc(100dvh - 520px)))}
