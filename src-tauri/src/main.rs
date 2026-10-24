@@ -30,9 +30,15 @@ async fn desktop_save(name:String,bytes:Vec<u8>)->Result<Value,String>{
  }).await.map_err(|e|e.to_string())?
 }
 #[tauri::command]
+fn desktop_close(app:tauri::AppHandle){app.exit(0);}
+#[tauri::command]
 async fn desktop_print(window:tauri::WebviewWindow)->Result<(),String>{window.print().map_err(|e|e.to_string())}
 fn main(){
  let app=tauri::Builder::default().on_window_event(|window,event|{
+ if window.label()=="main" {if let tauri::WindowEvent::CloseRequested{api,..}=event{
+  api.prevent_close();if let Some(view)=window.get_webview_window("main"){let _=view.eval("window.KifuDialogs?.requestClose()");}return;
+ }}
+
  if window.label()!="main"{return;}
  let Some(webview)=window.get_webview_window("main") else{return;};
  // Combined WebviewWindow drag notifications are delivered through WindowEvent.
@@ -86,6 +92,6 @@ fn main(){
 
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
  app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
- }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
+ }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print,desktop_close]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
  app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){for engine in [&state.engine,&state.black,&state.white]{if let Ok(mut engine)=engine.lock(){engine.stop();}}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
 }

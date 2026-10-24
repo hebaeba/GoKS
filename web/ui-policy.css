@@ -22,3 +22,11 @@ html body #white-captures{justify-self:start;width:max-content;max-width:100%}
 #record-replace-dialog{max-width:min(460px,90vw);border:1px solid #72958a;border-radius:8px;padding:16px;color:#183b3d;background:white}
 #record-replace-dialog::backdrop{background:#142d2855}
 #record-replace-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+
+/* Del deletion should not add a keyboard-focus frame. Tab/arrow focus remains visible. */
+html body #board.delete-key-focus:focus-visible{outline:none!important;box-shadow:none!important}
+
+#app-confirm-dialog{max-width:min(480px,90vw);border:1px solid #72958a;border-radius:8px;padding:16px;color:#183b3d;background:white}
+#app-confirm-dialog::backdrop{background:#142d2855}
+#app-confirm-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+#app-confirm-dialog p{white-space:pre-line}
