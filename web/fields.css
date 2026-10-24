@@ -3,8 +3,8 @@
 html body :is(#field-policy #field-policy #field-policy,select,input:not([type]),input[type=text],input[type=number],input[type=search],input[type=password],input[type=url],input[type=email]){
  box-sizing:content-box!important;
  padding:3px!important;
- height:16px!important;min-height:16px!important;max-height:16px!important;
- font-size:12px!important;line-height:16px!important;
+ height:18px!important;min-height:18px!important;max-height:18px!important;
+ font-size:14px!important;line-height:18px!important;
  border-width:1px!important;border-radius:4px;
  margin-top:0!important;margin-bottom:0!important;
 }

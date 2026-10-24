@@ -1,0 +1,16 @@
+/* 固定UI仕様。変更にはユーザーの明示指示が必要。fields.cssの直前に読む。 */
+:root{--ui-text:14px;--ui-prominent:16px;--ui-small:12px;--ui-line:18px;--ui-pad:3px;--ui-button:26px;--ui-menu:30px}
+html body :is(#ui-policy #ui-policy #ui-policy,*){font-size:var(--ui-text)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,.game-title,.header-actions button,.workspace-tabs button,#engine-active-name){font-size:var(--ui-prominent)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,small,footer,footer *, .hint){font-size:var(--ui-small)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,button,summary){line-height:var(--ui-line)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,button){box-sizing:border-box!important;padding:var(--ui-pad)!important;height:var(--ui-button)!important;min-height:var(--ui-button)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,.header-actions button,.workspace-tabs button){height:var(--ui-menu)!important;min-height:var(--ui-menu)!important;line-height:22px!important}
+html body :is(#ui-policy #ui-policy #ui-policy,.tool-table button){height:auto!important}
+html body #turn.turn-after-recent{margin-left:24px!important}
+html body #delete-move{font-weight:700!important}
+html body #black-captures,html body #white-captures{background:#edf3ed;border-radius:4px;padding:3px}
+html body #board-fit{width:14px!important;height:14px!important;min-height:14px!important;padding:0!important}
+@media(pointer:coarse){html body :is(#ui-policy #ui-policy #ui-policy,button){height:auto!important;min-height:40px!important}}
+
+html body #engine-active #engine-quick,html body #engine-active #engine-state{font-size:14px!important;height:26px!important;min-height:26px!important;max-height:26px!important;line-height:18px!important;padding:3px!important}

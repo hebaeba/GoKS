@@ -287,6 +287,12 @@
   canvas.addEventListener('click',e=>{if(suppressClick){suppressClick=false;return;}const rect=canvas.getBoundingClientRect(),g=geometry(),x=(e.clientX-rect.left)*g.extent/rect.width,y=(e.clientY-rect.top)*g.extent/rect.height,ix=Math.round((x-g.start)/g.gap),iy=Math.round((y-g.start)/g.gap);if(ix<0||ix>=size||iy<0||iy>=size||Math.hypot(x-g.start-ix*g.gap,y-g.start-iy*g.gap)>g.gap*.6)return;keyboardBoard=false;focusPoint=originalPoint(iy*size+ix);place(focusPoint);});
   canvas.addEventListener('keydown',e=>{if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();e.stopPropagation();if(!document.querySelector('dialog[open]')&&!scoreSession)byMoves(e.key==='ArrowDown'?1:-1);return;}let shown=displayPoint(focusPoint),x=shown%size,y=Math.floor(shown/size);if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();keyboardBoard=true;x+=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;y+=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;focusPoint=originalPoint(Math.max(0,Math.min(size-1,y))*size+Math.max(0,Math.min(size-1,x)));draw();}else if(e.key==='Enter'||e.key===' '){e.preventDefault();place(focusPoint);}});
   canvas.addEventListener('blur',()=>{keyboardBoard=false;draw();});
+  // Delete delegates to the same guarded/confirmed operation as the button.
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Delete'||e.repeat||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||scoreSession||document.querySelector('dialog[open]')||e.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+    const button=$('delete-move');if(button.disabled||button.closest('[inert]'))return;
+    e.preventDefault();button.click();
+  });
   document.addEventListener('keydown',e=>{if(e.defaultPrevented||scoreSession||document.querySelector('dialog[open]')||e.target.isContentEditable||e.target===canvas||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();byMoves((['ArrowRight','ArrowDown'].includes(e.key)?1:-1)*(['ArrowLeft','ArrowRight'].includes(e.key)&&e.shiftKey?10:1));}});
   $('open').onclick=()=>{$('file').value='';$('file').click();};
   async function importFile(file){
