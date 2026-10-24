@@ -16,8 +16,6 @@ const candidateDetail=document.createElement('details');candidateDetail.classNam
 const setting=$('engine-settings');info('エンジンの設定について',[...setting.querySelectorAll(':scope > p.analysis-note'),q('.engine-running-details')?.nextElementSibling].filter(n=>n?.matches('.analysis-note')),setting);
 for(const kind of ['exe','model','config']){const input=$('engine-'+kind),label=setting.querySelector('label[for="'+input.id+'"]'),line=input.closest('.engine-path-row');if(label){label.textContent={exe:'エンジン',model:'モデル',config:'設定CFG'}[kind];line.prepend(label);}$('engine-pick-'+kind).textContent='…';$('engine-pick-'+kind).setAttribute('aria-label',{exe:'エンジン',model:'モデル',config:'設定ファイル'}[kind]+'を端末内から選択');}
 const toolHelp=document.createElement('div');for(const n of document.querySelectorAll('.tool-description')){const b=n.closest('button');if(b&&!b.title)b.title=n.textContent;const p=document.createElement('p');p.textContent=(b?.querySelector('span')?.textContent||'')+'：'+n.textContent;toolHelp.append(p);n.hidden=true;}info('ツールの操作とドラッグ対応',[toolHelp],$('pane-tools'));
-$('board-fit').title='ドラッグで変更した碁盤の幅を、現在のウィンドウに合わせた標準幅へ戻します。棋譜と路数は変わりません。';
-const fitHelp=document.createElement('p');fitHelp.textContent=$('board-fit').title;info('「画面に合わせる」とは',[fitHelp],$('board-display-options').lastElementChild);
 const jump=q('.jump'),position=q('.position-settings');const placeJump=()=>{(matchMedia('(min-width:1100px)').matches?q('.navigation'):position).append(jump);};window.addEventListener('resize',placeJump);placeJump();
 // Short labels leave descriptive names available on hover and for accessibility.
 const pv=$('analysis-pv-length').closest('label');pv.firstChild.textContent='読み筋 ';$('analysis-pv-length').setAttribute('aria-label','読み筋の表示手数');

@@ -1,6 +1,6 @@
 /* 固定UI仕様。変更にはユーザーの明示指示が必要。fields.cssの直前に読む。 */
 :root{--ui-text:14px;--ui-prominent:16px;--ui-small:12px;--ui-line:18px;--ui-pad:3px;--ui-button:26px;--ui-menu:30px}
-html body :is(#ui-policy #ui-policy #ui-policy,*){font-size:var(--ui-text)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,*):not(#analysis-overlay):not(#analysis-overlay *){font-size:var(--ui-text)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,.game-title,.header-actions button,.workspace-tabs button,#engine-active-name){font-size:var(--ui-prominent)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,small,footer,footer *, .hint){font-size:var(--ui-small)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,button,summary){line-height:var(--ui-line)!important}
@@ -30,3 +30,19 @@ html body #board.delete-key-focus:focus-visible{outline:none!important;box-shado
 #app-confirm-dialog::backdrop{background:#142d2855}
 #app-confirm-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
 #app-confirm-dialog p{white-space:pre-line}
+
+/* Automatic board width: no draggable separator or reset control. */
+@media(min-width:900px){body .studio-grid{grid-template-columns:var(--board-width,minmax(380px,1.5fr)) minmax(340px,1fr);gap:12px}}
+body #image-board-dialog{box-sizing:border-box;width:calc(100vw - 24px);max-width:1500px;max-height:min(960px,calc(100dvh - 16px));padding:10px;overflow:auto}
+body #image-board-dialog .image-options{margin:6px 0}
+body #image-board-dialog h3{margin:6px 0}
+body #image-board-dialog p{margin:5px 0}
+body #image-board-dialog .image-work{gap:14px}
+body #image-board-dialog .image-work canvas{width:auto;height:auto;max-width:100%;max-height:min(420px,max(120px,calc(100dvh - 470px)));margin:0 auto}
+body #image-board-dialog .image-adjustments{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px;border-top:1px solid #c4d3ce;border-bottom:1px solid #c4d3ce;padding:5px 0;margin:6px 0}
+body #image-board-dialog .image-adjustments h3{margin:0}
+body #image-board-dialog .image-adjustments label{display:inline-flex;align-items:center;gap:5px}
+body #image-board-dialog .image-adjustments small{flex-basis:100%}
+body #image-board-dialog .image-footer{position:sticky;bottom:-10px;background:#f8faf9;padding:8px 0 2px;z-index:2}
+#engine-list-disclosure>summary{cursor:pointer;margin:6px 0}
+body #image-board-dialog #image-source{aspect-ratio:auto!important}

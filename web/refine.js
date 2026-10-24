@@ -2,9 +2,7 @@
 (()=>{'use strict';const $=id=>document.getElementById(id),q=s=>document.querySelector(s);
 // Compact help bubbles become conventional hover descriptions.
 for(const d of document.querySelectorAll('.compact-info')){const text=d.querySelector('.compact-info-content')?.textContent.trim();if(text){const parent=d.parentElement;parent.title=[parent.title,text].filter(Boolean).join('\n');}d.hidden=true;}
-$('board-fit').textContent='標準幅に戻す';$('board-fit').title='ドラッグで変更した幅を、現在のウィンドウに合わせた標準幅へ戻します。棋譜や路数は変わりません。';
 for(const id of ['board-display-options','board-edit-options']){const d=$(id);d.open=true;d.querySelector('summary').hidden=true;d.classList.add('always-open');}
-$('board-edit-options').lastElementChild.append($('board-fit'));
 const history=document.createElement('div');history.className='history-pair';history.setAttribute('role','group');history.setAttribute('aria-label','編集履歴');$('undo').before(history);history.append($('undo'),$('redo'));$('board-edit-options').lastElementChild.prepend(history);
 $('undo').title='直前の編集を取り消します';$('redo').title='取り消した編集をやり直します';
 $('jump-go').textContent='指定手数へ移動';$('jump-go').title='入力した手数の局面へ移動します';const jump=q('.jump');for(const n of [...jump.childNodes])if(n.nodeType===3)n.remove();jump.prepend($('jump-go'));$('jump').setAttribute('aria-label','移動先の手数（３桁）');$('jump').style.width='5ch';
@@ -32,7 +30,6 @@ function sizeSelect(el){const span=document.createElement('span'),style=getCompu
 for(const id of ['analysis-seconds','analysis-metric','analysis-pv-length','worst-metric'])sizeSelect($(id));
 
 // Width reset belongs to the draggable separator, not the editing controls.
-$('board-divider').append($('board-fit'));$('board-fit').textContent='';$('board-fit').setAttribute('aria-label','標準幅に戻す');$('board-fit').classList.add('divider-reset');$('board-fit').addEventListener('click',e=>e.stopPropagation());
 $('tab-settings').textContent='エンジン設定';
 
 // Board title and direct operation rows.
@@ -68,3 +65,4 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  for(const id of ['analysis-graph','batch-progress','analysis-status','analysis-worst']){const e=document.getElementById(id);if(e)details.append(e);}
  const heading=batch.querySelector('h3');if(heading)heading.hidden=true;
 })();
+;(()=>{const box=document.querySelector('.engine-profiles');const d=document.createElement('details');d.id='engine-list-disclosure';const summary=document.createElement('summary');summary.textContent='エンジンリスト';box.before(d);d.append(summary,box);const label=box.querySelector('label');if(label&&label.querySelector('#engine-profile'))label.hidden=true;})();

@@ -10,7 +10,7 @@ function transform(corners,cols,rows){
  const h=m.map(r=>r[8]);return (u,v)=>{const d=h[6]*u+h[7]*v+1;return {x:(h[0]*u+h[1]*v+h[2])/d,y:(h[3]*u+h[4]*v+h[5])/d};};
 }
 function median(values){if(!values.length)return 0;values.sort((a,b)=>a-b);return values[Math.floor(values.length/2)];}
-function recognize(image,corners,cols,rows,{black=90,white=16,offset='auto'}={}){
+function recognize(image,corners,cols,rows,{black=16,white=16,offset='auto'}={}){
  const map=transform(corners,cols,rows),{width,height,data}=image;
  const upper=Math.hypot(corners[1].x-corners[0].x,corners[1].y-corners[0].y),lower=Math.hypot(corners[2].x-corners[3].x,corners[2].y-corners[3].y);const shift=offset==='auto'?(upper/lower<.85?-.25:0):Number(offset);
  function pixel(x,y){const p=map(x,y+shift),ix=Math.round(p.x),iy=Math.round(p.y);if(ix<0||ix>=width||iy<0||iy>=height)return null;const k=(iy*width+ix)*4,r=data[k],g=data[k+1],b=data[k+2];return {l:.2126*r+.7152*g+.0722*b,s:Math.max(r,g,b)-Math.min(r,g,b)};}
