@@ -48,3 +48,10 @@ html body.simple-mode .workspace{max-width:none}
 html body.simple-mode .inspector{position:fixed!important}
 #simple-info #komi,#simple-info #move{background:#edf3ed;border-radius:4px;padding:0 3px}
 @media(pointer:coarse){#simple-menu>details>summary{box-sizing:border-box;min-height:40px;display:flex;align-items:center}}
+
+/* A board-width client area; native Windows chrome is resized separately. */
+html body.simple-mode main{width:100%;max-width:calc(var(--simple-board-edge,100vw) + 12px);margin:0 auto}
+html body.simple-mode .simple-top-slot .coordinate-choice{display:none!important}
+#shortcut-dialog .shortcut-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+#shortcut-dialog .shortcut-heading h2{margin:0 0 12px}
+#shortcut-dialog .shortcut-heading button{flex:none;white-space:nowrap}

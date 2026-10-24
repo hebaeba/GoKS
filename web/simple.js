@@ -8,26 +8,28 @@
  const toggle=document.createElement('button');toggle.id='simple-toggle';toggle.textContent='シンプル';toggle.title='碁盤を大きく表示するシンプルモードへ切り替えます';toggle.setAttribute('aria-pressed','false');q('.header-actions').append(toggle);
  const back=document.createElement('button');back.id='simple-return';back.textContent='通常表示';back.title='通常モードに戻ります';bar.append(back);
  const close=document.createElement('button');close.id='simple-panel-close';close.textContent='閉じる';close.title='詳細パネルを閉じて碁盤に戻ります';close.hidden=true;inspector.prepend(close);
- let simple=false,moves=[],scale=1;const menus=[];
- function hideMenus(){for(const d of menus)d.open=false;context.hidden=true;}
+ let simple=false,moves=[],menuTracking=false;const menus=[];
+ function hideMenus(){menuTracking=false;for(const d of menus)d.open=false;context.hidden=true;}
  function move(el,parent){if(!el)return;const marker=document.createComment('simple-home');el.before(marker);moves.push([el,marker]);parent.append(el);}
  function panel(id){hideMenus();KifuWorkspace.activate(id);if(simple){body.classList.add('simple-panel-open');close.hidden=false;close.focus();}}
  function closePanel(){body.classList.remove('simple-panel-open');close.hidden=true;if(simple)bar.querySelector('summary')?.focus();}
  close.onclick=closePanel;
- function menu(label){const d=document.createElement('details');d.className='simple-menu-group';d.innerHTML='<summary></summary><div class="simple-menu-content"></div>';d.firstElementChild.textContent=label;bar.insertBefore(d,title);menus.push(d);d.addEventListener('toggle',()=>{if(d.open){sync();for(const other of menus)if(other!==d)other.open=false;}});return d.lastElementChild;}
+ function menu(label){const d=document.createElement('details');d.className='simple-menu-group';d.innerHTML='<summary></summary><div class="simple-menu-content"></div>';d.firstElementChild.textContent=label;bar.insertBefore(d,title);menus.push(d);const summary=d.firstElementChild;
+ summary.addEventListener('click',e=>{e.preventDefault();const opening=!d.open;hideMenus();if(opening){menuTracking=true;d.open=true;sync();}});
+ summary.addEventListener('mouseenter',()=>{if(menuTracking){for(const other of menus)other.open=other===d;sync();}});
+ d.addEventListener('toggle',()=>{if(d.open){sync();for(const other of menus)if(other!==d)other.open=false;}});return d.lastElementChild;}
  const proxies=[];
  function action(parent,label,fn,target){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{hideMenus();fn();};parent.append(b);if(target)proxies.push([b,target]);return b;}
  function command(parent,label,id){return action(parent,label,()=>$(id)?.click(),()=>$(id));}
  const file=menu('ファイル'),view=menu('表示'),edit=menu('編集'),analysis=menu('解析'),game=menu('対局'),other=menu('その他');
  command(file,'棋譜を開く (O)','open');action(file,'クリップボードから読み込む (Ctrl+V)',()=>$('paste-board').click());command(file,'画像から局面を取り込む','workspace-image-open');command(file,'棋譜全体を保存','save');command(file,'盤面を印刷','print');action(file,'その他の保存・GIF',()=>panel('storage'));action(file,'棋譜欄・文字コード',()=>panel('record'));
  command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近５手の表示／非表示','recent');action(view,'コメント',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
- const sizeRow=document.createElement('label');sizeRow.className='simple-size';sizeRow.innerHTML='碁盤サイズ <input id="simple-size" type="range" min="50" max="100" value="100" aria-label="画面に収まる碁盤サイズの割合"><output>100%</output>';view.append(sizeRow);sizeRow.querySelector('input').oninput=e=>{scale=Number(e.target.value)/100;sizeRow.querySelector('output').value=e.target.value+'%';fit();};action(view,'画面に合わせる',()=>{scale=1;sizeRow.querySelector('input').value=100;sizeRow.querySelector('output').value='100%';fit();});
  const topSlot=document.createElement('div');topSlot.className='simple-top-slot';view.append(topSlot);
  const controlSlot=document.createElement('div');controlSlot.className='simple-control-slot';edit.append(controlSlot);action(edit,'碁石・記号・文字の配置',()=>panel('tools'));action(edit,'碁盤をクリア (Ctrl+Home)',()=>q('.clear-board')?.click(),()=>q('.clear-board'));
  command(analysis,'解析の開始／停止 (Space)','analyze-live');action(analysis,'第一候補を着手 (F2)',()=>window.KifuAnalysisControl.playFirst());action(analysis,'候補手・全局解析・グラフ',()=>panel('analysis'));action(analysis,'エンジン設定',()=>panel('settings'));
  action(game,'対局の設定・開始',()=>panel('match'));command(game,'勝敗判定','score');action(other,'ショートカット一覧',()=>help.showModal());command(other,'このGoKifuStudioについて','about-open');
- const help=document.createElement('dialog');help.id='shortcut-dialog';help.innerHTML='<h2>キーボード操作（通常・シンプル共通）</h2><table><tbody></tbody></table><button>閉じる</button>';document.body.append(help);help.querySelector('button').onclick=()=>help.close();
- const keys=[['Space','解析の開始・停止'],['Home','初手へ移動（着手前の局面）'],['End','選択中の手順の最終手へ移動'],['Ctrl+Home','碁盤をクリア（確認あり）'],['M','手数の表示・非表示'],['C','座標の表示・非表示'],['O','棋譜を開く'],['↓／→','1手進む'],['↑／←','1手戻る'],['Shift+→／Shift+←','10手進む・戻る'],['F2','第一候補を着手'],['Del','表示中の着手以降を削除'],['Ctrl+V','クリップボードの棋譜を読み込む']];
+ const help=document.createElement('dialog');help.id='shortcut-dialog';help.innerHTML='<div class=shortcut-heading><h2>キーボード操作（通常・シンプル共通）</h2><button>閉じる</button></div><table><tbody></tbody></table>';document.body.append(help);help.querySelector('button').onclick=()=>help.close();
+ const keys=[['Space','解析の開始・停止'],['Home','初手へ移動（着手前の局面）'],['End','選択中の手順の最終手へ移動'],['Ctrl+Home','碁盤をクリア（確認あり）'],['M','手数の表示・非表示'],['C','座標の表示・非表示'],['O','棋譜を開く'],['↓','1手進む'],['↑','1手戻る'],['ホイールを手前へ','1手進む'],['ホイールを奥へ','1手戻る'],['Shift+↓／Shift+↑','10手進む・戻る'],['F2','第一候補を着手'],['Del','表示中の着手以降を削除'],['Ctrl+V','クリップボードの棋譜を読み込む']];
  for(const [key,text]of keys){const tr=document.createElement('tr');const a=document.createElement('th'),b=document.createElement('td');a.textContent=key;b.textContent=text;tr.append(a,b);help.querySelector('tbody').append(tr);}
  const normalHelp=document.createElement('button');normalHelp.id='shortcuts-open';normalHelp.textContent='キー操作';normalHelp.title='キーボード操作の一覧を表示します';normalHelp.onclick=()=>help.showModal();q('.footer-links').prepend(normalHelp);
  const comments=document.createElement('dialog');comments.id='simple-comment';comments.innerHTML='<h2>コメント・対局情報</h2><div></div><button>閉じる</button>';document.body.append(comments);comments.querySelector('button').onclick=()=>comments.close();function openComment(){comments.querySelector('div').replaceChildren(...[...$('comment').childNodes].map(n=>n.cloneNode(true)));comments.showModal();}
@@ -44,16 +46,28 @@
  $('board').addEventListener('contextmenu',e=>{e.preventDefault();e.stopImmediatePropagation();hideMenus();sync();context.hidden=false;context.style.left=Math.max(4,Math.min(e.clientX,innerWidth-context.offsetWidth-4))+'px';context.style.top=Math.max(4,Math.min(e.clientY,innerHeight-context.offsetHeight-4))+'px';context.querySelector('button:not(:disabled)')?.focus();},true);
  context.addEventListener('keydown',e=>{const bs=[...context.querySelectorAll('button:not(:disabled)')];const i=bs.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();e.stopPropagation();bs[(i+(e.key==='ArrowDown'?1:bs.length-1))%bs.length]?.focus();}});
  document.addEventListener('pointerdown',e=>{if(!bar.contains(e.target)&&!context.contains(e.target))hideMenus();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideMenus();if(simple)closePanel();}});
+ document.addEventListener('click',e=>{if(!e.target.closest('#simple-menu>details>summary')){menuTracking=false;if(!e.target.closest('.simple-menu-content'))hideMenus();}});
  inspector.addEventListener('click',e=>{if(simple&&e.target.closest('[data-tool],.close-tools'))closePanel();});
  function sync(){title.textContent=q('.game-title').textContent;title.title=title.textContent;for(const [b,get]of proxies){const t=get();b.disabled=!t||t.disabled;}
   for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');const text=simple?num:'アゲハマ '+num;if(el.textContent!==text)el.textContent=text;el.setAttribute('aria-label',(id==='black-captures'?'黒':'白')+'のアゲハマ '+num);}
  }
- function setMode(value){if(simple===value)return;hideMenus();closePanel();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
-  if(value){move(q('.topline'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
-  else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];q('.canvas-wrap').style.removeProperty('--fit-board-size');}
-  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
+
+ let nativeQueue=Promise.resolve(),lastNativeWidth=null,nativeTimer;
+ function desiredWidth(){return Math.max(360,Math.floor(innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14)+12);}
+ function resizeNative(value,force=false){
+  const invoke=window.__TAURI_INTERNALS__?.invoke;if(!invoke)return;
+  const width=value?desiredWidth():0;
+  if(!force&&lastNativeWidth===width)return;
+  lastNativeWidth=width;clearTimeout(nativeTimer);
+  const run=()=>{nativeQueue=nativeQueue.catch(()=>{}).then(()=>invoke('desktop_simple_window',{simple:value,width})).catch(error=>{console.error('Window resize:',error);});};
+  if(force)run();else nativeTimer=setTimeout(run,100);
  }
- function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available*scale);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';}
+ function setMode(value){if(simple===value)return;hideMenus();closePanel();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
+  if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
+  else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];q('.canvas-wrap').style.removeProperty('--fit-board-size');}
+  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
+ }
+ function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');resizeNative(true);}
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);
  window.addEventListener('resize',fit);window.addEventListener('kifu-position-change',()=>{sync();fit();});window.addEventListener('workspace-layout',()=>{if(simple)fit();});
  new ResizeObserver(fit).observe(bar);document.fonts?.ready.then(fit);let restore=false;try{restore=localStorage.getItem('gokifu-simple')==='1';}catch{}if(restore)setMode(true);
