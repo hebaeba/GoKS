@@ -9,7 +9,7 @@ const primary=q('.analysis-primary'),conditions=q('.analysis-conditions'),engine
 const navigation=document.createElement('div');navigation.className='inspector-navigation';inspector.prepend(navigation);navigation.append(q('.workspace-mode'),q('.workspace-tabs'));navigation.after(dock);$('engine-connect').title='選択したエンジンを起動し、解析の準備をします';
 q('.analysis-heading').remove();
 const files=document.createElement('details');files.className='engine-running-details';files.innerHTML='<summary>実行中のファイルを確認</summary><pre id="engine-running-files">エンジンは停止しています。</pre>';q('.engine-actions').after(files);
-const hintSettings=document.createElement('p');hintSettings.className='analysis-note';hintSettings.textContent='起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。同梱のCPU版はエンジンリストの「KataGo Eigen（CPU・標準）」です。';files.after(hintSettings);
+const hintSettings=document.createElement('p');hintSettings.className='analysis-note';hintSettings.textContent='起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。同梱のCPU版はエンジンリストの「KataGo Eigen（CPU）」です。';files.after(hintSettings);
 
 // One lifecycle badge; show startup/error details beside the connection controls only.
 dock.append($('engine-notice'));$('engine-notice-title').hidden=true;$('engine-nearby-name').hidden=true;
@@ -40,7 +40,7 @@ for(const [key,shape]of Object.entries(shapes)){const label=q('[data-tool="'+key
 const paste=document.createElement('button');paste.id='paste-board';paste.textContent='クリップボードから';paste.title='コピーしたSGF棋譜を読み込みます';$('load-options').prepend(paste);
 const dlg=document.createElement('dialog');dlg.id='paste-dialog';dlg.innerHTML='<h2>棋譜を貼り付け</h2><p>SGF棋譜を貼り付けて「読込み」を押してください。</p><textarea id="paste-text" aria-label="貼り付けるSGF棋譜" placeholder="(;GM[1]…)"></textarea><div><button id="paste-load">読込み</button><button id="paste-close">閉じる</button></div>';document.body.append(dlg);
 paste.onclick=async()=>{try{const text=await navigator.clipboard.readText();if(text.trim()){api.pasteRecord(text);return;}}catch{}dlg.showModal();$('paste-text').focus();};
-$('paste-load').onclick=()=>{const text=$('paste-text').value;dlg.close();if(!api.pasteRecord(text))dlg.showModal();};$('paste-close').onclick=()=>dlg.close();
+$('paste-load').onclick=async()=>{const text=$('paste-text').value;dlg.close();if(!await api.pasteRecord(text))dlg.showModal();};$('paste-close').onclick=()=>dlg.close();
 const open=$('workspace-open'),hint=document.createElement('div');hint.id='open-record-hint';hint.className='open-record-hint';hint.hidden=true;hint.setAttribute('role','tooltip');hint.textContent='クリック：棋譜ファイルを選択\nドラッグ：棋譜ファイルを盤面へ\n貼り付け：盤面にフォーカスしてCtrl+V、または盤面を右クリック';q('.header-actions').append(hint);open.setAttribute('aria-describedby',hint.id);open.removeAttribute('title');
 const hideHint=()=>hint.hidden=true;open.addEventListener('mouseenter',()=>hint.hidden=false);open.addEventListener('mouseleave',hideHint);open.addEventListener('focus',()=>hint.hidden=false);open.addEventListener('blur',hideHint);open.addEventListener('click',hideHint);window.addEventListener('blur',hideHint);document.addEventListener('keydown',e=>{if(e.key==='Escape')hideHint();});
 

@@ -268,12 +268,27 @@
     }catch(error){report(error.message,true);}
   }
   function okayToReplace(){if(insertion||!canLeave())return false;return !dirty||confirm('保存していない変更があります。現在の棋譜を置き換えますか？');}
-  function load(text,name='kifu.sgf'){
+  function confirmRecordReplace(){
+    return new Promise(resolve=>{
+      const d=document.createElement('dialog');d.id='record-replace-dialog';
+      d.setAttribute('aria-labelledby','record-replace-title');
+      d.innerHTML='<h2 id="record-replace-title">別の棋譜を読み込みますか？</h2><p>現在の変更内容が保存されない可能性があります。</p><div class="dialog-actions"><button data-cancel autofocus>キャンセル</button><button data-accept>読み込む</button></div>';
+      d.querySelector('[data-cancel]').onclick=()=>d.close('cancel');d.querySelector('[data-accept]').onclick=()=>d.close('accept');
+      d.addEventListener('close',()=>{const ok=d.returnValue==='accept';d.remove();resolve(ok);},{once:true});document.body.append(d);d.showModal();
+    });
+  }
+  let recordLoadPending=false;
+  async function load(text,name='kifu.sgf'){
     if(window.KifuMatch?.locked){report('対局を中断してから棋譜を開いてください。',true);return false;}
-    try{const game=GoImport.parse(text,name);validate(game.root,game.size);if(!okayToReplace())return false;
+    if(recordLoadPending)return false;recordLoadPending=true;
+    try{const game=GoImport.parse(text,name);validate(game.root,game.size);
+      if(insertion||scoreSession)return false;
+      if((dirty||hasCommentDraft()||hasInfoDraft())&&!await confirmRecordReplace())return false;
+      if(window.KifuMatch?.locked||scoreSession||insertion)return false;
+      clearDrafts();
       clearTimeout(recoveryTimer);root=game.root;size=game.size;choices=new WeakMap();index=0;dirty=false;editing=false;focusPoint=0;originalName=name.replace(/\.(?:sgf|ngf|ugf|ugi|gib|mgt)$/i,'')+'.sgf';
       $('sgf').value='';$('size').value=String(size);resetHistory();rebuild();index=route.length-1;window.dispatchEvent(new Event('kifu-record-replaced'));refresh();$('load-menu').open=false;$('load-options').hidden=true;dragStatus('');report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
-    }catch(error){report('読込みできませんでした：'+error.message,true);return false;}
+    }catch(error){report('読込みできませんでした：'+error.message,true);return false;}finally{recordLoadPending=false;}
   }
   function serialized(){const old=root.props.CA,oldKomi=root.props.KM;root.props.CA=['UTF-8'];root.props.KM=[String(currentKomi())];try{return S.write(root);}finally{if(old)root.props.CA=old;else delete root.props.CA;if(oldKomi)root.props.KM=oldKomi;else delete root.props.KM;}}
   $('new').onclick=()=>{if(!okayToReplace())return;$('sgf').value='';size=Number($('size').value);root=S.create(size);choices=new WeakMap();index=0;editing=true;dirty=false;focusPoint=0;originalName='kifu.sgf';resetHistory();rebuild();window.dispatchEvent(new Event('kifu-record-replaced'));refresh();report(size+'路の新しい碁盤です。編集モードで石を打てます。');};
@@ -593,9 +608,9 @@
     analysisSnapshot(){if(insertion||scoreSession||!canLeave())throw Error('挿入・勝敗判定・未反映の入力を終了してください。');return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     peekAnalysisSnapshot(){return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     async analysisAt(target,expected){if(serialized()!==expected)throw Error('棋譜が変更されています。');if(!Number.isInteger(target)||target<0||target>=route.length)throw Error('局面番号が不正です。');await at(target);},
-    async loadAnalysisSnapshot(saved){if(!load(saved.sgf,'解析付き棋譜.sgf'))return false;choices=new WeakMap();let n=root;for(const selected of saved.path){if(!n.children[selected])throw Error('保存された変化が不正です。');choices.set(n,selected);n=n.children[selected];}index=saved.index;rebuild();refresh();return true;},
+    async loadAnalysisSnapshot(saved){if(!await load(saved.sgf,'解析付き棋譜.sgf'))return false;choices=new WeakMap();let n=root;for(const selected of saved.path){if(!n.children[selected])throw Error('保存された変化が不正です。');choices.set(n,selected);n=n.children[selected];}index=saved.index;rebuild();refresh();return true;},
 
-    async loadSgf(text,name,move=100000,options={}){if(!load(text,name))return false;if(options.edited){dirty=true;editing=true;}const target=Math.max(0,Number(move)||0);let n=frames.findIndex(f=>f.move>=target);await at(n<0?route.length-1:n);return true;}
+    async loadSgf(text,name,move=100000,options={}){if(!await load(text,name))return false;if(options.edited){dirty=true;editing=true;}const target=Math.max(0,Number(move)||0);let n=frames.findIndex(f=>f.move>=target);await at(n<0?route.length-1:n);return true;}
   });
 
   function stopAuto(){clearTimeout(autoTimer);autoTimer=null;autoPlaying=false;syncAuto();}

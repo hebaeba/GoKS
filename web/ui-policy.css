@@ -14,3 +14,11 @@ html body #board-fit{width:14px!important;height:14px!important;min-height:14px!
 @media(pointer:coarse){html body :is(#ui-policy #ui-policy #ui-policy,button){height:auto!important;min-height:40px!important}}
 
 html body #engine-active #engine-quick,html body #engine-active #engine-state{font-size:14px!important;height:26px!important;min-height:26px!important;max-height:26px!important;line-height:18px!important;padding:3px!important}
+
+/* Keep the capture alignment while coloring only its text box. */
+html body #black-captures{justify-self:end;width:max-content;max-width:100%}
+html body #white-captures{justify-self:start;width:max-content;max-width:100%}
+#batch-disclosure{margin-top:10px}#batch-disclosure>summary{cursor:pointer}
+#record-replace-dialog{max-width:min(460px,90vw);border:1px solid #72958a;border-radius:8px;padding:16px;color:#183b3d;background:white}
+#record-replace-dialog::backdrop{background:#142d2855}
+#record-replace-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}

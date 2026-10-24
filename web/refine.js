@@ -59,3 +59,12 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const recent=document.querySelector('.recent-label'),turn=document.getElementById('turn');
  recent.after(turn);turn.classList.add('turn-after-recent');
 })();
+
+;(()=>{
+ document.getElementById('candidate-list').open=false;
+ const batch=document.getElementById('analysis-batch'),details=document.createElement('details');
+ details.id='batch-disclosure';const title=document.createElement('summary');title.textContent='全局解析';details.append(title);batch.before(details);details.append(batch);
+ // Settings, graph, progress and rankings form a single collapsible section.
+ for(const id of ['analysis-graph','batch-progress','analysis-status','analysis-worst']){const e=document.getElementById(id);if(e)details.append(e);}
+ const heading=batch.querySelector('h3');if(heading)heading.hidden=true;
+})();
