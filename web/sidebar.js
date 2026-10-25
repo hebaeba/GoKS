@@ -30,15 +30,17 @@
  function sync(){const hasInfo=$('metadata').children.length>0,hasComment=[...$('comment').children].some(e=>!e.classList.contains('root-info')&&e.textContent.trim());notes.hidden=!(hasInfo||hasComment);notes.textContent=hasInfo&&hasComment?'コメント・対局情報':hasInfo?'対局情報':'コメント';if(dialog.open)fillNotes();q('.side-branches').hidden=$('branches').hidden;
   for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');el.textContent=num;el.title=(id==='black-captures'?'黒':'白')+'のアゲハマ '+num;}
  }
- const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.textContent='詳細欄を畳む';toggle.title='右側の詳細欄を畳んで碁盤を広く表示します';sidebar.firstElementChild.append(toggle);
- const inspector=q('.inspector'),close=document.createElement('button');close.id='normal-panel-close';close.textContent='閉じる';close.title='右側の詳細欄を閉じます';inspector.prepend(close);
- function setCollapsed(value){body.classList.toggle('inspector-collapsed',value);toggle.textContent=value?'詳細欄を表示':'詳細欄を畳む';toggle.setAttribute('aria-expanded',String(!value));window.dispatchEvent(new Event('workspace-layout'));}
+ const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.textContent='右側を隠す';toggle.title='右側を隠して碁盤を広く表示します';sidebar.firstElementChild.append(toggle);
+ const inspector=q('.inspector'),close=document.createElement('button');close.id='normal-panel-close';close.textContent='閉じる';close.title='右側を隠します';inspector.prepend(close);
+ let normalCollapsed=null;
+ function setCollapsed(value){body.classList.toggle('inspector-collapsed',value);toggle.textContent=value?'右側を表示':'右側を隠す';toggle.setAttribute('aria-expanded',String(!value));toggle.title=value?'右側を表示します':'右側を隠して碁盤を広く表示します';window.dispatchEvent(new Event('workspace-layout'));}
  toggle.onclick=()=>setCollapsed(!body.classList.contains('inspector-collapsed'));close.onclick=()=>setCollapsed(true);
  const activate=KifuWorkspace.activate;KifuWorkspace.activate=id=>{setCollapsed(false);activate(id);};
  // Header save "other" uses its original closure, so open the pane explicitly too.
  $('quick-more').addEventListener('click',()=>setCollapsed(false));
  const narrow=matchMedia('(max-width:1100px)');if(narrow.matches)setCollapsed(true);
- const media=matchMedia('(max-width:899px)');media.addEventListener('change',()=>setCollapsed(true));
+ // Resizing into simple mode must not overwrite the normal panel preference.
+ // Narrow screens use the existing overlay CSS without changing the saved state.
  window.addEventListener('kifu-position-change',sync);sync();
- window.KifuSidebar={openNotes};
+ window.KifuSidebar={openNotes,enterSimple(){normalCollapsed=body.classList.contains('inspector-collapsed');},leaveSimple(){if(normalCollapsed!==null)setCollapsed(normalCollapsed);normalCollapsed=null;}};
 })();

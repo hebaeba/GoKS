@@ -14,3 +14,7 @@ test('match time may exceed 600 seconds or be unlimited while visits stay capped
  const unlimited=M.limits(0,200);assert.ok(unlimited.includes('kata-set-param maxTime 100000000000000000000'));assert.ok(unlimited.includes('kata-set-param maxVisits 200'));
  for(const seconds of [-1,NaN,Infinity,0.01])assert.throws(()=>M.limits(seconds,500));
 });
+
+test('match disables the game clock rather than starting with zero seconds',()=>{
+ for(const seconds of [0,0.1,10,3600]){const cmds=M.limits(seconds,5000);assert.equal(cmds[0],'time_settings 0 1 0');assert(!cmds.includes('time_settings 0 0 0'));}
+});

@@ -8,7 +8,9 @@ function sgf(snapshot,S){const parsed=S.parse(snapshot.sgf);let node=parsed.root
 function limits(seconds,visits){
  if(!Number.isFinite(seconds)||seconds<0||(seconds!==0&&seconds<0.1))throw Error('時間は0.1秒以上で入力するか、無制限を選んでください。');
  if(!Number.isSafeInteger(visits)||visits<1||visits>1000000000)throw Error('訪問数は1〜1000000000の整数で入力してください。');
- return ['time_settings 0 0 0','kata-set-param maxVisits '+visits,'kata-set-param maxPlayouts 1000000000','kata-set-param maxTime '+(seconds===0?1e20:seconds)];
+ // GTP: positive overtime with zero stones disables the clock; 0 0 0 means zero absolute time.
+ // Keep time/visit limits in search parameters, independently of the GTP game clock.
+ return ['time_settings 0 1 0','kata-set-param maxVisits '+visits,'kata-set-param maxPlayouts 1000000000','kata-set-param maxTime '+(seconds===0?1e20:seconds)];
 }
 const api={limits,parseMove,view,streak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
 })(globalThis);

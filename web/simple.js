@@ -23,7 +23,7 @@
  function command(parent,label,id){return action(parent,label,()=>$(id)?.click(),()=>$(id));}
  const file=menu('ファイル'),view=menu('表示'),edit=menu('編集'),analysis=menu('解析'),game=menu('対局'),other=menu('その他');
  command(file,'棋譜を開く (O)','open');action(file,'クリップボードから読み込む (Ctrl+V)',()=>$('paste-board').click());command(file,'画像から局面を取り込む','workspace-image-open');command(file,'棋譜全体を保存','save');command(file,'盤面を印刷','print');action(file,'その他の保存・GIF',()=>panel('storage'));action(file,'棋譜欄・文字コード',()=>panel('record'));
- command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近５手の表示／非表示','recent');action(view,'コメント・対局情報',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
+ command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近手数の表示／非表示','recent');action(view,'コメント・対局情報',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
  const topSlot=document.createElement('div');topSlot.className='simple-top-slot';view.append(topSlot);
  const controlSlot=document.createElement('div');controlSlot.className='simple-control-slot';edit.append(controlSlot);const simpleEditActions=document.createElement('div');simpleEditActions.className='simple-edit-extras';edit.append(simpleEditActions);action(simpleEditActions,'碁石・記号・文字の配置',()=>panel('tools'));action(simpleEditActions,'碁盤をクリア (Ctrl+Home)',()=>q('.clear-board')?.click(),()=>q('.clear-board'));
  command(analysis,'解析の開始／停止 (Space)','analyze-live');action(analysis,'第一候補を着手 (F2)',()=>window.KifuAnalysisControl.playFirst());action(analysis,'候補手・全局解析・グラフ',()=>panel('analysis'));action(analysis,'エンジン',()=>panel('settings'));
@@ -62,9 +62,9 @@
   const run=()=>{nativeQueue=nativeQueue.catch(()=>{}).then(()=>invoke('desktop_simple_window',{simple:value,width})).catch(error=>{console.error('Window resize:',error);});};
   if(force)run();else nativeTimer=setTimeout(run,100);
  }
- function setMode(value){if(simple===value)return;hideMenus();closePanel();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
+ function setMode(value){if(simple===value)return;hideMenus();closePanel();if(value)window.KifuSidebar?.enterSimple();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
   if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
-  else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];q('.canvas-wrap').style.removeProperty('--fit-board-size');}
+  else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
   try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
  }
  function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');resizeNative(true);}

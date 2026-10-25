@@ -1,0 +1,43 @@
+/* Browser integration with a deterministic GTP transport, not a KataGo strength/speed test. */
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../web');
+const server=http.createServer((req,res)=>{const p=path.join(root,decodeURIComponent(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));if(!p.startsWith(root)||!fs.existsSync(p)){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':'text/html; charset=utf-8');res.end(fs.readFileSync(p));});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),headless:true,args:['--no-sandbox','--disable-gpu','--use-gl=disabled','--disable-software-rasterizer','--single-process','--no-zygote']});
+ const p=await browser.newPage({viewport:{width:1280,height:940}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:'+server.address().port);await p.waitForTimeout(150);
+ // Native simple-mode widths cross the responsive breakpoint in both directions.
+ for(const collapsed of [false,true]){
+  await p.evaluate(v=>{if(document.body.classList.contains('inspector-collapsed')!==v)document.getElementById('inspector-toggle').click();},collapsed);
+  assert.equal(await p.textContent('#inspector-toggle'),collapsed?'右側を表示':'右側を隠す');
+  await p.locator('#simple-toggle').click();await p.setViewportSize({width:800,height:940});
+  await p.evaluate(()=>KifuSimple.openPanel('tools'));await p.locator('#simple-panel-close').click();await p.locator('#simple-return').click();await p.setViewportSize({width:1280,height:940});await p.waitForTimeout(100);
+  assert.equal(await p.evaluate(()=>document.body.classList.contains('inspector-collapsed')),collapsed);
+ }
+ // The shared recent selector controls actual stone labels, not just its caption.
+ await p.evaluate(()=>{IndependentGo.loadSgf('(;SZ[19];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff];B[gg];W[hh];B[ii];W[jj])','recent.sgf');IndependentGo.setCoordinates(false);const ctx=document.getElementById('board').getContext('2d'),fill=ctx.fillText.bind(ctx),clear=ctx.clearRect.bind(ctx);window.labels=[];ctx.fillText=(t,...a)=>{if(/^\d+$/.test(String(t)))window.labels.push(String(t));return fill(t,...a)};ctx.clearRect=(...a)=>{window.labels=[];return clear(...a)};document.getElementById('recent').click();});
+ for(const n of [1,5,10]){await p.selectOption('#recent-count',String(n));await p.waitForTimeout(60);assert.deepEqual(await p.evaluate(()=>[...new Set(labels)]),Array.from({length:n},(_,i)=>String(11-n+i)));}
+ assert.equal(await p.locator('#recent-count').evaluate(e=>getComputedStyle(e).paddingTop),'3px');
+ await p.evaluate(()=>{IndependentGo.matchReset();IndependentGo.setCoordinates(true);});
+ // Real match controller and GTP Bridge; fake wire supports delayed, cancellable genmove.
+ await p.evaluate(()=>{
+  const sessions=new Map();window.wire=[];window.delay=400;window.moveNo=0;window.samples=[];
+  const profile={id:'cpu',name:'Test CPU',exe:'cpu.exe',model:'model.bin.gz'};KifuAnalysisControl.profiles=()=>[profile,{...profile,id:'gpu',name:'Test GPU',exe:'gpu.exe'}];KifuAnalysisControl.config=()=>profile;KifuAnalysisControl.suspend=async()=>{};
+  KifuAnalysisControl.rawCall=async(action,payload)=>{const id=payload.session;let s=sessions.get(id);if(action==='start'){s={events:[],alive:true};sessions.set(id,s);return {meta:{kind:'katago'}}}if(action==='stop'){if(s)s.alive=false;return {}}if(action==='poll'){const events=s?.events.splice(0)||[];return {events}}if(action==='send'){for(const line of payload.commands){const at=line.indexOf(' '),num=line.slice(0,at),cmd=line.slice(at+1);wire.push({session:id,cmd});let text=cmd==='name'?'KataGo':cmd==='list_commands'?'kata-genmove_analyze kata-set-param kata-set-rules set_position':'';const send=()=>{if(!s.alive)return;s.events.push(...('='+num+' '+text+'\n\n').split('\n').slice(0,-1).map(line=>({type:'gtp',line})));};if(cmd.startsWith('kata-genmove_analyze ')){const x=moveNo++%19,y=Math.floor((moveNo-1)/19);text='info move '+ 'ABCDEFGHJKLMNOPQRST'[x]+(19-y)+' visits 5000 winrate 0.5 scoreLead 0 rootInfo visits 5000 winrate 0.5 scoreLead 0\nplay '+'ABCDEFGHJKLMNOPQRST'[x]+(19-y);setTimeout(send,delay)}else send();}return {}}throw Error('Unexpected '+action)};
+  window.dispatchEvent(new Event('kifu-engine-profiles'));KifuWorkspace.activate('match');
+  for(const side of ['black','white']){document.getElementById('match-'+side).value=side==='black'?'cpu':'gpu';document.getElementById('match-'+side).onchange();document.getElementById('match-'+side+'-preset').value='custom';document.getElementById('match-'+side+'-preset').onchange();document.getElementById('match-'+side+'-seconds').value=10;document.getElementById('match-'+side+'-visits-preset').value='custom';document.getElementById('match-'+side+'-visits-preset').onchange();document.getElementById('match-'+side+'-visits').value=5000;}
+ });
+ await p.waitForTimeout(100);const before=(await p.locator('#board').boundingBox()).width;
+ await p.evaluate(()=>{window.sampling=true;function sample(){samples.push(document.getElementById('board').getBoundingClientRect().width);if(sampling)requestAnimationFrame(sample)}sample()});
+ await p.locator('#match-start').click();await p.waitForFunction(()=>IndependentGo.peekAnalysisSnapshot().index>=2);await p.evaluate(()=>window.sampling=false);
+ const commands=await p.evaluate(()=>wire);for(const session of ['black','white']){const c=commands.filter(v=>v.session===session).map(v=>v.cmd);assert(c.includes('time_settings 0 1 0'));assert(!c.includes('time_settings 0 0 0'));assert(c.includes('kata-set-param maxTime 10'));assert(c.includes('kata-set-param maxVisits 5000'));}
+ const sizes=await p.evaluate(()=>samples);assert(sizes.every(w=>Math.abs(w-before)<1),JSON.stringify({before,min:Math.min(...sizes),max:Math.max(...sizes)}));
+ await p.locator('#board').focus();const pressed=await p.getAttribute('#numbers','aria-pressed');await p.keyboard.press('m');assert.notEqual(await p.getAttribute('#numbers','aria-pressed'),pressed);await p.keyboard.press('m');assert.equal(await p.getAttribute('#numbers','aria-pressed'),pressed);
+ const coords=await p.evaluate(()=>IndependentGo.getCoordinates());await p.keyboard.press('c');assert.notEqual(await p.evaluate(()=>IndependentGo.getCoordinates()),coords);
+ await p.locator('#match-end').click();await p.waitForSelector('#app-confirm-dialog');const stopped=await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().index);await p.waitForTimeout(650);assert.equal(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().index),stopped);assert.equal(await p.locator('#app-confirm-dialog button').last().textContent(),'終了する');await p.locator('#app-confirm-dialog button').first().click();assert.equal(await p.evaluate(()=>KifuMatch.phase),'paused');
+ await p.locator('#match-resume').click();await p.waitForFunction(n=>IndependentGo.peekAnalysisSnapshot().index>n,stopped);await p.locator('#match-end').click();await p.locator('#app-confirm-dialog button').last().click();await p.waitForFunction(()=>KifuMatch.phase==='finished');const end=await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().index);await p.waitForTimeout(600);assert.equal(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().index),end);
+ // Height-constrained desktop: starting and stopping must not resize the board either.
+ await p.setViewportSize({width:1280,height:740});await p.evaluate(()=>IndependentGo.matchReset());await p.waitForTimeout(120);
+ const shortBefore=(await p.locator('#board').boundingBox()).width;await p.evaluate(()=>{samples=[];window.sampling=true;function sample(){samples.push(document.getElementById('board').getBoundingClientRect().width);if(sampling)requestAnimationFrame(sample)}sample()});
+ await p.locator('#match-start').click();await p.waitForFunction(()=>IndependentGo.peekAnalysisSnapshot().index>=1);await p.locator('#match-end').click();await p.locator('#app-confirm-dialog button').last().click();await p.waitForFunction(()=>KifuMatch.phase==='finished');await p.evaluate(()=>sampling=false);assert((await p.evaluate(()=>samples)).every(w=>Math.abs(w-shortBefore)<1));
+ assert.deepEqual(errors,[]);console.log('update72: panel memory, recent labels 1/5/10, per-color GTP limits, M/C, end/cancel/resume and stable board size: OK');
+ }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

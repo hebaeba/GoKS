@@ -89,3 +89,8 @@ html body.sidebar-layout .controls .side-row :is(.recent-label,.jump,.autoplay,o
 html body.sidebar-layout .controls .side-row #score{margin-left:0}
 html body.sidebar-layout:not(.simple-mode) #message.error{position:fixed;bottom:28px;left:222px;max-width:calc(100vw - 240px);z-index:70;max-height:25vh;overflow:auto}
 @media(max-width:899px){html body.sidebar-layout:not(.simple-mode) .board-block{width:100%!important;max-width:100%!important;justify-self:stretch!important}}
+
+/* The metadata button appearing at match start must not change board height. */
+html body.sidebar-layout .board-heading{box-sizing:border-box;height:30px;flex:none;overflow:hidden}
+html body .side-row .recent-label>label{display:inline-flex;align-items:center;gap:3px;margin:0}
+@media(pointer:coarse){html body.sidebar-layout .board-heading{height:40px;min-height:40px}}
