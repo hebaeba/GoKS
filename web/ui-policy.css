@@ -1,6 +1,6 @@
 /* 固定UI仕様。変更にはユーザーの明示指示が必要。fields.cssの直前に読む。 */
 :root{--ui-text:14px;--ui-prominent:16px;--ui-small:12px;--ui-line:18px;--ui-pad:3px;--ui-button:26px;--ui-menu:30px}
-html body :is(#ui-policy #ui-policy #ui-policy,*):not(#analysis-overlay):not(#analysis-overlay *){font-size:var(--ui-text)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,*):where(:not(#analysis-overlay):not(#analysis-overlay *)){font-size:var(--ui-text)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,.game-title,.header-actions button,.workspace-tabs button,#engine-active-name){font-size:var(--ui-prominent)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,small,footer,footer *, .hint){font-size:var(--ui-small)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,button,summary){line-height:var(--ui-line)!important}

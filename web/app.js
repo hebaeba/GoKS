@@ -228,7 +228,7 @@
     const comment=read(route[index].props,'C').replace(/^画像から石の配置を取り込みました。着手順・アゲハマ・コウ履歴は不明です。(?:画像の範囲外は未確認です。)?$/, ''),commentBox=$('comment');commentBox.replaceChildren();
     if(index===0){const data=document.createElement('dl');data.className='root-info';for(const [key,label] of [['GN','対局名'],['PB','黒番'],['BR','棋力'],['PW','白番'],['WR','棋力'],['EV','大会'],['RO','回戦'],['DT','日付'],['PC','場所'],['RE','結果'],['GC','対局説明']]){const value=read(root.props,key);if(!value||(key==='GN'&&value==='画像から取り込んだ局面'))continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;data.append(dt,dd);}if(data.childNodes.length)commentBox.append(data);}
     if(comment){const text=document.createElement('p');text.textContent=comment;commentBox.append(text);}$('comment-area').hidden=!commentBox.childNodes.length;
-    $('metadata').replaceChildren();for(const [key,label] of [['PB','黒番'],['PW','白番'],['GN','対局名'],['EV','大会'],['DT','日付'],['RE','結果'],['RU','ルール'],['GC','対局説明']]){if(!root.props[key])continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=read(root.props,key);$('metadata').append(dt,dd);}
+    $('metadata').replaceChildren();for(const [key,label] of [['PB','黒番'],['BR','黒の棋力'],['PW','白番'],['WR','白の棋力'],['GN','対局名'],['EV','大会'],['RO','回戦'],['DT','日付'],['PC','場所'],['RE','結果'],['RU','ルール'],['GC','対局説明']]){if(!root.props[key])continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=read(root.props,key);$('metadata').append(dt,dd);}
     catalog();const current=route[index];$('branches').hidden=current.children.length<2;$('branch').replaceChildren();current.children.forEach((child,i)=>{const key=child.props.B?'B':child.props.W?'W':'';const v=key?read(child.props,key):'';$('branch').add(new Option((lineEntry(child).number?'変化'+lineEntry(child).lane:'本譜')+(key?'：'+(key==='B'?'黒':'白')+(v?lineEntry(child).label:' パス'):''),i));});$('branch').value=String(choices.get(current)||0);
     canvas.setAttribute('aria-label',size+'路、'+state.move+'手。'+(state.turn===R.BLACK?'黒':'白')+'番。'+(editing?'編集モード。矢印で交点を選びEnterで着手。':'閲覧モード。石を押すとその手へ移動。'));
     firstElement('.canvas-wrap').style.width=geometry().extent+'px';editRefresh();drawMoveStrip();draw();scheduleRecovery();
@@ -307,11 +307,11 @@
   document.addEventListener('keydown',e=>{if(e.key==='Tab'||e.key.startsWith('Arrow'))canvas.classList.remove('delete-key-focus');},true);
   canvas.addEventListener('blur',()=>canvas.classList.remove('delete-key-focus'));
   document.addEventListener('keydown',e=>{
-    if(e.key!=='Delete'||e.repeat||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||scoreSession||document.querySelector('dialog[open]')||e.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+    if(e.key!=='Delete'||e.repeat||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||scoreSession||document.querySelector('dialog[open]')||e.isComposing||window.KifuInteraction.blocksShortcuts(e.target))return;
     const button=$('delete-move');if(button.disabled||button.closest('[inert]'))return;
     canvas.classList.add('delete-key-focus');e.preventDefault();button.click();
   });
-  document.addEventListener('keydown',async e=>{if(e.defaultPrevented||scoreSession||document.querySelector('dialog[open]')||e.target.isContentEditable||e.target===canvas||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();(await byMoves((e.key==='ArrowDown'?1:-1)*(e.shiftKey?10:1)));}});
+  document.addEventListener('keydown',async e=>{if(e.defaultPrevented||scoreSession||document.querySelector('dialog[open]')||e.isComposing||e.target===canvas||window.KifuInteraction.blocksShortcuts(e.target)||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();(await byMoves((e.key==='ArrowDown'?1:-1)*(e.shiftKey?10:1)));}});
   $('open').onclick=()=>{$('file').value='';$('file').click();};
   async function importFile(file){
     if(!file)return false;
@@ -340,6 +340,7 @@
   dropZone.addEventListener('dragleave',e=>{if(!dropZone.contains(e.relatedTarget))dropZone.classList.remove('file-dragover');});
   dropZone.addEventListener('drop',async e=>{e.preventDefault();if(e.dataTransfer.files.length!==1){report('棋譜ファイルは１つずつ読み込んでください',true);return;}await importFile(e.dataTransfer.files[0]);});
   canvas.addEventListener('paste',e=>{const text=e.clipboardData?.getData('text/plain');if(text){e.preventDefault();pasteRecord(text);}});
+  document.addEventListener('paste',e=>{if(e.defaultPrevented||scoreSession||document.querySelector('dialog[open]')||window.KifuInteraction.blocksShortcuts(e.target))return;const text=e.clipboardData?.getData('text/plain');if(text){e.preventDefault();pasteRecord(text);}});
   $('import-text').onclick=()=>load($('sgf').value);$('export-text').onclick=async ()=>{if(insertion||!(await canLeave()))return;$('sgf').value=exportSgf();report('現在の棋譜をSGFテキスト欄へ書き出しました。');};
   function download(content){
     const blob=new Blob([content],{type:'application/x-go-sgf;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -638,7 +639,7 @@
     $('auto-seconds').onchange=()=>{if(autoPlaying)scheduleAuto();};
     for(const type of ['pointerdown','click','keydown','input','change'])document.addEventListener(type,event=>{if(autoPlaying&&!group.contains(event.target))stopAuto();},true);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAuto();});window.addEventListener('pagehide',stopAuto);
-    new ResizeObserver(()=>{const narrow=firstElement('.controls').clientWidth<400;const target=narrow?actions:nav;if(group.parentNode!==target){if(narrow)target.prepend(group);else target.append(group);}}).observe(firstElement('.controls'));
+    new ResizeObserver(()=>{if(document.body.classList.contains("sidebar-layout"))return;const narrow=firstElement('.controls').clientWidth<400;const target=narrow?actions:nav;if(group.parentNode!==target){if(narrow)target.prepend(group);else target.append(group);}}).observe(firstElement('.controls'));
     syncAuto();
   }
 

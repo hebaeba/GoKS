@@ -1,0 +1,91 @@
+/* Layout only: shared typography and 3px padding stay in ui-policy/fields. */
+html body.sidebar-layout:not(.simple-mode) .studio-grid{grid-template-columns:minmax(0,1fr) minmax(370px,28%);gap:10px}
+html body.sidebar-layout:not(.simple-mode) .board-panel{display:grid;grid-template-columns:204px minmax(0,1fr);gap:8px;overflow:hidden;align-items:start}
+html body.sidebar-layout:not(.simple-mode) .board-block{min-width:0;padding:5px;margin:0;overflow:hidden}
+html body.sidebar-layout:not(.simple-mode) .board-block .canvas-wrap{width:var(--fit-board-size,100%)!important;max-width:100%!important;min-width:0;margin:0 auto}
+html body.sidebar-layout .board-heading{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;margin:0 0 3px;min-height:30px}
+html body.sidebar-layout .board-heading .game-title{flex:1;min-width:0;text-align:center;margin:0}
+#board-notes{flex:none;white-space:nowrap}
+html body.sidebar-layout #comment-area{display:none!important}
+#board-sidebar{min-width:0;height:100%;overflow:auto;scrollbar-width:thin;background:#f6f8f5;border:1px solid #d3dfd9;border-radius:7px;padding:6px;box-sizing:border-box}
+html body #board-sidebar .header-actions{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:0 0 8px}
+html body #board-sidebar .header-actions button{flex:none;white-space:nowrap;width:auto}
+html body #board-sidebar .topline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0;padding:6px 0;border-top:1px solid #d3dfd9}
+html body #board-sidebar .topline label{display:flex;align-items:center;gap:3px;margin:0}
+.side-protection{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:6px 0}
+html body .side-protection .board-lock{margin:0;display:flex;gap:6px;align-items:center}
+html body #board-sidebar .controls,html body #simple-menu .controls{background:transparent;color:#213d39;border:0;border-radius:0;padding:0!important;margin:0}
+html body .controls .side-group{padding:7px 0;margin:0;border-top:1px solid #d3dfd9;background:transparent;color:#213d39}
+html body .controls .side-group h2{margin:0 0 5px;font-weight:600;color:#49665e}
+.side-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+html body .controls .side-row button{margin:0;flex:none;width:auto;white-space:nowrap;background:#fff;color:#213d39;border:1px solid #a8bdb4;box-shadow:none}
+html body .controls .side-row button:disabled{opacity:.45}
+html body .controls .side-row button:hover:not(:disabled){background:#e4eee8}
+html body .controls .side-row .navigation{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;margin:0}
+html body .controls .side-row .navigation button{width:100%;min-width:0}
+html body .controls .side-row .jump{display:flex;align-items:center;gap:4px;width:auto;margin:0}
+html body .controls .side-row .autoplay{display:flex;align-items:center;gap:6px;margin:0}
+html body .controls .side-row .autoplay label{display:flex;align-items:center;gap:3px}
+html body .controls .side-row .history-pair{display:flex;gap:5px;width:100%;margin:0}
+html body .controls .side-row .board-view-tools{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:0;padding:0;background:transparent;border:0}
+html body .side-row .board-view-tools>span:first-child{display:none}
+html body .side-row .reflection-controls{display:flex;gap:5px;flex-wrap:wrap}
+html body .controls .side-row #branches{max-width:100%}
+html body .side-row #turn{margin-left:0!important}
+html body .side-row .recent-label{color:inherit;white-space:nowrap}
+html body .workspace-tabs{display:flex!important;align-items:center;justify-content:space-between;gap:3px;flex-wrap:nowrap;padding:6px}
+html body .workspace-tabs button{flex:0 0 auto!important;width:auto!important;min-width:0!important;white-space:nowrap}
+html body .workspace-tabs button[hidden]{display:none!important}
+.board-info-row{display:flex;align-items:center;gap:5px;white-space:nowrap;min-height:28px;margin:0 auto;max-width:100%;overflow:hidden}
+.board-info-row #black-name,.board-info-row #white-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.board-info-row .stones{display:inline-flex;gap:4px;align-items:center;flex:none}
+.board-info-row #black-captures,.board-info-row #white-captures{flex:none;width:auto}
+.board-info-row #komi,.board-info-row #move{flex:none;white-space:nowrap;background:#edf3ed;border-radius:4px;padding:0 3px;color:#213d39}
+.board-slider-row{height:18px;display:flex;align-items:center;max-width:100%;margin:0 auto}
+.board-slider-row #slider{width:100%;height:16px;padding:0;margin:0;accent-color:#bc473b}
+#normal-info:empty,#normal-slider:empty{display:none}
+html body.simple-mode #board-sidebar{display:none}
+html body.simple-mode .side-protection{display:none}
+html body.simple-mode #normal-info,html body.simple-mode #normal-slider{display:none}
+html body.simple-mode #simple-menu .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;width:410px;max-width:100%;align-items:start}
+#simple-menu .simple-control-slot{max-width:100%}
+#simple-menu .simple-edit-extras{display:flex;flex-wrap:wrap;gap:6px}
+#simple-menu .side-group.side-branches{grid-column:1/-1}
+html body #simple-menu .side-group h2{white-space:nowrap}
+html body.sidebar-layout:not(.simple-mode).inspector-collapsed .studio-grid{grid-template-columns:minmax(0,1fr)}
+html body.sidebar-layout:not(.simple-mode).inspector-collapsed .inspector{display:none}
+html body.sidebar-layout:not(.simple-mode).inspector-collapsed .board-block{justify-self:center;width:100%;max-width:calc(100dvh - 100px)}
+#normal-panel-close{display:none}
+html body.simple-mode #normal-panel-close{display:none!important}
+#board-notes-dialog{width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;border:1px solid #91a99d;border-radius:7px;background:#f8faf7;color:#213d39}
+.notes-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.notes-content dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px}
+.notes-content dt{font-weight:bold}.notes-content dd{margin:0;overflow-wrap:anywhere}.notes-content p{white-space:pre-wrap;overflow-wrap:anywhere}
+#board-notes-dialog::backdrop{background:#183c3933}
+html body #board-sidebar .save-popup{position:fixed;top:80px;left:16px;right:auto;z-index:100;width:310px}
+html body #board-sidebar .save-popup button{white-space:normal;width:100%}
+@media(max-width:1100px){
+ html body.sidebar-layout:not(.simple-mode) .studio-grid{grid-template-columns:minmax(0,1fr)}
+ html body.sidebar-layout:not(.simple-mode) .inspector{position:fixed!important;top:8px;right:8px;bottom:8px;width:min(520px,calc(100vw - 16px));height:auto!important;max-height:calc(100dvh - 16px)!important;overflow:auto;z-index:60;box-shadow:0 4px 20px #0004}
+ html body.sidebar-layout:not(.simple-mode) #normal-panel-close{display:block;margin:4px 4px 4px auto}
+}
+@media(max-width:899px){
+ html body.sidebar-layout:not(.simple-mode) main{padding:6px}
+ html body.sidebar-layout:not(.simple-mode) .workspace{max-width:none}
+ html body.sidebar-layout:not(.simple-mode) .board-panel{grid-template-columns:minmax(0,1fr);overflow:visible}
+ html body.sidebar-layout:not(.simple-mode) .board-block{grid-row:1;max-width:none!important;width:auto!important;justify-self:stretch}
+ html body.sidebar-layout:not(.simple-mode) #board-sidebar{grid-row:2;height:auto;overflow:visible}
+ html body #board-sidebar .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+ html body #board-sidebar .header-actions{margin:0 0 5px}
+ html body #board-sidebar .topline{display:flex;flex-wrap:wrap}
+ .side-protection{flex-direction:row;flex-wrap:wrap;gap:14px}
+ .board-info-row{gap:3px}.board-info-row .stones small{display:none}
+ html body .workspace-tabs{overflow-x:auto;justify-content:space-between}
+ html body #simple-menu .simple-menu-content{min-width:0;box-sizing:border-box}
+ html body.simple-mode #simple-menu .controls{width:360px}
+}
+html body.simple-mode #simple-menu .side-protection{display:flex}
+html body.sidebar-layout .controls .side-row :is(.recent-label,.jump,.autoplay,output){color:#213d39!important}
+html body.sidebar-layout .controls .side-row #score{margin-left:0}
+html body.sidebar-layout:not(.simple-mode) #message.error{position:fixed;bottom:28px;left:222px;max-width:calc(100vw - 240px);z-index:70;max-height:25vh;overflow:auto}
+@media(max-width:899px){html body.sidebar-layout:not(.simple-mode) .board-block{width:100%!important;max-width:100%!important;justify-self:stretch!important}}

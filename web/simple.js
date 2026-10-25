@@ -23,19 +23,19 @@
  function command(parent,label,id){return action(parent,label,()=>$(id)?.click(),()=>$(id));}
  const file=menu('ファイル'),view=menu('表示'),edit=menu('編集'),analysis=menu('解析'),game=menu('対局'),other=menu('その他');
  command(file,'棋譜を開く (O)','open');action(file,'クリップボードから読み込む (Ctrl+V)',()=>$('paste-board').click());command(file,'画像から局面を取り込む','workspace-image-open');command(file,'棋譜全体を保存','save');command(file,'盤面を印刷','print');action(file,'その他の保存・GIF',()=>panel('storage'));action(file,'棋譜欄・文字コード',()=>panel('record'));
- command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近５手の表示／非表示','recent');action(view,'コメント',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
+ command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近５手の表示／非表示','recent');action(view,'コメント・対局情報',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
  const topSlot=document.createElement('div');topSlot.className='simple-top-slot';view.append(topSlot);
- const controlSlot=document.createElement('div');controlSlot.className='simple-control-slot';edit.append(controlSlot);action(edit,'碁石・記号・文字の配置',()=>panel('tools'));action(edit,'碁盤をクリア (Ctrl+Home)',()=>q('.clear-board')?.click(),()=>q('.clear-board'));
- command(analysis,'解析の開始／停止 (Space)','analyze-live');action(analysis,'第一候補を着手 (F2)',()=>window.KifuAnalysisControl.playFirst());action(analysis,'候補手・全局解析・グラフ',()=>panel('analysis'));action(analysis,'エンジン設定',()=>panel('settings'));
+ const controlSlot=document.createElement('div');controlSlot.className='simple-control-slot';edit.append(controlSlot);const simpleEditActions=document.createElement('div');simpleEditActions.className='simple-edit-extras';edit.append(simpleEditActions);action(simpleEditActions,'碁石・記号・文字の配置',()=>panel('tools'));action(simpleEditActions,'碁盤をクリア (Ctrl+Home)',()=>q('.clear-board')?.click(),()=>q('.clear-board'));
+ command(analysis,'解析の開始／停止 (Space)','analyze-live');action(analysis,'第一候補を着手 (F2)',()=>window.KifuAnalysisControl.playFirst());action(analysis,'候補手・全局解析・グラフ',()=>panel('analysis'));action(analysis,'エンジン',()=>panel('settings'));
  action(game,'対局の設定・開始',()=>panel('match'));command(game,'勝敗判定','score');action(other,'ショートカット一覧',()=>help.showModal());command(other,'このGoKifuStudioについて','about-open');
  const help=document.createElement('dialog');help.id='shortcut-dialog';help.innerHTML='<div class=shortcut-heading><h2>キーボード操作（通常・シンプル共通）</h2><button>閉じる</button></div><table><tbody></tbody></table>';document.body.append(help);help.querySelector('button').onclick=()=>help.close();
  const keys=[['Space','解析の開始・停止'],['Home','初手へ移動（着手前の局面）'],['End','選択中の手順の最終手へ移動'],['Ctrl+Home','碁盤をクリア（確認あり）'],['M','手数の表示・非表示'],['C','座標の表示・非表示'],['O','棋譜を開く'],['↓','1手進む'],['↑','1手戻る'],['ホイールを手前へ','1手進む'],['ホイールを奥へ','1手戻る'],['Shift+↓／Shift+↑','10手進む・戻る'],['F2','第一候補を着手'],['Del','表示中の着手以降を削除'],['Ctrl+V','クリップボードの棋譜を読み込む']];
  for(const [key,text]of keys){const tr=document.createElement('tr');const a=document.createElement('th'),b=document.createElement('td');a.textContent=key;b.textContent=text;tr.append(a,b);help.querySelector('tbody').append(tr);}
  const normalHelp=document.createElement('button');normalHelp.id='shortcuts-open';normalHelp.textContent='キー操作';normalHelp.title='キーボード操作の一覧を表示します';normalHelp.onclick=()=>help.showModal();q('.footer-links').prepend(normalHelp);
- const comments=document.createElement('dialog');comments.id='simple-comment';comments.innerHTML='<h2>コメント・対局情報</h2><div></div><button>閉じる</button>';document.body.append(comments);comments.querySelector('button').onclick=()=>comments.close();function openComment(){comments.querySelector('div').replaceChildren(...[...$('comment').childNodes].map(n=>n.cloneNode(true)));comments.showModal();}
+ function openComment(){window.KifuSidebar.openNotes();}
  function toggleCoordinates(){const value=!api.getCoordinates();api.setCoordinates(value);document.querySelectorAll('[name="board-coordinates"]').forEach(el=>el.checked=(el.value==='on')===value);}
  for(const [id,key]of [['first','Home'],['last','End'],['numbers','M'],['workspace-open','O']])$(id).title=($(id).title||$(id).textContent)+' ('+key+')';q('.clear-board').title+=' (Ctrl+Home)';q('.coordinate-choice').title='座標の表示・非表示 (C)';
- document.addEventListener('keydown',e=>{if(e.defaultPrevented||e.isComposing||e.altKey||e.metaKey||e.shiftKey||e.target?.closest?.('input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]')||body.classList.contains('scoring-mode'))return;let target,fn;
+ document.addEventListener('keydown',e=>{if(e.defaultPrevented||e.isComposing||e.altKey||e.metaKey||e.shiftKey||window.KifuInteraction.blocksShortcuts(e.target)||document.querySelector('dialog[open]')||body.classList.contains('scoring-mode'))return;let target,fn;
   if(e.ctrlKey){if(e.key==='Home')target=q('.clear-board');else return;}
   else if(e.key==='Home')target=$('first');else if(e.key==='End')target=$('last');else if(e.key.toLowerCase()==='m')target=$('numbers');else if(e.key.toLowerCase()==='c')fn=toggleCoordinates;else if(e.key.toLowerCase()==='o')target=$('open');else return;
   e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;hideMenus();if(fn)fn();else if(target&&!target.disabled)target.click();
@@ -49,7 +49,7 @@
  document.addEventListener('click',e=>{if(!e.target.closest('#simple-menu>details>summary')){menuTracking=false;if(!e.target.closest('.simple-menu-content'))hideMenus();}});
  inspector.addEventListener('click',e=>{if(simple&&e.target.closest('[data-tool],.close-tools'))closePanel();});
  function sync(){title.textContent=q('.game-title').textContent;title.title=title.textContent;for(const [b,get]of proxies){const t=get();b.disabled=!t||t.disabled;}
-  for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');const text=simple?num:'アゲハマ '+num;if(el.textContent!==text)el.textContent=text;el.setAttribute('aria-label',(id==='black-captures'?'黒':'白')+'のアゲハマ '+num);}
+  for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');const text=num;if(el.textContent!==text)el.textContent=text;el.setAttribute('aria-label',(id==='black-captures'?'黒':'白')+'のアゲハマ '+num);}
  }
 
  let nativeQueue=Promise.resolve(),lastNativeWidth=null,nativeTimer;
@@ -63,7 +63,7 @@
   if(force)run();else nativeTimer=setTimeout(run,100);
  }
  function setMode(value){if(simple===value)return;hideMenus();closePanel();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
-  if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
+  if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];q('.canvas-wrap').style.removeProperty('--fit-board-size');}
   try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
  }
