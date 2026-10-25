@@ -71,8 +71,5 @@
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);
  window.addEventListener('resize',fit);window.addEventListener('kifu-position-change',()=>{sync();fit();});window.addEventListener('workspace-layout',()=>{if(simple)fit();});
  new ResizeObserver(fit).observe(bar);document.fonts?.ready.then(fit);let restore=false;try{restore=localStorage.getItem('gokifu-simple')==='1';}catch{}if(restore)setMode(true);
- const engineMark=document.createElement('span');engineMark.id='simple-engine-status';analysis.parentElement.querySelector('summary').append(engineMark);
- function engineStatus(){const state=$('engine-state');engineMark.textContent=state.dataset.state==='ready'?' ●':state.dataset.state==='error'?' !':['starting','tuning'].includes(state.dataset.state)?' …':'';engineMark.dataset.state=state.dataset.state||'';analysis.parentElement.querySelector('summary').title=$('engine-active-name').textContent+'：'+state.textContent;}
- const eo=new MutationObserver(engineStatus);eo.observe($('engine-state'),{childList:true,subtree:true,attributes:true});eo.observe($('engine-active-name'),{childList:true,subtree:true});engineStatus();
  window.KifuSimple={setMode,openPanel:panel};
 })();

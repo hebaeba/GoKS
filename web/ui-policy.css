@@ -56,3 +56,6 @@ body #image-board-dialog .image-work canvas{max-height:min(360px,max(120px,calc(
 html body :is(#ui-policy #ui-policy #ui-policy,#simple-menu>details>summary,#simple-title,#simple-return){font-size:var(--ui-prominent)!important}
 
 body #image-board-dialog .image-work #image-review{margin-left:0;margin-right:auto}
+
+/* Pointer focus is not an active-operation indicator. Keep Tab/arrow focus visible. */
+html body.pointer-focus :is(button,input,select,textarea,summary,canvas,[tabindex]):focus-visible{outline:none!important;outline-offset:0!important}

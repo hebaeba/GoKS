@@ -66,3 +66,10 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const heading=batch.querySelector('h3');if(heading)heading.hidden=true;
 })();
 ;(()=>{const box=document.querySelector('.engine-profiles');const d=document.createElement('details');d.id='engine-list-disclosure';const summary=document.createElement('summary');summary.textContent='エンジンリスト';box.before(d);d.append(summary,box);const label=box.querySelector('label');if(label&&label.querySelector('#engine-profile'))label.hidden=true;})();
+
+;(()=>{
+ const d=document.getElementById('engine-list-disclosure');
+ for(const key of ['exe','model','config']){const input=document.getElementById('engine-'+key),row=input.closest('.engine-path-row'),label=document.querySelector('label[for="'+input.id+'"]');d.append(label,row);}
+ d.append(document.getElementById('engine-advanced'),document.querySelector('.engine-registration'));
+ const sync=()=>KifuAnalysisControl.setFieldsCollapsed(!d.open);d.addEventListener('toggle',sync);sync();
+})();
