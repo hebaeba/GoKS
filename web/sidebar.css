@@ -94,3 +94,10 @@ html body.sidebar-layout:not(.simple-mode) #message.error{position:fixed;bottom:
 html body.sidebar-layout .board-heading{box-sizing:border-box;height:30px;flex:none;overflow:hidden}
 html body .side-row .recent-label>label{display:inline-flex;align-items:center;gap:3px;margin:0}
 @media(pointer:coarse){html body.sidebar-layout .board-heading{height:40px;min-height:40px}}
+
+html body #board-sidebar .save-popup{box-sizing:border-box;width:min(310px,calc(100vw - 32px));max-height:calc(100dvh - 96px);overflow:auto}
+/* Running paths and the engine list are sibling disclosures, with no redundant toggle. */
+html body #pane-settings #engine-settings{border:0;border-radius:0;background:transparent;padding:0;margin:0;min-width:0}
+html body #engine-settings>.engine-running-details,html body #engine-settings>#engine-list-disclosure{display:block;width:100%;min-width:0;box-sizing:border-box;margin:8px 0}
+html body #engine-settings>#engine-list-disclosure>summary{margin:0}
+html body #engine-running-files{box-sizing:border-box;width:100%;min-width:0;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-all}

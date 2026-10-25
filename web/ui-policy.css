@@ -59,3 +59,7 @@ body #image-board-dialog .image-work #image-review{margin-left:0;margin-right:au
 
 /* Pointer focus is not an active-operation indicator. Keep Tab/arrow focus visible. */
 html body.pointer-focus :is(button,input,select,textarea,summary,canvas,[tabindex]):focus-visible{outline:none!important;outline-offset:0!important}
+
+/* Multiline save-menu items grow to fit their text; normal buttons stay unchanged. */
+html body :is(#ui-policy #ui-policy #ui-policy,#workspace-save-popup button){height:auto!important;min-height:var(--ui-menu)!important;white-space:normal!important}
+@media(pointer:coarse){html body :is(#ui-policy #ui-policy #ui-policy,#workspace-save-popup button){min-height:40px!important}}

@@ -38,3 +38,6 @@ html body :is(#field-policy #field-policy #field-policy,#komi-input,#match-komi)
 .match-komi-label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 
 #engine-extraArgs{white-space:pre;overflow-x:auto;overflow-wrap:normal;word-break:normal}#engine-extraArgs::placeholder{white-space:pre}
+
+/* Engine names can exceed the remaining match column. Account for both padding and arrow. */
+html body :is(#field-policy #field-policy #field-policy,#match-black,#match-white):not([multiple]):not([size]){max-width:calc(100% - 26px)!important;text-overflow:ellipsis}

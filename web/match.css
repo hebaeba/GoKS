@@ -65,3 +65,18 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
 }
 #analysis-visits-state{display:none!important}
 #load-menu[hidden]{display:none!important}
+
+/* Shared right edge for black/white, independent of name and custom-limit widths. */
+#pane-match{container-type:inline-size}
+#pane-match .match-player{grid-template-columns:48px minmax(0,1fr) auto;min-width:0}
+#pane-match .match-player>strong{grid-column:1;grid-row:1}
+#pane-match .match-player>select{grid-column:2;grid-row:1;min-width:0}
+#pane-match .match-player>.match-time-label{grid-column:3;grid-row:1;justify-self:end}
+#pane-match .match-player>.match-visits-label{grid-column:3;grid-row:2;justify-self:end}
+#pane-match .match-player>.match-name-label{grid-column:1/3;grid-row:2;min-width:0}
+@container(max-width:300px){
+ #pane-match .match-player{grid-template-columns:48px minmax(0,1fr)}
+ #pane-match .match-player>.match-time-label{grid-column:1/-1;grid-row:2;flex-wrap:wrap;justify-content:flex-end}
+ #pane-match .match-player>.match-visits-label{grid-column:1/-1;grid-row:3;flex-wrap:wrap;justify-content:flex-end}
+ #pane-match .match-player>.match-name-label{grid-column:1/-1;grid-row:4}
+}

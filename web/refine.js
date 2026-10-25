@@ -69,6 +69,7 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
 
 ;(()=>{
  const d=document.getElementById('engine-list-disclosure');
+ document.querySelector('.engine-running-details').after(d);
  for(const key of ['exe','model','config']){const input=document.getElementById('engine-'+key),row=input.closest('.engine-path-row'),label=document.querySelector('label[for="'+input.id+'"]');d.append(label,row);}
  d.append(document.getElementById('engine-advanced'),document.querySelector('.engine-registration'));
  const sync=()=>KifuAnalysisControl.setFieldsCollapsed(!d.open);d.addEventListener('toggle',sync);sync();
