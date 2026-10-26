@@ -5,7 +5,7 @@
  const bar=document.createElement('nav');bar.id='simple-menu';bar.hidden=true;bar.setAttribute('aria-label','シンプルモードのメニュー');main.prepend(bar);
  const info=document.createElement('div');info.id='simple-info';info.hidden=true;const slide=document.createElement('div');slide.id='simple-slider';slide.hidden=true;block.append(info,slide);
  const title=document.createElement('span');title.id='simple-title';bar.append(title);
- const toggle=document.createElement('button');toggle.id='simple-toggle';toggle.textContent='シンプル';toggle.title='碁盤を大きく表示するシンプルモードへ切り替えます';toggle.setAttribute('aria-pressed','false');q('.header-actions').append(toggle);
+ const toggle=document.createElement('button');toggle.id='simple-toggle';toggle.textContent='シンプル表示';toggle.title='碁盤を大きく表示するシンプルモードへ切り替えます';toggle.setAttribute('aria-pressed','false');q('.header-actions').append(toggle);
  const back=document.createElement('button');back.id='simple-return';back.textContent='通常表示';back.title='通常モードに戻ります';bar.append(back);
  const close=document.createElement('button');close.id='simple-panel-close';close.textContent='閉じる';close.title='詳細パネルを閉じて碁盤に戻ります';close.hidden=true;inspector.prepend(close);
  let simple=false,moves=[],menuTracking=false;const menus=[];
@@ -43,7 +43,7 @@
  const context=document.createElement('div');context.id='board-context-menu';context.hidden=true;context.setAttribute('role','group');context.setAttribute('aria-label','碁盤の操作');document.body.append(context);
  for(const [label,id]of [['初手へ移動 (Home)','first'],['最終手へ移動 (End)','last'],['手数の表示／非表示 (M)','numbers'],['取り消し','undo'],['やり直し','redo'],['ここへ挿入','insert'],['削除 (Del)','delete-move'],['棋譜を開く (O)','open'],['クリップボードから読み込む','paste-board'],['棋譜全体を保存','save'],['勝敗判定','score']])command(context,label,id);
  command(context,'解析の開始／停止 (Space)','analyze-live');action(context,'座標の表示／非表示 (C)',toggleCoordinates);action(context,'碁石・記号・文字の配置',()=>panel('tools'));action(context,'碁盤をクリア (Ctrl+Home)',()=>q('.clear-board').click(),()=>q('.clear-board'));action(context,'ショートカット一覧',()=>help.showModal());
- $('board').addEventListener('contextmenu',e=>{e.preventDefault();e.stopImmediatePropagation();hideMenus();sync();context.hidden=false;context.style.left=Math.max(4,Math.min(e.clientX,innerWidth-context.offsetWidth-4))+'px';context.style.top=Math.max(4,Math.min(e.clientY,innerHeight-context.offsetHeight-4))+'px';context.querySelector('button:not(:disabled)')?.focus();},true);
+ $('board').addEventListener('contextmenu',e=>{e.preventDefault();e.stopImmediatePropagation();hideMenus();if(api.fillHatchedAreaAt(event))return;sync();context.hidden=false;context.style.left=Math.max(4,Math.min(e.clientX,innerWidth-context.offsetWidth-4))+'px';context.style.top=Math.max(4,Math.min(e.clientY,innerHeight-context.offsetHeight-4))+'px';context.querySelector('button:not(:disabled)')?.focus();},true);
  context.addEventListener('keydown',e=>{const bs=[...context.querySelectorAll('button:not(:disabled)')];const i=bs.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();e.stopPropagation();bs[(i+(e.key==='ArrowDown'?1:bs.length-1))%bs.length]?.focus();}});
  document.addEventListener('pointerdown',e=>{if(!bar.contains(e.target)&&!context.contains(e.target))hideMenus();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideMenus();if(simple)closePanel();}});
  document.addEventListener('click',e=>{if(!e.target.closest('#simple-menu>details>summary')){menuTracking=false;if(!e.target.closest('.simple-menu-content'))hideMenus();}});

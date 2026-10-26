@@ -122,7 +122,29 @@
   const markerKeys=['TR','SQ','CR','MA','LB','DD'];
   function removeAt(props,point,keys){if(keys.includes('LB')&&props.XIGTEXT){props.XIGTEXT=props.XIGTEXT.filter(value=>value!==R.encode(point,size));if(!props.XIGTEXT.length)delete props.XIGTEXT;}for(const key of keys){if(!props[key])continue;if(key==='LB')props[key]=props[key].filter(value=>value.split(':')[0]!==R.encode(point,size));else props[key]=R.expanded(props[key],size).filter(p=>p!==point).map(p=>R.encode(p,size));if(!props[key].length)delete props[key];}}
   function markupMap(){const map=new Map(),props=route[index].props;for(const key of markerKeys){for(const value of props[key]||[]){try{if(key==='LB'){const split=value.indexOf(':');if(split<0)continue;const point=R.coordinate(value.slice(0,split),size);if(!map.has(point))map.set(point,[]);map.get(point).push({key,text:value.slice(split+1),free:(props.XIGTEXT||[]).includes(value.slice(0,split))});}else for(const point of R.expanded([value],size)){if(!map.has(point))map.set(point,[]);map.get(point).push({key});}}catch(error){/* Preserve unsupported incoming markup in SGF, without executing it. */}}}return map;}
-  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':c.fillStyle='#12697055';c.fillRect(x-gap*.46,y-gap*.46,gap*.92,gap*.92);c.strokeStyle='#12697088';for(let offset=-gap*.4;offset<gap*.5;offset+=gap*.2){c.beginPath();c.moveTo(x+offset,y-gap*.42);c.lineTo(x+offset,y+gap*.42);c.stroke();}break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?'blue':state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillText(text,x,y);break;}}c.restore();}}}
+  function drawHatching(c,x,y,gap,pixel){
+    const half=gap*.46;c.save();c.beginPath();c.rect(x-half,y-half,half*2,half*2);c.clip();
+    c.fillStyle='#2689cf18';c.fillRect(x-half,y-half,half*2,half*2);
+    const pitch=Math.max(gap*.24,5*pixel),ink=Math.max(1.3*pixel,gap*.035);
+    c.beginPath();for(let offset=-gap*2;offset<=gap*2;offset+=pitch){c.moveTo(x-half+offset,y+half);c.lineTo(x+half+offset,y-half);}
+    c.strokeStyle='#f4fcff';c.lineWidth=ink+1.8*pixel;c.stroke();
+    c.strokeStyle='#075ca8';c.lineWidth=ink;c.stroke();c.restore();
+  }
+  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':drawHatching(c,x,y,gap,g.extent/(canvas.clientWidth||g.extent));break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?'blue':state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillText(text,x,y);break;}}c.restore();}}}
+  function fillHatchedAreaAt(event){
+    if(tool!=='DD')return false;
+    // Consume this context click only in the region tool; ordinary right-click menus stay intact.
+    if(!editing||insertion||scoreSession||exportBusy||stroke||window.KifuMatch?.locked){report('網掛けを編集できる状態にしてから操作してください。',true);return true;}
+    const point=pointAt(event),node=route[index],boardSize=size;
+    if(point===null)return true;
+    (async()=>{
+      if(!await canLeave()||tool!=='DD'||route[index]!==node||size!==boardSize||!editing||insertion||scoreSession||exportBusy||window.KifuMatch?.locked)return;
+      const boundary=R.expanded(node.props.DD||[],size);
+      const interior=R.enclosedRegion(size,boundary,point);
+      if(!interior.length){report('網掛けで隙間なく囲んだ内側を右クリックしてください。囲みの外側や網掛け済みの交点は塗りません。',true);return;}
+      transaction(()=>{node.props.DD=[...new Set([...boundary,...interior])].map(p=>R.encode(p,size));},interior.length+'交点を網掛けしました。取り消しで元に戻せます。');
+    })().catch(error=>report(error.message,true));return true;
+  }
   async function annotate(point){if(!editing||insertion||!(await canLeave()))return;transaction(()=>{
     let current=route[index],props=current.props;const coordinate=R.encode(point,size);
     if(['AB','AW','AE'].includes(tool)){
@@ -353,7 +375,7 @@
   $('save').onclick=async()=>{
     if(insertion||!(await canLeave()))return;if(!GoExport.hasRecord(root)){report('保存する棋譜がありません。');return;}const content=exportSgf();let handle;if(window.__TAURI_INTERNALS__?.invoke){try{if(await GoExport.save(new Blob([content],{type:'application/x-go-sgf'}),originalName)){dirty=false;report('SGFファイルを保存しました。');}}catch(e){report('保存できません：'+e.message,true);}return;}
     if(window.showSaveFilePicker){
-      try{handle=await window.showSaveFilePicker({suggestedName:originalName,types:[{description:'SGF棋譜',accept:{'application/x-go-sgf':['.sgf']}}]});}
+      try{handle=await window.showSaveFilePicker(GoExport.fileOptions(originalName));}
       catch(error){if(error.name==='AbortError')return;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name)){report('保存先を開けませんでした：'+error.message,true);return;}}
     }
     if(!handle){download(content);window.dispatchEvent(new Event('kifu-record-saved'));return;}
@@ -438,7 +460,7 @@
     const picker=document.createElement('select');picker.id='line-picker';picker.title='本譜・変化を選択します';picker.setAttribute('aria-label','変化を選択');const lineLabel=document.createElement('label');lineLabel.className='line-selector';lineLabel.append('変化を選択 ',picker);$('tree-block').querySelector('h2').after(lineLabel);picker.onchange=async ()=>{const entry=branchCatalog[Number(picker.value)];(await chooseLine(entry,entry.number?entry.anchor:undefined));};
     // Match the user's tool table: left shapes, right characters and areas.
     const table=firstElement('.tool-table'),popup=firstElement('.tool-popup'),tools=$('tools');table.replaceChildren();
-    const entries=[['AB','＊ 黒石 ●','を盤面に配置','黒石を配置します。ドラッグで連続操作できます'],['upper','英大文字','を順番に配置','A〜Zを順番に配置します。Zの次はAに戻ります'],['AW','＊ 白石 ○','を盤面に配置','白石を配置します。ドラッグで連続操作できます'],['lower','英小文字','を順番に配置','a〜zを順番に配置します。zの次はaに戻ります'],['TR','＊ 三角 △','を盤面に配置','交点に三角の記号を付けます。ドラッグで連続操作できます'],['number','数字','を順番に配置','交点に数字を順に付けます'],['SQ','＊ 四角 □','を盤面に配置','交点に四角の記号を付けます。ドラッグで連続操作できます'],['label','文章入力','10px・青文字で横書き','入力した文字を交点に付けます'],['CR','＊ 丸 ○','を盤面に配置','交点に丸の記号を付けます。ドラッグで連続操作できます'],['DD','＊ 網掛け','盤面に領域作成','網掛けで盤面に領域を作成します。ドラッグで連続操作できます'],['MA','＊ バツ ×','を盤面に配置','交点にバツの記号を付けます。ドラッグで連続操作できます'],['clear','＊ 要素を削除','着手以外を消去','追加石や記号を削除します。ドラッグで連続操作できます']];
+    const entries=[['AB','＊ 黒石 ●','を盤面に配置','黒石を配置します。ドラッグで連続操作できます'],['upper','英大文字','を順番に配置','A〜Zを順番に配置します。Zの次はAに戻ります'],['AW','＊ 白石 ○','を盤面に配置','白石を配置します。ドラッグで連続操作できます'],['lower','英小文字','を順番に配置','a〜zを順番に配置します。zの次はaに戻ります'],['TR','＊ 三角 △','を盤面に配置','交点に三角の記号を付けます。ドラッグで連続操作できます'],['number','数字','を順番に配置','交点に数字を順に付けます'],['SQ','＊ 四角 □','を盤面に配置','交点に四角の記号を付けます。ドラッグで連続操作できます'],['label','文章入力','10px・青文字で横書き','入力した文字を交点に付けます'],['CR','＊ 丸 ○','を盤面に配置','交点に丸の記号を付けます。ドラッグで連続操作できます'],['DD','＊ 網掛け','盤面に領域作成','ドラッグで網掛けします。網掛けで囲んだ内側を右クリックすると一括で塗ります'],['MA','＊ バツ ×','を盤面に配置','交点にバツの記号を付けます。ドラッグで連続操作できます'],['clear','＊ 要素を削除','着手以外を消去','追加石や記号を削除します。ドラッグで連続操作できます']];
     for(const [value,name,description,title]of entries){const button=document.createElement('button');button.type='button';button.dataset.tool=value;button.title=title;const option=[...$('tool').options].find(option=>option.value===value);if(option)option.text=name.replace('＊ ','');const label=document.createElement('span'),text=document.createElement('span');label.textContent=name;text.textContent=description;text.className='tool-description';button.append(label,text);button.onclick=()=>{$('tool').value=value;$('tool').dispatchEvent(new Event('change'));table.querySelectorAll('button').forEach(item=>item.classList.toggle('selected',item===button));firstElement('.editor-fields').hidden=true;$('info-edit').hidden=true;if(value!=='label')tools.open=false;};table.append(button);}
     const header=document.createElement('strong');header.textContent='碁盤のツール';header.className='tool-heading';popup.prepend(header);const help=document.createElement('p');help.className='tool-drag-help';help.textContent='＊印はドラッグで連続操作できます';table.before(help);
     const commentEditor=firstElement('.editor-fields');commentEditor.hidden=true;$('info-edit').hidden=true;const editGroup=document.createElement('div');editGroup.className='tool-other';
@@ -537,6 +559,7 @@
 
   // Explicit same-origin interface for the bulletin board. No legacy player shim.
   window.IndependentGo=Object.freeze({
+    fillHatchedAreaAt,
     matchReset(){
       if(insertion||scoreSession||exportBusy||!canLeaveSync())throw Error('編集中の操作を終了してください。');
       const komi=currentKomi();editing=true;if(!transaction(()=>{root=S.create(size);root.props.KM=[String(komi)];originalName='kifu.sgf';choices=new WeakMap();index=0;commentTarget=null;infoTarget=null;analysisPreview=null;},'新しい対局用に盤面をクリアしました。'))throw Error('盤面をクリアできませんでした。');

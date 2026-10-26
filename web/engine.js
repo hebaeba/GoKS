@@ -120,7 +120,20 @@
     }
     return next;
   }
-  const api = {EMPTY, BLACK, WHITE, other, position, copy, neighbors, group, play, forcePlay, coordinate, encode, expanded, apply};
+  // Four-connected flood fill: stones are not barriers; only marked intersections are.
+  // An unmarked edge means the clicked component is outside/open, never fill it.
+  function enclosedRegion(size, boundary, seed) {
+    if(!Number.isInteger(size)||size<1||size>19||!Number.isInteger(seed)||seed<0||seed>=size*size)return [];
+    const wall=new Set(boundary);if(wall.has(seed)||!wall.size)return [];
+    const seen=new Set([seed]),queue=[seed];let outside=false;
+    for(let i=0;i<queue.length;i++){
+      const point=queue[i],x=point%size,y=Math.floor(point/size);
+      if(x===0||y===0||x===size-1||y===size-1)outside=true;
+      for(const next of neighbors(point,size))if(!wall.has(next)&&!seen.has(next)){seen.add(next);queue.push(next);}
+    }
+    return outside?[]:queue;
+  }
+  const api = {EMPTY, BLACK, WHITE, other, position, copy, neighbors, group, play, forcePlay, coordinate, encode, expanded, apply, enclosedRegion};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.GoRules = api;
 })(typeof globalThis === 'undefined' ? this : globalThis);

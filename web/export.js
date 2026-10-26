@@ -1,9 +1,15 @@
 /* Independent Go Editor: newly implemented raster exports and GIF89a writer. MIT. */
 (function(root){'use strict';
+ function fileOptions(name){
+  const match=/\.(sgf|json|png|jpe?g|gif|csv)$/i.exec(name);
+  if(!match)return {suggestedName:name};
+  const ext=match[1].toLowerCase(),mime={sgf:'application/x-go-sgf',json:'application/json',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',csv:'text/csv'}[ext];
+  return {suggestedName:name.slice(0,-match[0].length),types:[{description:ext.toUpperCase(),accept:{[mime]:['.'+ext]}}],excludeAcceptAllOption:true};
+ }
  async function save(blob,name){
   function saved(ok){if(ok&&/\.sgf$/i.test(name)&&root.dispatchEvent)root.dispatchEvent(new Event('kifu-record-saved'));return ok;}
   if(root.__TAURI_INTERNALS__?.invoke){const result=await root.__TAURI_INTERNALS__.invoke("desktop_save",{name,bytes:Array.from(new Uint8Array(await blob.arrayBuffer()))});return saved(result.saved);}
-  if(root.showSaveFilePicker){let handle;try{handle=await root.showSaveFilePicker({suggestedName:name});}catch(error){if(error.name==='AbortError')return false;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name))throw error;}if(handle){const out=await handle.createWritable();await out.write(blob);await out.close();return saved(true);}}
+  if(root.showSaveFilePicker){let handle;try{handle=await root.showSaveFilePicker(fileOptions(name));}catch(error){if(error.name==='AbortError')return false;if(!['SecurityError','NotAllowedError','TypeError'].includes(error.name))throw error;}if(handle){const out=await handle.createWritable();await out.write(blob);await out.close();return saved(true);}}
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return saved(true);
  }
  function raster(canvas,type='png'){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('画像を生成できません。')),type==='jpg'?'image/jpeg':'image/png',.88));}
@@ -28,5 +34,5 @@
   frame(rgba,seconds){const codes=lzw(indexed(rgba));this.add([33,249,4,4,...this.word(Math.max(1,Math.round(seconds*100))),0,0,44,0,0,0,0,...this.word(this.width),...this.word(this.height),0,8]);for(let i=0;i<codes.length;i+=255){const chunk=codes.subarray(i,i+255);this.add([chunk.length]);this.add(chunk);}this.add([0]);}
   finish(){this.add([59]);return new Blob(this.parts,{type:'image/gif'});}
  }
- const api={save,raster,hasRecord,mainOnly,rotated,Gif,indexed,lzw};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GoExport=api;
+ const api={fileOptions,save,raster,hasRecord,mainOnly,rotated,Gif,indexed,lzw};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GoExport=api;
 })(typeof globalThis==='undefined'?this:globalThis);

@@ -2,6 +2,7 @@
 use std::{sync::{Arc,Mutex},path::PathBuf};
 use tauri::Manager;
 mod window_state;
+mod save_name;
 use serde_json::{Value,json};
 use kifu_katago_backend::Engine;
 use kifu_lan_server::Share;
@@ -26,7 +27,7 @@ async fn mobile_share(action:String,payload:Value,state:tauri::State<'_,Desktop>
 async fn desktop_save(name:String,bytes:Vec<u8>)->Result<Value,String>{
  if bytes.len()>64*1024*1024{return Err("保存ファイルは64MB以内にしてください".into());}
  tauri::async_runtime::spawn_blocking(move||{
- #[cfg(windows)]{let filename=std::path::Path::new(&name).file_name().and_then(|v|v.to_str()).unwrap_or("kifu.sgf");if let Some(path)=rfd::FileDialog::new().set_file_name(filename).save_file(){std::fs::write(path,bytes).map_err(|e|e.to_string())?;Ok(json!({"saved":true}))}else{Ok(json!({"saved":false}))}}
+ #[cfg(windows)]{let (initial,kind)=save_name::parts(&name);let mut dialog=rfd::FileDialog::new().set_file_name(initial);if let Some((label,extension))=kind{dialog=dialog.add_filter(label,&[extension]);}if let Some(path)=dialog.save_file(){std::fs::write(path,bytes).map_err(|e|e.to_string())?;Ok(json!({"saved":true}))}else{Ok(json!({"saved":false}))}}
  #[cfg(not(windows))]{let _=(name,bytes);Err("この保存機能はWindows向けです".into())}
  }).await.map_err(|e|e.to_string())?
 }
