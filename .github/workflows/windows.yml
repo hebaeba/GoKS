@@ -1,4 +1,4 @@
-name: Windows test build
+name: GoKifuStudio Windows build
 on:
   workflow_dispatch:
 permissions:
@@ -20,6 +20,8 @@ jobs:
           cargo test --manifest-path backend-rs/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --manifest-path lan-server/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --manifest-path src-tauri/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build Windows application
         shell: pwsh
