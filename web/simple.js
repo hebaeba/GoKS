@@ -72,4 +72,5 @@
  window.addEventListener('resize',fit);window.addEventListener('kifu-position-change',()=>{sync();fit();});window.addEventListener('workspace-layout',()=>{if(simple)fit();});
  new ResizeObserver(fit).observe(bar);document.fonts?.ready.then(fit);let restore=false;try{restore=localStorage.getItem('gokifu-simple')==='1';}catch{}if(restore)setMode(true);
  window.KifuSimple={setMode,openPanel:panel};
+ if(window.__TAURI_INTERNALS__?.invoke)requestAnimationFrame(()=>requestAnimationFrame(()=>nativeQueue.finally(()=>window.__TAURI_INTERNALS__.invoke('desktop_ready',{simple})).catch(console.error)));
 })();

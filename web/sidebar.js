@@ -22,7 +22,7 @@
  const slide=document.createElement('div');slide.id='normal-slider';slide.className='board-slider-row';
  for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])info.append(q(selector));slide.append($('slider'));block.append(info,slide);
  q('.players').hidden=true;q('.statusline').hidden=true;
- const head=q('.board-heading'),notes=document.createElement('button');notes.id='board-notes';notes.textContent='コメント・対局情報';notes.title='この局面のコメントと対局情報を表示します';notes.hidden=true;head.append(notes);
+ const head=q('.board-heading'),notes=document.createElement('button');notes.id='board-notes';notes.textContent='コメント・対局情報';notes.title='この局面のコメントと対局情報を表示します';notes.hidden=true;head.prepend(notes);head.append($('komi'));
  const dialog=document.createElement('dialog');dialog.id='board-notes-dialog';dialog.innerHTML='<div class="notes-heading"><strong>コメント・対局情報</strong><button type="button">閉じる</button></div><div class="notes-content"></div>';body.append(dialog);dialog.querySelector('button').onclick=()=>dialog.close();
  function fillNotes(){const dest=dialog.querySelector('.notes-content');dest.replaceChildren();const dl=$('metadata').cloneNode(true);dl.removeAttribute('id');if(dl.children.length)dest.append(dl);for(const el of $('comment').children)if(!el.classList.contains('root-info'))dest.append(el.cloneNode(true));}
  function openNotes(){fillNotes();if(!dialog.open)dialog.showModal();}
@@ -33,12 +33,12 @@
  const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.textContent='右側を隠す';toggle.title='右側を隠して碁盤を広く表示します';sidebar.firstElementChild.append(toggle);
  const inspector=q('.inspector'),close=document.createElement('button');close.id='normal-panel-close';close.textContent='閉じる';close.title='右側を隠します';inspector.prepend(close);
  let normalCollapsed=null;
- function setCollapsed(value){body.classList.toggle('inspector-collapsed',value);toggle.textContent=value?'右側を表示':'右側を隠す';toggle.setAttribute('aria-expanded',String(!value));toggle.title=value?'右側を表示します':'右側を隠して碁盤を広く表示します';window.dispatchEvent(new Event('workspace-layout'));}
+ function setCollapsed(value){if(!body.classList.contains('simple-mode'))try{localStorage.setItem('gokifu-right-hidden',value?'1':'0');}catch{}body.classList.toggle('inspector-collapsed',value);toggle.textContent=value?'右側を表示':'右側を隠す';toggle.setAttribute('aria-expanded',String(!value));toggle.title=value?'右側を表示します':'右側を隠して碁盤を広く表示します';window.dispatchEvent(new Event('workspace-layout'));}
  toggle.onclick=()=>setCollapsed(!body.classList.contains('inspector-collapsed'));close.onclick=()=>setCollapsed(true);
  const activate=KifuWorkspace.activate;KifuWorkspace.activate=id=>{setCollapsed(false);activate(id);};
  // Header save "other" uses its original closure, so open the pane explicitly too.
  $('quick-more').addEventListener('click',()=>setCollapsed(false));
- const narrow=matchMedia('(max-width:1100px)');if(narrow.matches)setCollapsed(true);
+ const narrow=matchMedia('(max-width:1100px)');let collapsed=narrow.matches;try{const saved=localStorage.getItem('gokifu-right-hidden');if(saved!==null)collapsed=saved==='1';}catch{}setCollapsed(collapsed);
  // Resizing into simple mode must not overwrite the normal panel preference.
  // Narrow screens use the existing overlay CSS without changing the saved state.
  window.addEventListener('kifu-position-change',sync);sync();

@@ -6,7 +6,7 @@ test('match SGF keeps metadata and selected played prefix, removes sibling and u
 test('match limits independently set both colors, reject invalid visits, and preserve time cap',()=>{
  for(const visits of [50,100,200,500,1000,321]){const cmds=M.limits(0.5,visits);assert.ok(cmds.includes('kata-set-param maxVisits '+visits));assert.ok(cmds.includes('kata-set-param maxTime 0.5'));}
  assert.ok(M.limits(2,200).includes('kata-set-param maxVisits 200'));assert.ok(M.limits(1,1000).includes('kata-set-param maxVisits 1000'));
- for(const v of [0,-1,1.5,NaN,Infinity,1000000001])assert.throws(()=>M.limits(1,v));
+ for(const v of [-1,1.5,NaN,Infinity,1000000001])assert.throws(()=>M.limits(1,v));
 });
 
 test('match time may exceed 600 seconds or be unlimited while visits stay capped',()=>{
@@ -17,4 +17,13 @@ test('match time may exceed 600 seconds or be unlimited while visits stay capped
 
 test('match disables the game clock rather than starting with zero seconds',()=>{
  for(const seconds of [0,0.1,10,3600]){const cmds=M.limits(seconds,5000);assert.equal(cmds[0],'time_settings 0 1 0');assert(!cmds.includes('time_settings 0 0 0'));}
+});
+
+test('default visits restores KataGo unlimited limits after an explicitly limited game',()=>{
+ assert.ok(M.limits(10,500).includes('kata-set-param maxVisits 500'));
+ const commands=M.limits(10);
+ assert.ok(commands.includes('kata-set-param maxVisits 1125899906842624'));
+ assert.ok(commands.includes('kata-set-param maxPlayouts 1125899906842624'));
+ assert.ok(commands.includes('kata-set-param maxTime 10'));
+ assert.equal(commands[0],'time_settings 0 1 0');
 });

@@ -101,3 +101,19 @@ html body #pane-settings #engine-settings{border:0;border-radius:0;background:tr
 html body #engine-settings>.engine-running-details,html body #engine-settings>#engine-list-disclosure{display:block;width:100%;min-width:0;box-sizing:border-box;margin:8px 0}
 html body #engine-settings>#engine-list-disclosure>summary{margin:0}
 html body #engine-running-files{box-sizing:border-box;width:100%;min-width:0;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-all}
+
+/* Height-limited square board owns its column; surplus width belongs to the inspector. */
+@media(min-width:1101px) and (pointer:fine){
+ html body.sidebar-layout:not(.simple-mode):not(.inspector-collapsed) .studio-grid{grid-template-columns:calc(224px + var(--normal-board-size,600px)) minmax(370px,1fr);gap:8px}
+}
+@media(min-width:900px) and (pointer:fine){
+ html body.sidebar-layout:not(.simple-mode) .board-panel{grid-template-columns:204px calc(12px + var(--normal-board-size,600px));gap:8px}
+ html body.sidebar-layout:not(.simple-mode) .board-block{width:100%!important;max-width:none!important;justify-self:start!important}
+}
+html body.sidebar-layout:not(.simple-mode) .board-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(104px,1fr);gap:5px}
+html body.sidebar-layout:not(.simple-mode) .board-heading .game-title{grid-column:2;grid-row:1;min-width:0;width:100%}
+html body.sidebar-layout:not(.simple-mode) #board-notes{grid-column:1;grid-row:1;justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+html body.sidebar-layout:not(.simple-mode) .board-heading #komi{grid-column:3;grid-row:1;justify-self:end;white-space:nowrap;background:#edf3ed;border-radius:4px;padding:0 3px}
+html body .recent-label{flex-wrap:wrap}
+html body #recent-custom{--number-ch:4}
+html body #recent-custom[hidden]{display:none!important}

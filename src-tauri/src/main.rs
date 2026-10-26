@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{sync::{Arc,Mutex},path::PathBuf};
 use tauri::Manager;
+mod window_state;
 use serde_json::{Value,json};
 use kifu_katago_backend::Engine;
 use kifu_lan_server::Share;
@@ -29,52 +30,23 @@ async fn desktop_save(name:String,bytes:Vec<u8>)->Result<Value,String>{
  #[cfg(not(windows))]{let _=(name,bytes);Err("この保存機能はWindows向けです".into())}
  }).await.map_err(|e|e.to_string())?
 }
-#[derive(Default)]
-struct SimpleWindow(Mutex<Option<(u32,bool,tauri::PhysicalPosition<i32>)>>);
 #[tauri::command]
-fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64,state:tauri::State<'_,SimpleWindow>)->Result<(),String>{
- let mut saved=state.0.lock().map_err(|_|"画面サイズを記憶できません")?;
- let current=window.inner_size().map_err(|e|e.to_string())?;
- if simple {
-  if !width.is_finite() || width<1.0 {return Err("画面幅が不正です".into());}
-  if saved.is_none(){
-   let maximized=window.is_maximized().map_err(|e|e.to_string())?;
-   *saved=Some((current.width,maximized,window.outer_position().map_err(|e|e.to_string())?));
-   if maximized {window.unmaximize().map_err(|e|e.to_string())?;}
-  }
-  let scale=window.scale_factor().map_err(|e|e.to_string())?;
-  let outer=window.outer_size().map_err(|e|e.to_string())?;
-  let inner=window.inner_size().map_err(|e|e.to_string())?;
-  let border=outer.width.saturating_sub(inner.width);
-  let mut target=(width*scale).round().max(360.0) as u32;
-  if let Some(monitor)=window.current_monitor().map_err(|e|e.to_string())?{
-   target=target.min(monitor.size().width.saturating_sub(border+20));
-   let pos=window.outer_position().map_err(|e|e.to_string())?;
-   let left=monitor.position().x;let right=left+monitor.size().width as i32;
-   let x=pos.x.max(left).min((right-(target+border) as i32).max(left));
-   if x!=pos.x{window.set_position(tauri::PhysicalPosition::new(x,pos.y)).map_err(|e|e.to_string())?;}
-  }
-  if inner.width!=target || inner.height!=current.height {window.set_size(tauri::PhysicalSize::new(target,current.height)).map_err(|e|e.to_string())?;}
- } else if let Some((normal_width,maximized,position))=*saved {
-  window.set_size(tauri::PhysicalSize::new(normal_width,current.height)).map_err(|e|e.to_string())?;
-  window.set_position(position).map_err(|e|e.to_string())?;
-  if maximized {window.maximize().map_err(|e|e.to_string())?;}
-  *saved=None;
- }
- Ok(())
-}
+fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64)->Result<(),String>{window_state::set_mode(&window,simple,width)}
 #[tauri::command]
-fn desktop_close(app:tauri::AppHandle){app.exit(0);}
+fn desktop_ready(window:tauri::WebviewWindow,simple:bool)->Result<(),String>{window_state::ready(&window,simple)}
+#[tauri::command]
+fn desktop_close(app:tauri::AppHandle){if let Some(w)=app.get_webview_window("main"){window_state::save(&w);}app.exit(0);}
 #[tauri::command]
 async fn desktop_print(window:tauri::WebviewWindow)->Result<(),String>{window.print().map_err(|e|e.to_string())}
 fn main(){
- let app=tauri::Builder::default().manage(SimpleWindow::default()).on_window_event(|window,event|{
+ let app=tauri::Builder::default().on_window_event(|window,event|{
  if window.label()=="main" {if let tauri::WindowEvent::CloseRequested{api,..}=event{
   api.prevent_close();if let Some(view)=window.get_webview_window("main"){let _=view.eval("window.KifuDialogs?.requestClose()");}return;
  }}
 
  if window.label()!="main"{return;}
  let Some(webview)=window.get_webview_window("main") else{return;};
+ if matches!(event,tauri::WindowEvent::Resized(_)|tauri::WindowEvent::Moved(_)|tauri::WindowEvent::ScaleFactorChanged{..}) && webview.try_state::<window_state::State>().is_some(){window_state::capture(&webview);}
  // Combined WebviewWindow drag notifications are delivered through WindowEvent.
  let phase=match event {
   tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Enter{..})=>Some("enter"),
@@ -111,21 +83,15 @@ fn main(){
   });
  }
  }).setup(|app|{
- // Account for Windows decorations in physical pixels; keep the initial outer height <= 980.
+ let state_dir=app.path().app_config_dir()?;std::fs::create_dir_all(&state_dir)?;
+ app.manage(window_state::State::load(state_dir.join("window-layout.json")));
  if let Some(window)=app.get_webview_window("main"){
-   if let (Ok(outer),Ok(inner),Ok(Some(monitor)))=(window.outer_size(),window.inner_size(),window.current_monitor()){
-     let border_h=outer.height.saturating_sub(inner.height);
-     let border_w=outer.width.saturating_sub(inner.width);
-     let target_h=980u32.min(monitor.size().height.saturating_sub(80));
-     let target_w=outer.width.min(monitor.size().width.saturating_sub(40));
-     let _=window.set_min_size(Some(tauri::PhysicalSize::new(360u32,500u32)));
-     let _=window.set_size(tauri::PhysicalSize::new(target_w.saturating_sub(border_w),target_h.saturating_sub(border_h)));
-     let _=window.center();
-   }
+  if let Err(error)=window_state::initialize(&window){eprintln!("Window restoration: {error}");}
+  // Recovery for a failed frontend: never leave an invisible process indefinitely.
+  let fallback=window.clone();std::thread::spawn(move||{std::thread::sleep(std::time::Duration::from_secs(5));if !fallback.is_visible().unwrap_or(true){let _=fallback.show();}});
  }
-
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
  app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
- }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print,desktop_close,desktop_simple_window]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
+ }).invoke_handler(tauri::generate_handler![engine_call,mobile_share,desktop_save,desktop_print,desktop_close,desktop_simple_window,desktop_ready]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
  app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){for engine in [&state.engine,&state.black,&state.white]{if let Ok(mut engine)=engine.lock(){engine.stop();}}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
 }
