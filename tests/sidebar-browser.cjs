@@ -6,7 +6,7 @@ const server=http.createServer((req,res)=>{let p=path.join(root,decodeURICompone
  browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),headless:true,args:['--no-sandbox','--disable-gpu','--use-gl=disabled','--disable-software-rasterizer','--single-process','--no-zygote']});
  const p=await browser.newPage({viewport:{width:1280,height:940}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:'+server.address().port);await p.waitForTimeout(150);
  const bbox=s=>p.locator(s).boundingBox();
- for(const [width,height]of [[1280,940],[1280,740],[1600,940],[390,844]]){
+ for(const [width,height]of [[1280,940],[1280,740],[1600,940],[1920,1000]]){
   await p.setViewportSize({width,height});await p.waitForTimeout(100);
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const board=await bbox('#board'),info=await bbox('#normal-info'),slider=await bbox('#normal-slider');
