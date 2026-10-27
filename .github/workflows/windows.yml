@@ -1,4 +1,4 @@
-name: GoKifuStudio Windows build
+name: Go棋譜Studio Windows build
 on:
   workflow_dispatch:
 permissions:
