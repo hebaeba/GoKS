@@ -6,7 +6,7 @@
  const sidebar=document.createElement('aside');sidebar.id='board-sidebar';sidebar.setAttribute('aria-label','碁盤の操作');board.prepend(sidebar);
  sidebar.append(q('.header-actions'),q('.topline'),controls);
  $('tab-settings').textContent='エンジン';
- function group(label,els){const section=document.createElement('section');section.className='side-group';section.setAttribute('aria-label',label);const heading=document.createElement('h2');heading.textContent=label;section.append(heading);const row=document.createElement('div');row.className='side-row';section.append(row);for(const el of els.filter(Boolean))row.append(el);controls.append(section);return section;}
+ function group(label,els){const section=document.createElement('section');section.className='side-group';section.setAttribute('aria-label',label);if(label==='分岐'){const heading=document.createElement('h2');heading.textContent=label;section.append(heading);}const row=document.createElement('div');row.className='side-row';section.append(row);for(const el of els.filter(Boolean))row.append(el);controls.append(section);return section;}
  const nav=q('.navigation'),jump=q('.jump'),autoplay=q('.autoplay'),history=q('.history-pair'),rotation=q('.board-view-tools');
  group('手数移動',[nav,jump,autoplay]).classList.add('side-navigation');
  group('石の表示',[$('numbers'),q('.recent-label')]);

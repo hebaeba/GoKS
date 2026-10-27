@@ -63,7 +63,7 @@
   if(force)run();else nativeTimer=setTimeout(run,100);
  }
  function setMode(value){if(simple===value)return;hideMenus();closePanel();if(value)window.KifuSidebar?.enterSimple();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
-  if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])move(q(selector),info);move($('slider'),slide);}
+  if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#komi','#black-name','#black-captures','.stones','#white-captures','#white-name','#move'])move(q(selector),info);move($('slider'),slide);}
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
   try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
  }

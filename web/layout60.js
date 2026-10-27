@@ -6,7 +6,7 @@
   const other=['.board-heading','#normal-info','#normal-slider'].reduce((n,s)=>n+(block.querySelector(s)?.getBoundingClientRect().height||0),0)+18;
   const available=desktop?grid.clientHeight-other:innerHeight-other-30;
   const right=innerWidth>1100&&!document.body.classList.contains('inspector-collapsed')?378:0;
-  const width=desktop?grid.clientWidth-224-right:block.clientWidth-12;
+  const width=desktop?grid.clientWidth-310-right:block.clientWidth-12;
   const size=Math.floor(Math.max(80,Math.min(width,available)));
   grid.style.setProperty('--normal-board-size',size+'px');
   if(wrap.style.getPropertyValue('--fit-board-size')!==size+'px')wrap.style.setProperty('--fit-board-size',size+'px');
