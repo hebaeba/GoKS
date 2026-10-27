@@ -27,14 +27,14 @@ async fn mobile_share(action:String,payload:Value,state:tauri::State<'_,Desktop>
 async fn desktop_save(name:String,bytes:Vec<u8>)->Result<Value,String>{
  if bytes.len()>64*1024*1024{return Err("保存ファイルは64MB以内にしてください".into());}
  tauri::async_runtime::spawn_blocking(move||{
- #[cfg(windows)]{let (initial,kind)=save_name::parts(&name);let mut dialog=rfd::FileDialog::new().set_file_name(initial);if let Some((label,extension))=kind{dialog=dialog.add_filter(label,&[extension]);}if let Some(path)=dialog.save_file(){std::fs::write(path,bytes).map_err(|e|e.to_string())?;Ok(json!({"saved":true}))}else{Ok(json!({"saved":false}))}}
+ #[cfg(windows)]{let (initial,kind)=save_name::parts(&name);let exe=std::env::current_exe().map_err(|e|e.to_string())?;let directory=exe.parent().ok_or("保存先フォルダーを取得できません")?;let mut dialog=rfd::FileDialog::new().set_directory(directory).set_file_name(initial);if let Some((label,extension))=kind{dialog=dialog.add_filter(label,&[extension]);}if let Some(path)=dialog.save_file(){std::fs::write(path,bytes).map_err(|e|e.to_string())?;Ok(json!({"saved":true}))}else{Ok(json!({"saved":false}))}}
  #[cfg(not(windows))]{let _=(name,bytes);Err("この保存機能はWindows向けです".into())}
  }).await.map_err(|e|e.to_string())?
 }
 #[tauri::command]
 fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64)->Result<(),String>{window_state::set_mode(&window,simple,width)}
 #[tauri::command]
-fn desktop_ready(window:tauri::WebviewWindow,simple:bool)->Result<(),String>{window_state::ready(&window,simple)}
+fn desktop_ready(window:tauri::WebviewWindow,simple:bool,content_height:Option<f64>)->Result<(),String>{window_state::ready(&window,simple,content_height)}
 #[tauri::command]
 fn desktop_close(app:tauri::AppHandle){if let Some(w)=app.get_webview_window("main"){window_state::save(&w);}app.exit(0);}
 #[tauri::command]

@@ -33,12 +33,12 @@ html body #board.delete-key-focus:focus-visible{outline:none!important;box-shado
 
 /* Automatic board width: no draggable separator or reset control. */
 @media(min-width:900px){body .studio-grid{grid-template-columns:var(--board-width,minmax(380px,1.5fr)) minmax(340px,1fr);gap:12px}}
-body #image-board-dialog{box-sizing:border-box;width:calc(100vw - 24px);max-width:1500px;max-height:min(960px,calc(100dvh - 16px));padding:10px;overflow:auto}
+body #image-board-dialog{box-sizing:border-box;width:960px;max-width:calc(100vw - 16px);min-width:min(620px,calc(100vw - 16px));min-height:320px;resize:both;max-height:min(960px,calc(100dvh - 16px));padding:10px;overflow:auto}
 body #image-board-dialog .image-options{margin:6px 0}
 body #image-board-dialog h3{margin:6px 0}
 body #image-board-dialog p{margin:5px 0}
 body #image-board-dialog .image-work{gap:14px}
-body #image-board-dialog .image-work canvas{width:auto;height:auto;max-width:100%;max-height:min(420px,max(120px,calc(100dvh - 470px)));margin:0 auto}
+body #image-board-dialog .image-work canvas{width:auto;height:auto;max-width:100%;max-height:min(420px,max(120px,calc(100dvh - 470px)));margin:0}
 body #image-board-dialog .image-adjustments{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px;border-top:1px solid #c4d3ce;border-bottom:1px solid #c4d3ce;padding:5px 0;margin:6px 0}
 body #image-board-dialog .image-adjustments h3{margin:0}
 body #image-board-dialog .image-adjustments label{display:inline-flex;align-items:center;gap:5px}
@@ -63,3 +63,9 @@ html body.pointer-focus :is(button,input,select,textarea,summary,canvas,[tabinde
 /* Multiline save-menu items grow to fit their text; normal buttons stay unchanged. */
 html body :is(#ui-policy #ui-policy #ui-policy,#workspace-save-popup button){height:auto!important;min-height:var(--ui-menu)!important;white-space:normal!important}
 @media(pointer:coarse){html body :is(#ui-policy #ui-policy #ui-policy,#workspace-save-popup button){min-height:40px!important}}
+
+/* Update78: compact movable, resizable photo-import window. */
+body #image-board-dialog .image-title{cursor:move;touch-action:none;user-select:none;position:sticky;top:-10px;background:#f8faf9;z-index:3;padding:4px 0}
+body #image-board-dialog .image-work{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+body #image-board-dialog .image-work>section:first-child canvas{margin-left:auto;margin-right:0}
+body #image-board-dialog .image-work>section:last-child canvas{margin-left:0;margin-right:auto}

@@ -34,12 +34,13 @@
   if(snapshot)try{let node=GoSgf.parse(snapshot.sgf).root;route.push({index:0,move:node.props.B||node.props.W?++move:move});for(const choice of snapshot.path){node=node.children[choice];if(!node)break;if(node.props.B||node.props.W)move++;route.push({index:route.length,move});}}catch{}
   const max=Math.max(1,move,...records.map(p=>p.move)),extent=Math.max(10,Math.ceil(Math.max(0,...records.map(p=>Math.abs(p.result.rootInfo.scoreLead)))/10)*10);
   const x=m=>left+(right-left)*m/max,yw=v=>bottom-(bottom-top)*v,ys=v=>yw((v+extent)/(extent*2));
-  for(const t of [0,.5,1]){const y=yw(t);add('line',{x1:left,x2:right,y1:y,y2:y,stroke:'#ced8d2','stroke-dasharray':'3 3'});add('text',{x:left-4,y:y+4,'text-anchor':'end',fill:'#324c42','font-size':12},Math.round(t*100)+'%');add('text',{x:right+4,y:y+4,fill:'#324c42','font-size':12},String(Math.round((t*2-1)*extent)));}
+  for(const t of [0,.5,1]){const y=yw(t);add('line',{x1:left,x2:right,y1:y,y2:y,class:t===.5?'eval-midline':'eval-gridline',stroke:t===.5?'#d4e0d8':'#84978d','stroke-width':t===.5?1.5:1,'stroke-dasharray':t===.5?'none':'3 3'});add('text',{x:left-4,y:y+4,'text-anchor':'end',fill:'#edf3ef','font-size':12},Math.round(t*100)+'%');add('text',{x:right+4,y:y+4,fill:'#edf3ef','font-size':12},String(Math.round((t*2-1)*extent)));}
+  for(let m=0;m<=max;m+=25){for(const y of [top,bottom])add('line',{class:'eval-tick','data-move':m,x1:x(m),x2:x(m),y1:y-4,y2:y+4,stroke:'#d4e0d8','stroke-width':1});}
   const step=max<=10?5:max<=50?25:50*Math.max(1,Math.ceil(max/200));
-  for(let m=0;m<=max;m+=step){add('text',{x:x(m),y:height-4,'text-anchor':m===0?'start':'middle',fill:'#324c42','font-size':12},m+'手');}
-  if(max%step&&max%step>step*.5)add('text',{x:right,y:height-4,'text-anchor':'end',fill:'#324c42','font-size':12},max+'手');
+  for(let m=0;m<=max;m+=step){add('text',{x:x(m),y:height-4,'text-anchor':m===0?'start':'middle',fill:'#edf3ef','font-size':12},m+'手');}
+  if(max%step&&max%step>step*.5)add('text',{x:right,y:height-4,'text-anchor':'end',fill:'#edf3ef','font-size':12},max+'手');
   if(!records.length)return;
-  const index=snapshot.index,cursor=route[index];if(cursor)add('line',{class:'eval-cursor',x1:x(cursor.move),x2:x(cursor.move),y1:top,y2:bottom,stroke:'#728b80','stroke-width':1});
+  const index=snapshot.index,cursor=route[index];if(cursor)add('line',{class:'eval-cursor',x1:x(cursor.move),x2:x(cursor.move),y1:top,y2:bottom,stroke:'#b0c6ba','stroke-width':1});
   for(const [metric,color,y]of [['winrate',green,yw],['scoreLead',magenta,ys]]){
    let d='';for(let i=0;i<records.length;i++){const item=records[i],prev=records[i-1],next=records[i+1],connected=prev&&item.index===prev.index+1&&item.move===prev.move+1,following=next&&next.index===item.index+1&&next.move===item.move+1;
     d+=(connected?' L':' M')+x(item.move)+' '+y(item.result.rootInfo[metric]);

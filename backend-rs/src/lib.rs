@@ -42,7 +42,7 @@ impl Engine {
         if !workdir.is_dir(){return Err("作業フォルダーが見つかりません".into());}
         self.stop();
         let mut cmd=Command::new(&exe);
-        if kind=="katago"{cmd.args(["gtp","-model"]).arg(&model).arg("-config").arg(&cfg).args(&extra).args(["-override-config","reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false"]).args(if payload["matchMode"].as_bool()==Some(true){vec!["-override-config","allowResignation=false"]}else{vec![]});}else{cmd.args(&extra);}
+        if kind=="katago"{cmd.args(["gtp","-model"]).arg(&model).arg("-config").arg(&cfg).args(&extra).args(["-override-config",if payload["matchMode"].as_bool()==Some(true){"reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false,allowResignation=false"}else{"reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false"}]);}else{cmd.args(&extra);}
         cmd.current_dir(&workdir).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
         #[cfg(windows)]{use std::os::windows::process::CommandExt;cmd.creation_flags(0x08000000);}
         let mut child=cmd.spawn().map_err(|e|format!("エンジンを起動できません：{}",e))?;

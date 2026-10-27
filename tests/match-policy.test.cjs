@@ -27,3 +27,14 @@ test('default visits restores KataGo unlimited limits after an explicitly limite
  assert.ok(commands.includes('kata-set-param maxTime 10'));
  assert.equal(commands[0],'time_settings 0 1 0');
 });
+
+test('early resignation guard resets streak through move 60 and counts each color thereafter',()=>{
+ const policy={threshold:.01,minMoves:60},losing={winrate:.01,scoreLead:-20};
+ assert.equal(M.resignationStreak(2,losing,'B',policy,60),0);
+ assert.equal(M.resignationStreak(0,losing,'B',policy,61),1);
+ assert.equal(M.resignationStreak(1,losing,'B',policy,63),2);
+ assert.equal(M.resignationStreak(2,losing,'B',policy,65),3);
+ assert.equal(M.resignationStreak(2,losing,'W',policy,62),0);
+ assert.equal(M.resignationStreak(2,{winrate:.011},'B',policy,65),0);
+ assert.equal(M.resignationStreak(0,losing,'B',{...policy,minMoves:0},1),1);
+});

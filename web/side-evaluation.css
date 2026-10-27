@@ -6,6 +6,6 @@
 .side-eval-legend{display:flex;justify-content:space-between;gap:8px;margin:5px 0;font-size:12px}
 .side-eval-legend span:before{content:'';display:inline-block;width:15px;height:3px;vertical-align:middle;margin-right:3px;background:#00ee00}
 .side-eval-legend .score-key:before{background:#ed00ed}
-#side-eval-graph{display:block;width:100%;height:300px;background:#f4f6f3;cursor:pointer;overflow:visible}
+#side-eval-graph{display:block;width:100%;height:300px;background:#4b5650;cursor:pointer;overflow:visible}
 #side-eval-graph circle{cursor:pointer}
 .match-resign-toggle{display:inline-flex;align-items:center;gap:3px;margin:6px 0}

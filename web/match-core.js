@@ -13,5 +13,8 @@ function limits(seconds,visits=0){
  // Keep time/visit limits in search parameters, independently of the GTP game clock.
  return ['time_settings 0 1 0','kata-set-param maxVisits '+(visits===0?UNLIMITED_VISITS:visits),'kata-set-param maxPlayouts '+UNLIMITED_VISITS,'kata-set-param maxTime '+(seconds===0?1e20:seconds)];
 }
-const api={UNLIMITED_VISITS,limits,parseMove,view,streak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
+function resignationStreak(previous,e,color,policy,nextMove){
+ return nextMove<=policy.minMoves?0:streak(previous,e,color,policy.threshold);
+}
+const api={UNLIMITED_VISITS,limits,parseMove,view,streak,resignationStreak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
 })(globalThis);

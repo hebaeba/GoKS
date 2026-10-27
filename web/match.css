@@ -80,3 +80,5 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
  #pane-match .match-player>.match-visits-label{grid-column:1/-1;grid-row:3;flex-wrap:wrap;justify-content:flex-end}
  #pane-match .match-player>.match-name-label{grid-column:1/-1;grid-row:4}
 }
+
+#pane-match .match-resign-rule{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#pane-match .match-resign-early{flex-basis:100%}#match-resign-min-moves{--number-ch:4}

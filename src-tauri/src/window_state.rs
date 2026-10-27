@@ -43,7 +43,7 @@ fn restore(window:&WebviewWindow,value:&Value,simple:bool)->Result<(),String>{
  let aw=(area.size.width as f64-border_w).max(1.0)/scale;
  let ah=(area.size.height as f64-border_h).max(1.0)/scale;
  let default_h=(980.0-border_h/scale).min(ah);
- let default_w=if simple{default_h-60.0}else{(default_h+530.0).min(aw)};
+ let default_w=if simple{default_h-60.0}else{(default_h+740.0).min(aw)};
  let w=number(value,"width",default_w);let h=number(value,"height",default_h);
  let (w,h,x,y)=geometry(w,h,number(value,"x",(aw-w)/2.0),number(value,"y",(ah-h)/2.0),aw,ah);
  window.set_min_size(Some(PhysicalSize::new((360.0*scale).min(area.size.width as f64) as u32,(400.0*scale).min(area.size.height as f64) as u32))).map_err(|e|e.to_string())?;
@@ -80,9 +80,16 @@ pub fn set_mode(window:&WebviewWindow,simple:bool,width:f64)->Result<(),String>{
  state.0.lock().map_err(|e|e.to_string())?.restoring=false;
  result
 }
-pub fn ready(window:&WebviewWindow,simple:bool)->Result<(),String>{
+pub fn ready(window:&WebviewWindow,simple:bool,content_height:Option<f64>)->Result<(),String>{
  let mismatch={let state=window.state::<State>();let d=state.0.lock().map_err(|e|e.to_string())?;d.simple!=simple};
  if mismatch {set_mode(window,simple,window.inner_size().map_err(|e|e.to_string())?.width as f64/window.scale_factor().map_err(|e|e.to_string())?)?;}
+ // On the very first normal launch, remove width-limited blank space below the square board.
+ // Later launches retain the user's saved geometry, including maximized state.
+ let first={let state=window.state::<State>();let d=state.0.lock().map_err(|e|e.to_string())?;!d.ready&&!d.saved[slot(simple)].is_object()};
+ if first&&!simple {if let Some(height)=content_height.filter(|h|h.is_finite()&&*h>=400.0){
+  let scale=window.scale_factor().map_err(|e|e.to_string())?;let inner=window.inner_size().map_err(|e|e.to_string())?;
+  let target=(height*scale).ceil() as u32;if target+24<inner.height{window.set_size(PhysicalSize::new(inner.width,target)).map_err(|e|e.to_string())?;}
+ }}
  {let state=window.state::<State>();let mut d=state.0.lock().map_err(|e|e.to_string())?;d.ready=true;d.restoring=false;}
  capture(window);window.show().map_err(|e|e.to_string())
 }
