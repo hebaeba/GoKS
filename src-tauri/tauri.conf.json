@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "GoKifuStudio",
+  "productName": "Go棋譜Studio",
   "version": "0.7.0",
   "identifier": "jp.h-eba.kifu-editor",
   "build": {
@@ -10,7 +10,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "GoKifuStudio",
+        "title": "Go棋譜Studio",
         "width": 1280,
         "height": 900,
         "minWidth": 360,

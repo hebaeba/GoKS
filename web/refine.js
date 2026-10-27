@@ -27,7 +27,7 @@ for(const p of document.querySelectorAll('#tools p')){if(p.querySelector('input,
 const toolHeading=q('#pane-tools > h2'),close=q('.close-tools');if(toolHeading&&close){const row=document.createElement('div');row.className='tools-heading';toolHeading.before(row);row.append(toolHeading,close);}
 // Match a select to the widest option; no fixed empty space or stretching.
 function sizeSelect(el){const span=document.createElement('span'),style=getComputedStyle(el);span.style.cssText='position:fixed;visibility:hidden;white-space:pre;font:'+style.font;document.body.append(span);let width=0;for(const o of el.options){span.textContent=o.textContent;width=Math.max(width,span.getBoundingClientRect().width);}span.remove();el.style.setProperty('width',Math.ceil(width+36)+'px','important');el.style.setProperty('min-width','0','important');el.style.setProperty('max-width','100%','important');}
-for(const id of ['analysis-seconds','analysis-metric','analysis-pv-length','worst-metric'])sizeSelect($(id));
+for(const id of ['analysis-seconds','analysis-pv-length','worst-metric'])sizeSelect($(id));
 
 // Width reset belongs to the draggable separator, not the editing controls.
 $('tab-settings').textContent='エンジン設定';
@@ -41,7 +41,7 @@ const moves=document.createElement('div');moves.className='move-edit-group';move
 q('.analysis-primary').append(q('.region-analysis-toggle'));
 })();
 
-;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;function openGuide(title,url){d.querySelector('strong').textContent=title;frame.src=url;d.showModal();}document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();openGuide(a.textContent,a.href);};});const about=document.getElementById('about-open');if(about){const help=about.closest('.help');help.remove();const footer=document.querySelector('footer'),links=document.createElement('span');links.className='footer-links';footer.append(links);links.append(about,...footer.querySelectorAll('a'));about.className='about-open';about.onclick=()=>openGuide('このGoKifuStudioについて','README.html?v=71');}frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();
+;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;function openGuide(title,url){d.querySelector('strong').textContent=title;frame.src=url;d.showModal();}document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();openGuide(a.textContent,a.href);};});const about=document.getElementById('about-open');if(about){const help=about.closest('.help');help.remove();const footer=document.querySelector('footer'),links=document.createElement('span');links.className='footer-links';footer.append(links);links.append(about,...footer.querySelectorAll('a'));about.className='about-open';about.onclick=()=>openGuide('このGo棋譜Studioについて','README.html?v=77');}frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();
 
 ;(()=>{
  const tools=document.querySelector('.board-view-tools');
@@ -62,7 +62,7 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const batch=document.getElementById('analysis-batch'),details=document.createElement('details');
  details.id='batch-disclosure';const title=document.createElement('summary');title.textContent='全局解析';details.append(title);batch.before(details);details.append(batch);
  // Settings, graph, progress and rankings form a single collapsible section.
- for(const id of ['analysis-graph','batch-progress','analysis-status','analysis-worst']){const e=document.getElementById(id);if(e)details.append(e);}
+ for(const id of ['batch-progress','analysis-status','analysis-worst']){const e=document.getElementById(id);if(e)details.append(e);}
  const heading=batch.querySelector('h3');if(heading)heading.hidden=true;
 })();
 ;(()=>{const box=document.querySelector('.engine-profiles');const d=document.createElement('details');d.id='engine-list-disclosure';const summary=document.createElement('summary');summary.textContent='エンジンリスト';box.before(d);d.append(summary,box);const label=box.querySelector('label');if(label&&label.querySelector('#engine-profile'))label.hidden=true;})();

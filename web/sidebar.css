@@ -117,3 +117,30 @@ html body.sidebar-layout:not(.simple-mode) .board-heading #komi{grid-column:3;gr
 html body .recent-label{flex-wrap:wrap}
 html body #recent-custom{--number-ch:4}
 html body #recent-custom[hidden]{display:none!important}
+
+/* Update77: independent PC panels; keep the board square without growing the inspector. */
+@media(min-width:1101px) and (pointer:fine){
+ html body.sidebar-layout:not(.simple-mode):not(.inspector-collapsed) .studio-grid{grid-template-columns:calc(var(--side-width,330px) + 20px + var(--normal-board-size,600px)) var(--right-width,420px);justify-content:center}
+}
+@media(min-width:900px) and (pointer:fine){
+ html body.sidebar-layout:not(.simple-mode) .board-panel{grid-template-columns:var(--side-width,330px) calc(12px + var(--normal-board-size,600px))}
+ html body.sidebar-layout:not(.simple-mode).inspector-collapsed .studio-grid{grid-template-columns:calc(var(--side-width,330px) + 20px + var(--normal-board-size,600px));justify-content:center}
+}
+html body .side-protection{flex-direction:row;justify-content:space-between;flex-wrap:wrap;gap:5px}
+html body .controls .side-row .navigation{display:flex;flex-wrap:nowrap;gap:4px}
+html body .controls .side-row .navigation button{flex:1;min-width:0}
+html body .controls .side-row .board-view-tools{flex-wrap:nowrap;gap:4px}
+html body .side-row .reflection-controls{flex-wrap:nowrap;gap:4px}
+html body .controls .side-row .history-pair{width:auto}
+html body .controls .side-group{padding:5px 0}
+html body .controls .side-row #undo:not(:disabled),html body .controls .side-row #redo:not(:disabled){background:#205a50;color:#fff;border-color:#17483e}
+html body .controls .side-row #undo:not(:disabled):hover,html body .controls .side-row #redo:not(:disabled):hover{background:#123f37}
+.panel-width-handle{position:fixed;width:7px;cursor:col-resize;z-index:32;touch-action:none;background:transparent;border-radius:3px}
+.panel-width-handle:hover,.panel-width-handle.dragging,.panel-width-handle:focus-visible{background:#6f9a8b80}
+.panel-width-handle[hidden]{display:none!important}
+html body .image-save-row{flex-wrap:wrap;gap:5px}
+
+#board-sidebar{container-type:inline-size}
+@container(max-width:310px){html body #board-sidebar .controls .side-row .board-view-tools{flex-wrap:wrap}}
+@media(max-width:899px){html body .controls .side-row .board-view-tools,html body .side-row .reflection-controls{flex-wrap:wrap}}
+html body.simple-mode #simple-menu .controls .side-row .board-view-tools,html body.simple-mode #simple-menu .side-row .reflection-controls{flex-wrap:wrap}

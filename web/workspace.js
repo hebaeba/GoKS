@@ -2,10 +2,10 @@
 (()=>{
  const $=id=>document.getElementById(id), q=s=>document.querySelector(s);
  const main=q('main'), workspace=q('.workspace'), board=q('.board-panel'), panel=q('.edit-panel');
- document.title='棋譜編集ツール';
+ document.title='Go棋譜Studio';
  const header=q('header');header.className='app-header';
  header.querySelectorAll('.eyebrow, header > p').forEach(e=>e.remove());
- const brand=document.createElement('div');brand.className='brand';brand.innerHTML='<span class="brand-mark" aria-hidden="true">●<i>○</i></span><span>棋譜編集ツール<small>棋譜を並べる・考える・残す</small></span>';
+ const brand=document.createElement('div');brand.className='brand';brand.innerHTML='<span class="brand-mark" aria-hidden="true">●<i>○</i></span><span>Go棋譜Studio<small>棋譜を並べる・考える・残す</small></span>';
  header.prepend(brand);const title=q('h1');title.className='game-title';
  const toolbar=document.createElement('div');toolbar.className='header-actions';toolbar.innerHTML='<button id="workspace-open" title="棋譜ファイルを開きます">棋譜を開く</button><button id="workspace-save" title="棋譜の保存・印刷を表示します">保存・印刷</button>';header.append(toolbar);
  workspace.className='workspace studio-grid';panel.classList.add('inspector');workspace.append(panel);
@@ -23,7 +23,7 @@
  const files=q('.files-panel');panes.record.append(files);panes.storage.append($('save-options'),$('recovery'));$('save-menu').open=true;$('save-menu').remove();$('save-options').hidden=false;
  const recordHeading=document.createElement('h2');recordHeading.textContent='棋譜の読み込み・書き込み';files.prepend(recordHeading);
  const storageHeading=document.createElement('h2');storageHeading.textContent='棋譜と盤面の保存';panes.storage.prepend(storageHeading);
- const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新76</span>');
+ const help=q('.help');const footer=q('footer');main.append(help,footer);footer.insertAdjacentHTML('afterbegin','<span class="release-label">単独版 · 更新77</span>');
  q('.edit-buttons').append($('score'));
  const activeMode=document.createElement('span');activeMode.className='mode-indicator';q('.topline').prepend(activeMode);const updateMode=()=>activeMode.textContent='';new MutationObserver(updateMode).observe(document.body,{attributes:true,attributeFilter:['class']});updateMode();
  function activate(id){

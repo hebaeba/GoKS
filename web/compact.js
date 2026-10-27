@@ -6,7 +6,7 @@ function row(className){const x=document.createElement('div');x.className=classN
 const rank=$('analysis-worst'),rh=row('compact-heading');rank.prepend(rh);rh.append(rank.querySelector('h3'),q('.worst-metric'));q('.worst-metric').firstChild.textContent='';$('worst-metric').setAttribute('aria-label','ワーストランキングの順位基準');info('順位の基準と評価の注意',[$('worst-note')],rh);
 const ranks=row('compact-rank-columns');rank.append(ranks);rank.querySelectorAll('.worst-side').forEach(n=>{ranks.append(n);n.querySelector('h4').textContent=n.querySelector('h4').textContent.includes('黒')?'● 黒':'○ 白';});
 // The full-game start action remains visible beside its time setting.
-const batch=$('analysis-batch'),bh=row('compact-heading');batch.prepend(bh);bh.append(batch.querySelector('h3'),q('.analysis-batch-settings'),$('analysis-metric'));$('analysis-metric').title='グラフに表示する評価';info('全局解析の対象と時間設定',[...batch.querySelectorAll(':scope > p')],bh);q('.analysis-graph-heading').hidden=true;
+const batch=$('analysis-batch'),bh=row('compact-heading');batch.prepend(bh);bh.append(batch.querySelector('h3'),q('.analysis-batch-settings'));info('全局解析の対象と時間設定',[...batch.querySelectorAll(':scope > p')],bh);
 const details=document.createElement('details');details.id='compact-analysis-details';details.innerHTML='<summary>解析の詳細</summary>';details.append($('analysis-run-info'));$('analysis-worst').after(details);
 const files=q('.analysis-files'),saveNote=files.nextElementSibling;$('batch-progress').after(files);info('解析結果の保存について',saveNote?.matches('p.analysis-note')?[saveNote]:[],files);
 const summary=$('candidate-list').querySelector('summary');info('候補手の色と実戦手の表示',[q('.analysis-legend')],q('.analysis-primary'));

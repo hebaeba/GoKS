@@ -17,13 +17,13 @@ dock.append($('engine-notice'));$('engine-notice-title').hidden=true;$('engine-n
 analysis.append($('analysis-help'));
 const batch=document.createElement('section');batch.id='analysis-batch';const old=$('analysis-batch');
 for(const child of [...old.children])if(child.tagName!=='SUMMARY')batch.append(child);old.replaceWith(batch);
-const title=document.createElement('h3');title.textContent='全局解析';batch.prepend(title);q('.analysis-graph-heading').before(batch);
+const title=document.createElement('h3');title.textContent='全局解析';batch.prepend(title);$('analysis-run-info').before(batch);
 $('candidate-settings').append(q('.analysis-legend'),$('analysis-played'));$('analysis-played').classList.add('actual-move-info');
 const candidates=q('.candidate-block'),candidateList=document.createElement('details');candidateList.id='candidate-list';candidateList.open=true;
 const candidateSummary=document.createElement('summary');candidateSummary.textContent='候補手一覧';candidateList.append(candidateSummary);candidates.before(candidateList);candidateList.append(candidates);
 const progress=document.createElement('section');progress.id='batch-progress';progress.hidden=true;progress.setAttribute('aria-label','全局解析の進捗');
 const progressLabel=document.createElement('p');progressLabel.id='batch-progress-label';progressLabel.setAttribute('role','status');$('analysis-progress').setAttribute('aria-labelledby','batch-progress-label');progress.append(progressLabel,$('analysis-progress'));
-$('analysis-graph').after(progress);progress.after($('analysis-status'));
+$('analysis-batch').after(progress);progress.after($('analysis-status'));
 const rank=document.createElement('section');rank.id='analysis-worst';rank.hidden=true;
 rank.innerHTML='<h3>ワーストランキング</h3><p id="worst-note" class="analysis-note"></p>';
 for(const [color,name]of [['B','● 黒のワーストランキング'],['W','○ 白のワーストランキング']]){const section=document.createElement('section');section.className='worst-side';section.innerHTML='<h4>'+name+'</h4><div class="candidate-scroll"><table class="candidate-table"><thead><tr><th>順位</th><th>着手</th><th>目数低下</th><th>勝率低下</th></tr></thead><tbody id="worst-rows-'+color+'"></tbody></table></div>';rank.append(section);}

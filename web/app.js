@@ -7,6 +7,7 @@
   const allElements=selector=>[...new Set([...document.querySelectorAll(selector),...(toolRoot?toolRoot.querySelectorAll(selector):[])])];
   let root = S.create(), size = 19, choices = new WeakMap(), route = [], frames = [], numberFrames = [], issues = [], index = 0;
   let editing = true, numbers = false, dirty = false, focusPoint = 0, keyboardBoard = false, originalName = 'kifu.sgf';
+  let renderMonochrome=false;
   let autoTimer=null,autoPlaying=false,analysisPreview=null,boardRotation=0,boardMirror=false;
   let showCoordinates=true;try{showCoordinates=localStorage.getItem("kifu-coordinates")!=="off";}catch{}
   const canvas = $('board'), context = canvas.getContext('2d');
@@ -99,7 +100,7 @@
     ['tool','label-text','turn','comment-edit','apply-comment','apply-info'].forEach(id=>$(id).disabled=blocked);allElements('[data-prop]').forEach(input=>input.disabled=blocked);
     for(const id of ['view','new','size','open','import-text','save','export-text','branch','slider','jump','jump-go'])$(id).disabled=!!insertion||(id==='slider'&&route.length===1);
     if(insertion)for(const id of ['first','back10','back','next','next10','last'])$(id).disabled=true;
-    for(const id of ['save-main','save-clean','save-image','print','gif-create','load-text-choice','score','recovery-save','recovery-restore'])if($(id))$(id).disabled=!!insertion;if($('handicap'))$('handicap').disabled=!!insertion;allElements('[data-editor]').forEach(button=>button.disabled=blocked);allElements('[data-tool]').forEach(button=>button.disabled=blocked);syncEditors();const hasRecord=GoExport.hasRecord(root),hasMain=GoExport.hasRecord(root,true);$('save').disabled=!!insertion||!hasRecord;for(const id of ['save-main','save-clean'])if($(id))$(id).disabled=!!insertion||!hasMain;
+    for(const id of ['save-main','save-clean','save-image','save-image-mono','print','gif-create','load-text-choice','score','recovery-save','recovery-restore'])if($(id))$(id).disabled=!!insertion;if($('handicap'))$('handicap').disabled=!!insertion;allElements('[data-editor]').forEach(button=>button.disabled=blocked);allElements('[data-tool]').forEach(button=>button.disabled=blocked);syncEditors();const hasRecord=GoExport.hasRecord(root),hasMain=GoExport.hasRecord(root,true);$('save').disabled=!!insertion||!hasRecord;for(const id of ['save-main','save-clean'])if($(id))$(id).disabled=!!insertion||!hasMain;
   }
   function resetHistory(){undoStack=[];redoStack=[];insertion=null;tool='play';$('tool').value='play';serial=1;commentTarget=null;infoTarget=null;canvas.style.touchAction='pan-y';$('tools').querySelector('summary').textContent='ツール';$('tools').open=false;$('label-row').hidden=true;allElements('[data-tool]').forEach(button=>button.classList.remove('selected'));}
   async function history(back){if(!editing||insertion||!(await canLeave()))return;const from=back?undoStack:redoStack,to=back?redoStack:undoStack;if(!from.length)return;to.push(snapshot());const saved=from.pop();restore(saved);dirty=true;trimHistory();report(back?'編集を取り消しました。':'編集をやり直しました。');}
@@ -130,7 +131,7 @@
     c.strokeStyle='#f4fcff';c.lineWidth=ink+1.8*pixel;c.stroke();
     c.strokeStyle='#075ca8';c.lineWidth=ink;c.stroke();c.restore();
   }
-  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':drawHatching(c,x,y,gap,g.extent/(canvas.clientWidth||g.extent));break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?'blue':state.board[point]===R.BLACK?'#fff3bf':'#7c251b';c.fillText(text,x,y);break;}}c.restore();}}}
+  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':drawHatching(c,x,y,gap,g.extent/(canvas.clientWidth||g.extent));break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle=renderMonochrome?'#fff':'#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?(renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):'blue'):renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillText(text,x,y);break;}}c.restore();}}}
   function fillHatchedAreaAt(event){
     if(tool!=='DD')return false;
     // Consume this context click only in the region tool; ordinary right-click menus stay intact.
@@ -141,7 +142,7 @@
       if(!await canLeave()||tool!=='DD'||route[index]!==node||size!==boardSize||!editing||insertion||scoreSession||exportBusy||window.KifuMatch?.locked)return;
       const boundary=R.expanded(node.props.DD||[],size);
       const interior=R.enclosedRegion(size,boundary,point);
-      if(!interior.length){report('網掛けで隙間なく囲んだ内側を右クリックしてください。囲みの外側や網掛け済みの交点は塗りません。',true);return;}
+      if(!interior.length){report('網掛けと盤端で囲んだ部分を右クリックしてください。網掛け済みの交点は塗りません。',true);return;}
       transaction(()=>{node.props.DD=[...new Set([...boundary,...interior])].map(p=>R.encode(p,size));},interior.length+'交点を網掛けしました。取り消しで元に戻せます。');
     })().catch(error=>report(error.message,true));return true;
   }
@@ -194,19 +195,20 @@
     return [[inset,inset],[far,inset],[middle,middle],[inset,far],[far,far]];
   }
   function draw(usePreview=true) {
+    const ink=(color,bw="#000")=>renderMonochrome?bw:color;
     const pv=usePreview?analysisPreview:null;
     const state = pv?pv.state:scoreSession?.result?{...frames[index],board:scoreSession.result.board}:frames[index], {extent, gap, start, wood, span} = geometry();
     const width = canvas.clientWidth || extent, ratio = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.round(width * ratio); canvas.height = canvas.width;
     context.setTransform(canvas.width / extent, 0, 0, canvas.height / extent, 0, 0);
     const marks=pv?new Map():markupMap();const c = context; c.clearRect(0,0,extent,extent);
-    c.fillStyle = 'silver'; c.fillRect(0,0,extent,extent); c.strokeStyle = '#1d2926'; c.lineWidth = extent/width; c.strokeRect(c.lineWidth/2,c.lineWidth/2,extent-c.lineWidth,extent-c.lineWidth);
-    c.fillStyle = '#ebc365'; c.fillRect(wood,wood,span,span);
-    c.strokeStyle='#564424';c.lineWidth=extent/width;c.strokeRect(wood,wood,span,span);
-    c.strokeStyle = '#564424'; c.lineWidth = .85; c.beginPath();
+    c.fillStyle = ink('silver','#fff'); c.fillRect(0,0,extent,extent); c.strokeStyle = ink('#1d2926'); c.lineWidth = extent/width; c.strokeRect(c.lineWidth/2,c.lineWidth/2,extent-c.lineWidth,extent-c.lineWidth);
+    c.fillStyle = ink('#ebc365','#fff'); c.fillRect(wood,wood,span,span);
+    c.strokeStyle=ink('#564424');c.lineWidth=extent/width;c.strokeRect(wood,wood,span,span);
+    c.strokeStyle = ink('#564424'); c.lineWidth = .85; c.beginPath();
     for (let n=0;n<size;n++) { const pos=start+n*gap; c.moveTo(start,pos); c.lineTo(start+(size-1)*gap,pos); c.moveTo(pos,start); c.lineTo(pos,start+(size-1)*gap); } c.stroke();
-    c.fillStyle='#4a3a21'; for (const [x,y] of starPoints(size)) { c.beginPath(); c.arc(start+x*gap,start+y*gap,Math.max(2,gap*.08),0,Math.PI*2); c.fill(); }
-    c.fillStyle='#24332e'; c.textAlign='center'; c.textBaseline='middle'; c.font=(12*extent/(canvas.clientWidth||extent))+'px system-ui,sans-serif';
+    c.fillStyle=ink('#4a3a21'); for (const [x,y] of starPoints(size)) { c.beginPath(); c.arc(start+x*gap,start+y*gap,Math.max(2,gap*.08),0,Math.PI*2); c.fill(); }
+    c.fillStyle=ink('#24332e'); c.textAlign='center'; c.textBaseline='middle'; c.font=(12*extent/(canvas.clientWidth||extent))+'px system-ui,sans-serif';
     const letters='ABCDEFGHJKLMNOPQRST';
     if(showCoordinates)for(let n=0;n<size;n++) { const pos=start+n*gap,top=originalPoint(n),left=originalPoint(n*size);const a=boardRotation%2?String(size-Math.floor(top/size)):letters[top%size],b=boardRotation%2?letters[left%size]:String(size-Math.floor(left/size));c.fillText(a,pos,wood/2);c.fillText(a,pos,extent-wood/2);c.fillText(b,wood/2,pos);c.fillText(b,extent-wood/2,pos); }
     state.board.forEach((color,point)=>{
@@ -215,18 +217,18 @@
       const gradient=c.createRadialGradient(x-r*.35,y-r*.4,r*.08,x,y,r);
       if(color===R.BLACK){gradient.addColorStop(0,'#555b5c');gradient.addColorStop(1,'#111415');}
       else{gradient.addColorStop(0,'#ffffff');gradient.addColorStop(1,'#dce2df');}
-      c.fillStyle=gradient;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle=color===R.BLACK?'#0a1111':'#87958f';c.lineWidth=.7;c.stroke();
+      c.fillStyle=renderMonochrome?(color===R.BLACK?'#000':'#fff'):gradient;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle=renderMonochrome?'#000':color===R.BLACK?'#0a1111':'#87958f';c.lineWidth=.7;c.stroke();
       const pvLabel=pv?.labels.get(point),label=pv?pvLabel:numberFrames[index][point],latest=state.last?.point===point;
       if((pvLabel||numbers)&&label&&(pvLabel||!$('recent').checked||label>state.move-recentCount())&&!marks.has(point)){
         const text=String(label);let font=r*1.12;c.font='600 '+font+'px Arial,sans-serif';
         const actual=c.measureText(text).width;if(actual>r*1.55)font*=r*1.55/actual;
-        c.font='600 '+font+'px Arial,sans-serif';c.fillStyle=latest?(color===R.BLACK?'#ff9e89':'#b12212'):(color===R.BLACK?'#fff':'#192824');c.fillText(text,x,y+.4);
-      }else if(latest&&!marks.has(point)){c.strokeStyle=color===R.BLACK?'#ff9980':'#b5261a';c.lineWidth=Math.max(1.5,gap*.07);c.beginPath();c.arc(x,y,r*.28,0,Math.PI*2);c.stroke();}
+        c.font='600 '+font+'px Arial,sans-serif';c.fillStyle=renderMonochrome?(color===R.BLACK?'#fff':'#000'):latest?(color===R.BLACK?'#ff9e89':'#b12212'):(color===R.BLACK?'#fff':'#192824');c.fillText(text,x,y+.4);
+      }else if(latest&&!marks.has(point)){c.strokeStyle=renderMonochrome?(color===R.BLACK?'#fff':'#000'):color===R.BLACK?'#ff9980':'#b5261a';c.lineWidth=Math.max(1.5,gap*.07);c.beginPath();c.arc(x,y,r*.28,0,Math.PI*2);c.stroke();}
     });
     if(!scoreSession)drawMarkup(c,{gap,start,extent},marks,state);drawScore(c,{gap,start,extent});
-    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion&&(tool==='play'||!editing)){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point]||marks.has(point))continue;const text=lineEntry(child).label,{x,y}=displayXY(point);c.save();const font=16*extent/(canvas.clientWidth||extent);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle='#ebc365';c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle='#06ad01';c.fillText(text,x,y);c.restore();}}
+    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion&&(tool==='play'||!editing)){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point]||marks.has(point))continue;const text=lineEntry(child).label,{x,y}=displayXY(point);c.save();const font=16*extent/(canvas.clientWidth||extent);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle=ink('#ebc365','#fff');c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle=ink('#06ad01');c.fillText(text,x,y);c.restore();}}
 
-    if(keyboardBoard){const {x,y}=displayXY(focusPoint);c.strokeStyle='#006675';c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
+    if(keyboardBoard){const {x,y}=displayXY(focusPoint);c.strokeStyle=ink('#006675');c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
   }
   let lastRenderedRecord=null;
   function refresh() {
@@ -447,7 +449,15 @@
   }
   let exportBusy=false,gifBlob=null,gifUrl=null;
   function invalidateGif(){if(exportBusy||!$('gif-preview'))return;gifBlob=null;$('gif-preview').hidden=true;$('gif-save').hidden=true;$('gif-toggle').hidden=true;if(gifUrl){URL.revokeObjectURL(gifUrl);gifUrl=null;}}
-  function rasterAt(position=index,scale=1){const old=index,keyboard=keyboardBoard;index=position;keyboardBoard=false;draw(false);const output=document.createElement('canvas');output.width=Math.max(1,Math.round(canvas.clientWidth*scale));output.height=output.width;output.getContext('2d').drawImage(canvas,0,0,output.width,output.height);index=old;keyboardBoard=keyboard;draw();return output;}
+  function rasterAt(position=index,scale=1,monochrome=false){
+    const old=index,keyboard=keyboardBoard,oldMono=renderMonochrome;
+    try{index=position;keyboardBoard=false;renderMonochrome=monochrome;draw(false);
+      const output=document.createElement('canvas');output.width=Math.max(1,Math.round(canvas.clientWidth*scale));output.height=output.width;
+      const ctx=output.getContext('2d');ctx.drawImage(canvas,0,0,output.width,output.height);
+      if(monochrome){const pixels=ctx.getImageData(0,0,output.width,output.height);for(let i=0;i<pixels.data.length;i+=4){const v=(pixels.data[i]+pixels.data[i+1]+pixels.data[i+2])/3<160?0:255;pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=v;pixels.data[i+3]=255;}ctx.putImageData(pixels,0,0);}
+      return output;
+    }finally{index=old;keyboardBoard=keyboard;renderMonochrome=oldMono;draw();}
+  }
   function pointAt(event){const rect=canvas.getBoundingClientRect(),g=geometry(),x=(event.clientX-rect.left)*g.extent/rect.width,y=(event.clientY-rect.top)*g.extent/rect.height,ix=Math.round((x-g.start)/g.gap),iy=Math.round((y-g.start)/g.gap);return ix>=0&&ix<size&&iy>=0&&iy<size?originalPoint(iy*size+ix):null;}
   function configureInterface(){
     firstElement('.text-label').hidden=true;$('sgf').placeholder='棋譜欄';$('sgf').setAttribute('aria-label','棋譜欄');$('import-text').textContent='棋譜欄から碁盤へ';$('export-text').textContent='碁盤から棋譜欄へ';
@@ -472,7 +482,8 @@
     const encoding=document.createElement('div');encoding.className='encoding-menu';encoding.innerHTML='<label>文字コード <select id="encoding" title="通常は自動のままで読み込めます。文字化けする場合に変更してください"><option value="auto">自動</option><option value="utf-8">UTF-8</option><option value="shift_jis">日本語（Shift_JIS）</option><option value="euc-jp">日本語（EUC-JP）</option><option value="euc-kr">韓国語（CP949）</option><option value="gb18030">中国語（簡体字）</option><option value="big5">中国語（繁体字）</option></select></label>';loadMenu.append(encoding);
     const saveMenu=$('save').closest('details');saveMenu.id='save-menu';saveMenu.querySelector('summary').textContent='棋譜の保存・印刷';saveMenu.querySelector('summary').title='クリックすると保存・印刷の操作を表示／非表示にします';const records=document.createElement('div');records.className='record-save-row';records.append($('save'));saveMenu.append(records);
     for(const [id,label,clean,title]of [['save-main','本譜だけを保存',false,'各分岐の先頭を本譜として、変化を除いてSGF保存します'],['save-clean','コメントも除いた本譜だけ保存',true,'変化とコメント・局面名を除いて本譜をSGF保存します']]){const button=document.createElement('button');button.type='button';button.id=id;button.textContent=label;button.title=title;button.onclick=async()=>{if(insertion||!(await canLeave())||!GoExport.hasRecord(root,true))return;try{await GoExport.save(new Blob([S.write(GoExport.mainOnly(S.parse(exportSgf()).root,clean))],{type:'application/x-go-sgf'}),clean?'本譜_コメントなし.sgf':'本譜.sgf');}catch(error){report(error.message,true);}};records.append(button);}
-    const images=document.createElement('div');images.className='image-save-row';images.innerHTML='<button id="save-image" title="表示中と同じ寸法の画像で保存します">盤面を画像保存</button><select id="image-format" aria-label="保存する画像形式" title="保存する画像形式をPNGまたはJPGから選びます"><option value="png">PNG</option><option value="jpg">JPG</option></select><button id="print" title="現在の盤面だけを印刷用の別窓に表示します">盤面を印刷</button>';saveMenu.append(images);
+    const images=document.createElement('div');images.className='image-save-row';images.innerHTML='<button id="save-image" title="表示中と同じ寸法の画像で保存します">盤面を画像保存</button><select id="image-format" aria-label="保存する画像形式" title="保存する画像形式をPNGまたはJPGから選びます"><option value="png">PNG</option><option value="jpg">JPG</option></select><button id="save-image-mono" title="白い盤面・黒白の石で画像を保存します">盤面を無色で保存</button><button id="print" title="現在の盤面だけを印刷用の別窓に表示します">盤面を印刷</button>';saveMenu.append(images);
+    $('save-image-mono').onclick=async()=>{try{const type=$('image-format').value;await GoExport.save(await GoExport.raster(rasterAt(index,1,true),type),'盤面_白黒.'+type);}catch(error){report(error.message,true);}};
     $('save-image').onclick=async()=>{try{const type=$('image-format').value;await GoExport.save(await GoExport.raster(rasterAt(),type),'盤面.'+type);}catch(error){report(error.message,true);}};
     const preview=document.createElement('dialog');preview.id='print-preview';preview.innerHTML='<h2>盤面の印刷・画像保存</h2><img id="print-preview-image" alt="印刷する盤面"><p id="print-status" role="status"></p><div class="print-actions"><button id="print-now">印刷する</button><button id="print-save">盤面を画像保存</button><select id="print-format" aria-label="プレビューの画像形式"><option value="png">PNG</option><option value="jpg">JPG</option></select><button id="print-close">閉じる</button></div>';document.body.append(preview);let printRaster=null;
     $('print').onclick=async ()=>{if(insertion||!(await canLeave()))return;printRaster=rasterAt();$('print-preview-image').src=printRaster.toDataURL('image/png');$('print-status').textContent='表示中の盤面を印刷、または画像として保存します。';preview.showModal();};

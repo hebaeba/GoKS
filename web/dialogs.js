@@ -8,7 +8,7 @@ async function confirm(message,{title='確認',accept='続ける'}={}){
  d.addEventListener('close',()=>{const result=d.returnValue==='accept';d.remove();resolve(result);},{once:true});d.showModal();});}finally{busy=false;}
 }
 let closing=false;
-window.KifuDialogs={confirm,addExitCheck(fn){checks.push(fn)},async requestClose(){if(closing||busy)return;closing=true;try{if(checks.some(fn=>fn())&&!await confirm('保存していない棋譜・入力・解析結果、または進行中の処理があります。保存せずに終了しますか？',{title:'GoKifuStudioを終了',accept:'終了する'}))return;await window.__TAURI_INTERNALS__.invoke('desktop_close');}finally{closing=false;}}};
+window.KifuDialogs={confirm,addExitCheck(fn){checks.push(fn)},async requestClose(){if(closing||busy)return;closing=true;try{if(checks.some(fn=>fn())&&!await confirm('保存していない棋譜・入力・解析結果、または進行中の処理があります。保存せずに終了しますか？',{title:'Go棋譜Studioを終了',accept:'終了する'}))return;await window.__TAURI_INTERNALS__.invoke('desktop_close');}finally{closing=false;}}};
 window.addEventListener('keydown',async e=>{
  if(!window.__TAURI_INTERNALS__||!(e.key==='F5'||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='r')))return;
  e.preventDefault();if(busy||closing)return;
