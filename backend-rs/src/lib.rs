@@ -42,7 +42,16 @@ impl Engine {
         if !workdir.is_dir(){return Err("作業フォルダーが見つかりません".into());}
         self.stop();
         let mut cmd=Command::new(&exe);
-        if kind=="katago"{cmd.args(["gtp","-model"]).arg(&model).arg("-config").arg(&cfg).args(&extra).args(["-override-config",if payload["matchMode"].as_bool()==Some(true){"reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false,allowResignation=false"}else{"reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false"}]);}else{cmd.args(&extra);}
+        let mut overrides=String::from("reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false");
+        if payload["matchMode"].as_bool()==Some(true){
+            if let Some(settings)=payload["matchSettings"].as_object(){
+                for (key,value) in settings{
+                    if !["allowResignation","maxTime","maxVisits","maxPlayouts","resignThreshold","resignConsecTurns","resignMinMovesPerBoardArea"].contains(&key.as_str()) || (if key=="allowResignation"{!value.is_boolean()}else{!value.is_number()}){return Err("対局条件が不正です".into());}
+                    overrides.push_str(&format!(",{}={}",key,value));
+                }
+            }else{overrides.push_str(",allowResignation=false");}
+        }
+        cmd.args(["gtp","-model"]).arg(&model).arg("-config").arg(&cfg).args(&extra).arg("-override-config").arg(overrides);
         cmd.current_dir(&workdir).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
         #[cfg(windows)]{use std::os::windows::process::CommandExt;cmd.creation_flags(0x08000000);}
         let mut child=cmd.spawn().map_err(|e|format!("エンジンを起動できません：{}",e))?;

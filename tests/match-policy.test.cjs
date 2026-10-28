@@ -38,3 +38,10 @@ test('early resignation guard resets streak through move 60 and counts each colo
  assert.equal(M.resignationStreak(2,{winrate:.011},'B',policy,65),0);
  assert.equal(M.resignationStreak(0,losing,'B',{...policy,minMoves:0},1),1);
 });
+
+test('even-game resignation converts probability into KataGo utility; handicap leaves CFG thresholds intact',()=>{
+ const p={enabled:true,threshold:.01,turns:3,minMoves:0,handicap:false};
+ const even=M.engineSettings(p,10,5000,19);assert.equal(even.allowResignation,true);assert.equal(even.resignThreshold,-.98);assert.equal(even.resignConsecTurns,3);assert.equal(even.maxTime,10);assert.equal(even.maxVisits,5000);
+ const handicap=M.engineSettings({...p,handicap:true,allowHandicap:true},0,0,19);assert.equal(handicap.allowResignation,true);assert(!('resignThreshold' in handicap));assert(!('resignConsecTurns'in handicap));assert.equal(handicap.maxVisits,M.UNLIMITED_VISITS);
+ assert.equal(M.engineSettings({...p,handicap:true,allowHandicap:false},1,0,19).allowResignation,false);
+});

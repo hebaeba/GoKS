@@ -69,3 +69,8 @@ body #image-board-dialog .image-title{cursor:move;touch-action:none;user-select:
 body #image-board-dialog .image-work{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 body #image-board-dialog .image-work>section:first-child canvas{margin-left:auto;margin-right:0}
 body #image-board-dialog .image-work>section:last-child canvas{margin-left:0;margin-right:auto}
+
+/* Update79: match fields share the analysis rule field metrics. */
+.match-handicap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.match-handicap label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.match-handicap [hidden],.match-resign-rule [hidden]{display:none!important}

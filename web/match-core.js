@@ -16,5 +16,11 @@ function limits(seconds,visits=0){
 function resignationStreak(previous,e,color,policy,nextMove){
  return nextMove<=policy.minMoves?0:streak(previous,e,color,policy.threshold);
 }
-const api={UNLIMITED_VISITS,limits,parseMove,view,streak,resignationStreak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
+function engineSettings(policy,seconds,visits,size){
+ const o={allowResignation:policy.handicap?policy.allowHandicap:policy.enabled,maxTime:seconds||1e20,maxVisits:visits||UNLIMITED_VISITS,maxPlayouts:UNLIMITED_VISITS,resignMinMovesPerBoardArea:0};
+ if(!policy.handicap){o.resignThreshold=2*policy.threshold-1;o.resignConsecTurns=policy.turns;}
+ // The GUI gates allowResignation by actual played moves. KataGo retains its own handicap guard.
+ return o;
+}
+const api={engineSettings,UNLIMITED_VISITS,limits,parseMove,view,streak,resignationStreak,sgf};if(typeof module!=='undefined')module.exports=api;else root.KifuMatchCore=api;
 })(globalThis);

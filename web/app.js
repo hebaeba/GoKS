@@ -585,6 +585,12 @@
       const komi=currentKomi();editing=true;if(!transaction(()=>{root=S.create(size);root.props.KM=[String(komi)];originalName='kifu.sgf';choices=new WeakMap();index=0;commentTarget=null;infoTarget=null;analysisPreview=null;},'新しい対局用に盤面をクリアしました。'))throw Error('盤面をクリアできませんでした。');
       window.dispatchEvent(new Event('kifu-record-replaced'));
     },
+    matchSetup(h){
+      if(!Number.isInteger(h)||h<0||h>9||h===1)throw Error('置き石数が不正です。');
+      if(h&&size<7)throw Error('置碁の設定は7路以上で使用できます。');
+      const edge=size<=11?2:3,far=size-1-edge,mid=Math.floor(size/2),corners=[[far,edge],[edge,far],[far,far],[edge,edge]],points=h<=4?corners.slice(0,h):h===5?[...corners,[mid,mid]]:h===6?[...corners,[edge,mid],[far,mid]]:h===7?[...corners,[edge,mid],[far,mid],[mid,mid]]:h===8?[...corners,[edge,mid],[far,mid],[mid,edge],[mid,far]]:[...corners,[edge,mid],[far,mid],[mid,edge],[mid,far],[mid,mid]];
+      this.matchReset();if(h){root.props.HA=[String(h)];root.props.AB=points.map(([x,y])=>R.encode(y*size+x,size));root.props.PL=['W'];root.props.KM=['0.5'];}else root.props.KM=['6.5'];infoTarget=null;commentTarget=null;rebuild();refresh();
+    },
     matchSaved(expected){
       // A match-only save covers this document only when no other branches or future moves exist.
       if(serialized()!==expected.sgf)return;

@@ -41,3 +41,6 @@ html body :is(#field-policy #field-policy #field-policy,#komi-input,#match-komi)
 
 /* Engine names can exceed the remaining match column. Account for both padding and arrow. */
 html body :is(#field-policy #field-policy #field-policy,#match-black,#match-white):not([multiple]):not([size]){max-width:calc(100% - 26px)!important;text-overflow:ellipsis}
+
+/* Match and analysis fields use identical metrics, including inherited flex alignment. */
+html body :is(#field-policy #field-policy #field-policy,#pane-match select,#analysis-rules){align-self:center!important;box-sizing:content-box!important;height:18px!important;min-height:18px!important;max-height:18px!important;line-height:18px!important;padding-top:3px!important;padding-bottom:3px!important;border-top-width:1px!important;border-bottom-width:1px!important}
