@@ -533,10 +533,10 @@
   // WebView2 does not reliably provide a script-accessible window.open result.
   // A floating same-document host keeps scoring usable without popup permission.
   function scorePanel(){
-    const host=document.createElement('section');host.id='score-panel';host.setAttribute('role','dialog');host.setAttribute('aria-label','勝敗判定');
-    const bar=document.createElement('div');bar.className='score-panel-bar';bar.textContent='勝敗判定（ここをドラッグして移動）';
-    const close=document.createElement('button');close.textContent='×';close.title='勝敗判定を閉じる';close.setAttribute('aria-label',close.title);bar.append(close);
-    const frame=document.createElement('iframe');frame.title='勝敗判定の操作と計算結果';host.append(bar,frame);document.body.append(host);
+    const host=document.createElement('section');host.id='score-panel';host.setAttribute('role','dialog');host.setAttribute('aria-label','地合い計算');
+    const bar=document.createElement('div');bar.className='score-panel-bar';bar.textContent='地合い計算（ここをドラッグして移動）';
+    const close=document.createElement('button');close.textContent='×';close.title='地合い計算を閉じる';close.setAttribute('aria-label',close.title);bar.append(close);
+    const frame=document.createElement('iframe');frame.title='地合い計算の操作と計算結果';host.append(bar,frame);document.body.append(host);
     let closed=false;const adapter={document:frame.contentDocument,get closed(){return closed;},close(){closed=true;host.remove();},focus(){host.focus();},addEventListener(){}};host.tabIndex=-1;close.onclick=()=>closeScore();
     const rect=canvas.getBoundingClientRect();host.style.left=Math.max(0,Math.min(innerWidth-host.offsetWidth,rect.right+8))+'px';host.style.top=Math.max(0,Math.min(70,innerHeight-host.offsetHeight))+'px';
     let drag=null;bar.onpointerdown=e=>{if(e.target===close)return;const r=host.getBoundingClientRect();drag={x:e.clientX-r.left,y:e.clientY-r.top};bar.setPointerCapture(e.pointerId);e.preventDefault();};bar.onpointermove=e=>{if(!drag)return;host.style.left=Math.max(0,Math.min(innerWidth-host.offsetWidth,e.clientX-drag.x))+'px';host.style.top=Math.max(0,Math.min(innerHeight-40,e.clientY-drag.y))+'px';};bar.onpointerup=bar.onpointercancel=()=>drag=null;
@@ -550,7 +550,7 @@
     try{const host=window.top;const pip=host.documentPictureInPicture;if(!win&&pip)win=await pip.requestWindow({width,height});}catch{}
     if(!win){try{win=window.open('','independentGoScore','popup,width='+width+',height='+height+',left='+left+',top='+top+',resizable=yes,scrollbars=yes');}catch{}}
     if(!win)win=scorePanel();
-    if(!win){report('勝敗判定の別窓を開けません。ポップアップを許可してください。',true);return;}
+    if(!win){report('地合い計算の別窓を開けません。ポップアップを許可してください。',true);return;}
     document.body.classList.add('scoring-mode');scoreWindow=win;const template=$('score-template').content;win.document.head.replaceChildren(...[...template.querySelector('[data-score-head]').children].map(node=>win.document.importNode(node,true)));win.document.body.replaceChildren(...[...template.querySelector('[data-score-body]').children].map(node=>win.document.importNode(node,true)));
     const km=currentKomi();scoreSession={state:R.copy(frames[index]),dead:new Set(),seki:new Set(),options:{rule:'japanese',komi:km,capturedB:frames[index].captures[1],capturedW:frames[index].captures[2],adjust:0}};const v=id=>win.document.getElementById(id);for(const id of ['komi','capturedB','capturedW','adjust']){v(id).value=scoreSession.options[id];v(id).oninput=updateScore;}v('rule').onclick=()=>{scoreSession.options.rule=scoreSession.options.rule==='japanese'?'chinese':'japanese';updateScore();};v('seki-mode').onchange=updateScore;v('reset').onclick=()=>{scoreSession.dead.clear();scoreSession.seki.clear();updateScore();};v('close').onclick=closeScore;win.addEventListener('pagehide',closeScore,{once:true});allElements('.controls,.topline,.edit-panel,.statusline').forEach(element=>{element.inert=true;element.dataset.scoreLock='1';});scorePoll=setInterval(()=>{if(!scoreWindow||scoreWindow.closed)closeScore();},400);updateScore();win.focus();
   }
@@ -560,7 +560,7 @@
   function recoveryData(){return {version:1,time:Date.now(),snapshot:snapshot(),editing,input:$('sgf').value,comment:$('comment-edit').value,info:[...allElements('[data-prop]')].map(input=>[input.dataset.prop,input.value])};}
   async function saveRecovery(manual){if(insertion||scoreSession)return;if(!manual&&!KifuRecordState.hasContent(root)&&!$('sgf').value.trim()&&!hasCommentDraft()&&!hasInfoDraft())return;try{const current=localStorage.getItem(recoveryKey);if(recoveryPending||current!==recoveryRaw){if(!manual||!(await KifuDialogs.confirm('端末内にある一時保存を、現在の棋譜で置き換えますか？',{accept:'上書き保存'}))){recoveryPending=true;recoveryStatus('前回または別の画面の一時保存があります。「復元」か「今すぐ保存」を選んでください。');return;}}const value=recoveryData(),raw=JSON.stringify(value);if(raw.length>4*1024*1024)throw Error('一時保存の上限を超えています');localStorage.setItem(recoveryKey,raw);recoveryRaw=raw;recoveryPending=false;recoveryStatus('端末内に一時保存しました（'+new Date(value.time).toLocaleTimeString('ja-JP')+'）');}catch(error){recoveryStatus('一時保存できません。棋譜をファイルに保存してください：'+error.message);}}
   function scheduleRecovery(){if(!recoveryReady||insertion||scoreSession)return;const signature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));if(signature===recoverySignature)return;recoverySignature=signature;clearTimeout(recoveryTimer);if($('auto-recovery').checked&&!recoveryPending&&(dirty||hasCommentDraft()||hasInfoDraft()||$('sgf').value.trim()))recoveryTimer=setTimeout(async ()=>(await saveRecovery(false)),700);}
-  function setupExtra(){const score=document.createElement('button');score.id='score';score.textContent='勝敗判定';score.title='元の碁盤で死に石・セキを指定し、日本ルール・中国ルールの結果を表示します';$('turn').after(score);score.onclick=openScore;
+  function setupExtra(){const score=document.createElement('button');score.id='score';score.textContent='地合い計算';score.title='元の碁盤で死に石・セキを指定し、日本ルール・中国ルールの結果を表示します';$('turn').after(score);score.onclick=openScore;
     const recovery=document.createElement('details');recovery.id='recovery';recovery.innerHTML='<summary title="このブラウザー内に盤面を一時保存し、復元します">盤面の一時保存・復元</summary><label><input id="auto-recovery" type="checkbox" checked> 自動で一時保存</label><div><button id="recovery-save" title="現在の棋譜をこの端末に一時保存します">今すぐ保存</button><button id="recovery-restore" title="端末内の一時保存を確認して復元します">復元</button><button id="recovery-delete" title="端末内の一時保存だけを削除します">保存を削除</button></div><p>このブラウザーに１件保存します。サーバーへの送信や他の端末との共有は行いません。大切な棋譜は上部の「保存・印刷」→「棋譜を保存…」でファイルに保存してください。</p><p id="recovery-status" role="status"></p>';
     firstElement('.text-actions').after(recovery);try{recoveryRaw=localStorage.getItem(recoveryKey);recoveryPending=!!recoveryRaw;if(recoveryPending)recoveryStatus('前回の一時保存があります。「復元」で読み込めます。');}catch{recoveryStatus('このブラウザーでは一時保存を利用できません。');$('auto-recovery').checked=false;}
     $('recovery-save').onclick=async ()=>(await saveRecovery(true));$('auto-recovery').onchange=()=>{clearTimeout(recoveryTimer);if($('auto-recovery').checked){recoverySignature='';scheduleRecovery();}};
@@ -603,14 +603,20 @@
       const before=snapshot();for(const [key,value] of Object.entries(info)){if(!['PB','PW','GN','RU','RE','DT','KM'].includes(key))continue;if(value)root.props[key]=[String(value)];else delete root.props[key];}
       remember(before);infoTarget=null;editing=true;tool='play';$('tool').value='play';refresh();
     },
-    async matchPlay(point,expected){
+    async matchPlay(point,expected,rules="japanese"){
       if(insertion||scoreSession||exportBusy)throw Error('盤面を変更できません。');
       if(serialized()!==expected.sgf||index!==expected.index||JSON.stringify(route.slice(1).map((n,i)=>route[i].children.indexOf(n)))!==JSON.stringify(expected.path))throw Error('対局中に局面が変更されました。');
-      R.play(frames[index],point);analysisPreview=null;tool='play';$('tool').value='play';editing=true;
+      const next=R.play(frames[index],point);if(rules==='chinese'&&point!==null&&frames.slice(0,index+1).some(f=>f.board.every((v,i)=>v===next.board[i])))throw Error('同じ盤面を繰り返す着手は中国ルールではできません。');analysisPreview=null;tool='play';$('tool').value='play';editing=true;
       const oldIndex=index;matchMutation=true;try{(await place(point));}finally{matchMutation=false;}
       if(index===oldIndex)throw Error('着手を反映できませんでした。');
     },
-    getSgf(){if(insertion||scoreSession||!canLeaveSync())throw Error('挿入・勝敗判定・編集中の入力を終了してから取り込んでください。');return serialized();},
+    matchRestore(saved,expected){
+      if(insertion||scoreSession||exportBusy||serialized()!==expected.sgf||index!==expected.index)throw Error('局面が変更されたため待ったできません。');
+      const parsed=S.parse(saved.sgf),before=snapshot();root=parsed.root;size=parsed.size;choices=new WeakMap();let node=root;
+      for(const choice of saved.path){if(!node.children[choice])break;choices.set(node,choice);node=node.children[choice];}
+      index=saved.index;analysisPreview=null;infoTarget=null;commentTarget=null;editing=true;tool='play';$('tool').value='play';remember(before);rebuild();refresh();
+    },
+    getSgf(){if(insertion||scoreSession||!canLeaveSync())throw Error('挿入・地合い計算・編集中の入力を終了してから取り込んでください。');return serialized();},
     mirrorBoard(){boardMirror=!boardMirror;boardRotation=(4-boardRotation)%4;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));},
     resetOrientation(){boardMirror=false;boardRotation=0;analysisPreview=null;draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));},
     flipColors(){
@@ -655,13 +661,13 @@
     previewAnalysis(result){if(scoreSession||insertion)return false;analysisPreview=result;draw();return true;},
     clearAnalysisPreview(){if(analysisPreview){analysisPreview=null;draw();}},
     async playAnalysisMove(point,expected){
-      if(insertion||scoreSession||exportBusy||!canLeaveSync())throw Error('挿入・勝敗判定・未反映の入力を終了してください。');
+      if(insertion||scoreSession||exportBusy||!canLeaveSync())throw Error('挿入・地合い計算・未反映の入力を終了してください。');
       if(serialized()!==expected.sgf||index!==expected.index||JSON.stringify(route.slice(1).map((n,i)=>route[i].children.indexOf(n)))!==JSON.stringify(expected.path))throw Error('局面が変わりました。候補手を選び直してください。');
       R.play(frames[index],point); // Validate before changing mode or tool.
       if(!editing)throw Error('棋譜のロックを解除してから着手してください。');analysisPreview=null;tool='play';$('tool').value='play';canvas.style.touchAction='pan-y';$('tools').querySelector('summary').textContent='ツール';
       (await place(point));
     },
-    analysisSnapshot(){if(insertion||scoreSession||!canLeaveSync())throw Error('挿入・勝敗判定・未反映の入力を終了してください。');return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
+    analysisSnapshot(){if(insertion||scoreSession||!canLeaveSync())throw Error('挿入・地合い計算・未反映の入力を終了してください。');return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     peekAnalysisSnapshot(){return {sgf:serialized(),size,komi:currentKomi(),index,path:route.slice(1).map((n,i)=>route[i].children.indexOf(n)),geometry:geometry()};},
     async analysisAt(target,expected){if(serialized()!==expected)throw Error('棋譜が変更されています。');if(!Number.isInteger(target)||target<0||target>=route.length)throw Error('局面番号が不正です。');await at(target);},
     async loadAnalysisSnapshot(saved){if(!await load(saved.sgf,'解析付き棋譜.sgf'))return false;choices=new WeakMap();let n=root;for(const selected of saved.path){if(!n.children[selected])throw Error('保存された変化が不正です。');choices.set(n,selected);n=n.children[selected];}index=saved.index;rebuild();refresh();return true;},

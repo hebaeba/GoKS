@@ -93,7 +93,7 @@ $('engine-profile-save').onclick=saveProfile;
 $('engine-profile-edit').onclick=()=>{if(pendingCalls>0||!$('engine-profile').value)return;$('engine-list-disclosure').open=true;$('engine-settings').classList.add('profile-editing');$('engine-profile-save').textContent='編集内容を保存';profileMessage('名前・実行ファイル・モデル・cfgを変更し、リスト直下の「編集内容を保存」を押してください。変更を取り消す場合はリストから同じ登録を選び直してください。');$('engine-name').focus();$('engine-name').scrollIntoView({block:'nearest'});};
 $('engine-profile').onchange=()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);$('engine-name').value=p?.name||'';$('engine-kind').value=p?.kind||'katago';for(const k of ['exe','model','config','workdir'])writePath(k,p?.[k]);$('engine-extraArgs').value=(p?.extraArgs||[]).join('\n');engineKindUI();clearConfigurationError();renderProfiles(p?.id||'');controls();profileMessage(p?'「'+p.name+'」を読み込みました。上部の起動／再起動ボタンで反映します。':'名前と設定を入力してください。');};
 $('engine-profile-new').onclick=()=>{$('engine-profile').value='';$('engine-profile').onchange();$('engine-exe').focus();};
-$('engine-profile-delete').onclick=async ()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(!p||!(await KifuDialogs.confirm('「'+p.name+'」をエンジンリストから削除しますか？',{accept:'登録を削除'})))return;if(writeProfiles(profiles.filter(v=>v.id!==p.id))){if(p.id==='bundled-eigen')try{localStorage.setItem('kifu-bundled-hidden','1');}catch{}renderProfiles();$('engine-name').value='';profileMessage('登録を削除しました。入力欄のパスと端末内のファイルは残しています。');controls();}};
+$('engine-profile-delete').onclick=async ()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(!p||!(await KifuDialogs.confirm('「'+p.name+'」をエンジンリストから削除しますか？',{accept:'登録を削除'})))return;if(writeProfiles(profiles.filter(v=>v.id!==p.id))){if(p.id.startsWith('bundled-'))try{localStorage.setItem('kifu-bundled-hidden-v80-'+p.id,'1');}catch{}renderProfiles();$('engine-name').value='';profileMessage('登録を削除しました。入力欄のパスと端末内のファイルは残しています。');controls();}};
 renderProfiles();
 const restored=profiles.find(p=>['exe','model','config'].every(k=>p[k]===paths()[k]));if(restored){renderProfiles(restored.id);$('engine-name').value=restored.name;}
 function engineState(state,title,message){$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':$('engine-name').value.trim()||'未選択';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
@@ -291,12 +291,20 @@ async function initBundledEngine(){
  if(!available||window.KifuRemote)return;
  try{const d=await call('defaults');if(!d?.exe)return;
   const selected=$('engine-profile').value;
-  bundledStartup=d;const bundled={id:'bundled-eigen',kind:'katago',name:d.name,exe:d.exe,model:d.model,config:d.config},idx=profiles.findIndex(x=>x.id==='bundled-eigen');
-  let hidden=false;try{hidden=localStorage.getItem('kifu-bundled-hidden')==='1';}catch{}
-  if(idx<0&&!hidden)profiles.unshift(bundled);else if(idx>=0&&!profiles[idx].userEdited)profiles[idx]={...profiles[idx],...bundled};writeProfiles(profiles);
-  const currentBundled=profiles.find(p=>p.id==='bundled-eigen');
-  if(currentBundled&&(!paths().exe||selected==='bundled-eigen'||(/[/\\]engines[/\\]eigen[/\\]katago\.exe$/i.test(paths().exe)&&/analysis_example\.cfg$/i.test(paths().config)))){
-   $('engine-kind').value='katago';engineKindUI();for(const k of ['exe','model','config'])writePath(k,currentBundled[k]);$('engine-name').value=currentBundled.name;$('engine-workdir').value=currentBundled.workdir||'';$('engine-extraArgs').value=(currentBundled.extraArgs||[]).join('\n');renderProfiles('bundled-eigen');
+  bundledStartup=d;
+  const bundles=d.profiles?.length?d.profiles:[{...d,id:'bundled-eigen'}];
+  for(const item of bundles){
+   const bundle={id:item.id,kind:'katago',name:item.name,exe:item.exe,model:item.model,config:item.config,workdir:item.workdir||''},idx=profiles.findIndex(p=>p.id===item.id);
+   let hidden=false;try{hidden=localStorage.getItem('kifu-bundled-hidden-v80-'+item.id)==='1';}catch{}
+   if(idx<0){if(!hidden)profiles.push(bundle);}else{
+    const old=profiles[idx],legacy=/[/\\]engines[/\\]eigen[/\\]katago\.exe$/i.test(old.exe);
+    if(!old.userEdited||legacy)profiles[idx]={...old,...bundle,userEdited:false};
+   }
+  }
+  writeProfiles(profiles);
+  const currentBundled=profiles.find(p=>p.id===selected)||profiles.find(p=>p.id==='bundled-eigen');
+  if(currentBundled&&(!paths().exe||selected.startsWith('bundled-')||/[/\\]engines[/\\]eigen[/\\]katago\.exe$/i.test(paths().exe))){
+   $('engine-kind').value='katago';engineKindUI();for(const k of ['exe','model','config','workdir'])writePath(k,currentBundled[k]||'');$('engine-name').value=currentBundled.name;$('engine-extraArgs').value=(currentBundled.extraArgs||[]).join('\n');renderProfiles(currentBundled.id);
   }else renderProfiles(selected);
   defaultsLoaded=true;controls();if(d.missing?.length){autoAttempted=true;engineError('同梱エンジンのファイルが不足しています：'+d.missing.join('、')+'。ZIPをすべて展開してください。');return;}autoConnect();
  }catch(e){log('同梱エンジンの確認：'+e.message);}
@@ -309,8 +317,8 @@ function autoConnect(){
  const d=bundledStartup;
  $('engine-kind').value='katago';engineKindUI();
  for(const k of ['exe','model','config'])writePath(k,d[k]);
- $('engine-name').value=d.name||'KataGo Eigen（CPU）';
- $('engine-workdir').value='';$('engine-extraArgs').value='';
+ $('engine-name').value=d.name||'KataGo-Eigen';
+ $('engine-workdir').value=d.workdir||'';$('engine-extraArgs').value='';
  renderProfiles(profiles.some(p=>p.id==='bundled-eigen')?'bundled-eigen':'');
  connect();
 }

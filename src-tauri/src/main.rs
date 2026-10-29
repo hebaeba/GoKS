@@ -10,9 +10,14 @@ struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mute
 #[tauri::command]
 async fn engine_call(action:String,payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
  if action=="defaults" {
-  let base=std::env::current_exe().map_err(|e|e.to_string())?.parent().ok_or("実行場所を取得できません")?.join("engines/eigen");
-  let missing:Vec<String>=["katago.exe","model.bin.gz","default_gtp.cfg","z.dll","zip.dll","libssl-3-x64.dll","libcrypto-3-x64.dll"].iter().filter(|n|!base.join(n).is_file()).map(|n|n.to_string()).collect();
-  return Ok(json!({"name":"KataGo Eigen（CPU）","exe":base.join("katago.exe"),"model":base.join("model.bin.gz"),"config":base.join("default_gtp.cfg"),"missing":missing}));
+  let base=std::env::current_exe().map_err(|e|e.to_string())?.parent().ok_or("実行場所を取得できません")?.join("engines/katago");
+  let mut profiles:Vec<Value>=serde_json::from_str(include_str!("../../engines/manifest.json")).map_err(|e|e.to_string())?;
+  for p in &mut profiles{
+   let mut missing=Vec::<String>::new();
+   for key in ["exe","model","config"]{let relative=p[key].as_str().ok_or("内蔵エンジン定義が不正です")?.to_string();let file=base.join(&relative);if !file.is_file(){missing.push(relative);}p[key]=json!(file);}
+   p["kind"]=json!("katago");p["workdir"]=json!(base);p["missing"]=json!(missing);
+  }
+  let mut defaults=profiles.first().cloned().ok_or("内蔵エンジンがありません")?;defaults["profiles"]=json!(profiles);return Ok(defaults);
  }
  let engine=match payload["session"].as_str(){None=>state.engine.clone(),Some("black")=>state.black.clone(),Some("white")=>state.white.clone(),_=>return Err("対局セッションが不正です".into())};tauri::async_runtime::spawn_blocking(move||engine.lock().map_err(|_|"エンジンの状態を取得できません".to_string())?.call(&action,&payload)).await.map_err(|e|e.to_string())?
 }
