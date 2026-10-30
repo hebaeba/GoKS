@@ -28,7 +28,7 @@
     };
     input.addEventListener('keydown',event=>{event.stopPropagation();if(event.key==='Enter'){event.preventDefault();input.blur();}});
   }
-  const report = (text, error = false) => { $('message').hidden=!error;$('message').textContent = text; $('message').classList.toggle('error', error); };
+  const report = (text, error = false) => { $('message').classList.remove('autoplay-warning');$('message').hidden=!error;$('message').textContent = text; $('message').classList.toggle('error', error); };
   for (let n = 4; n <= 19; n++) $('size').add(new Option(n + '路', n));
   $('size').value = '19';
   function forceNode(state,props){
@@ -325,7 +325,7 @@
     }catch(error){report('読込みできませんでした：'+error.message,true);return false;}finally{recordLoadPending=false;}
   }
   function serialized(){const old=root.props.CA,oldKomi=root.props.KM;root.props.CA=['UTF-8'];root.props.KM=[String(currentKomi())];try{return S.write(root);}finally{if(old)root.props.CA=old;else delete root.props.CA;if(oldKomi)root.props.KM=oldKomi;else delete root.props.KM;}}
-  $('new').onclick=async ()=>{if(!(await okayToReplace()))return;$('sgf').value='';size=Number($('size').value);root=S.create(size);choices=new WeakMap();index=0;editing=true;dirty=false;focusPoint=0;originalName='kifu.sgf';resetHistory();rebuild();window.dispatchEvent(new Event('kifu-record-replaced'));refresh();report(size+'路の新しい碁盤です。編集モードで石を打てます。');};
+  $('new').onclick=async ()=>{const requestedSize=Number($('size').value);if(!(await okayToReplace()))return;$('sgf').value='';size=requestedSize;root=S.create(size);choices=new WeakMap();index=0;editing=true;dirty=false;focusPoint=0;originalName='kifu.sgf';resetHistory();rebuild();window.dispatchEvent(new Event('kifu-record-replaced'));refresh();report(size+'路の新しい碁盤です。編集モードで石を打てます。');};
   $('view').onclick=async ()=>{if(insertion||!(await canLeave()))return;editing=false;refresh();report('閲覧モードです。棋譜は変更されません。');};$('edit').onclick=()=>{if(scoreSession||exportBusy)return;editing=true;refresh();report('編集モードです。途中から別の手を打つと変化として記録します。');};
   function recentCount(){const n=Number($('recent-count').value==='custom'?$('recent-custom').value:$('recent-count').value);return Number.isInteger(n)&&n>=1&&n<=9999?n:5;}
   $('recent-custom').oninput=()=>{if($('recent-custom').checkValidity()&&$('recent-custom').value){if($('recent').checked)numbers=true;refresh();}};
@@ -573,7 +573,7 @@
   const top=firstElement('.topline'),settings=firstElement('.position-settings'),actions=firstElement('.actions');
   top.querySelector('label').after($('handicap').closest('label'));
   settings.prepend($('turn'));actions.append($('pass'),$('delete-move'));
-  firstElement('.edit-action-row').remove();$('message').hidden=true;$('new').hidden=true;$('size').onchange=()=>{$('new').click();$('size').value=String(size);};
+  firstElement('.edit-action-row').remove();$('message').hidden=true;$('new').hidden=true;$('size').onchange=async ()=>{try{await $('new').onclick();}finally{$('size').value=String(size);}};
 
   firstElement('.edit-buttons').append($('tools'));
 
@@ -693,7 +693,7 @@
     const group=document.createElement('div');group.className='autoplay';group.innerHTML='<button type="button" id="auto-play" aria-pressed="false">自動<span aria-hidden="true">►</span></button><label><select id="auto-seconds" aria-label="自動再生の間隔" title="次の手を表示する間隔です">'+[1,2,3,4,5].map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select>秒</label>';
     const nav=firstElement('.navigation'),actions=firstElement('.actions');nav.append(group);
     $('auto-play').onclick=()=>{if(autoPlaying)return stopAuto();if(scoreSession||insertion||exportBusy||resolving||!canLeaveSync())return;
-      if(index>=route.length-1){report('この手順の末尾です。自動再生する続きがありません。',true);return;}
+      if(index>=route.length-1){report('この手順の末尾です。自動再生する続きがありません。',true);$('message').classList.add('autoplay-warning');return;}
       // Preserve the path already reached, but discard remembered future detours.
       const prefix=route.slice(0,index+1);choices=new WeakMap();
       for(let n=0;n<prefix.length-1;n++)choices.set(prefix[n],prefix[n].children.indexOf(prefix[n+1]));

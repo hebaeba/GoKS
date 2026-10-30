@@ -24,7 +24,7 @@ html body .controls .side-row button:hover:not(:disabled){background:#e4eee8}
 html body .controls .side-row .navigation{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;margin:0}
 html body .controls .side-row .navigation button{width:100%;min-width:0}
 html body .controls .side-row .jump{display:flex;align-items:center;gap:4px;width:auto;margin:0}
-html body .controls .side-row .autoplay{display:flex;align-items:center;gap:6px;margin:0}
+html body .controls .side-row .autoplay{display:flex;align-items:center;gap:6px;margin:0 0 0 auto}
 html body .controls .side-row .autoplay label{display:flex;align-items:center;gap:3px}
 html body .controls .side-row .history-pair{display:flex;gap:5px;width:100%;margin:0}
 html body .controls .side-row .board-view-tools{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:0;padding:0;background:transparent;border:0}
@@ -144,3 +144,6 @@ html body .image-save-row{flex-wrap:wrap;gap:5px}
 @container(max-width:310px){html body #board-sidebar .controls .side-row .board-view-tools{flex-wrap:wrap}}
 @media(max-width:899px){html body .controls .side-row .board-view-tools,html body .side-row .reflection-controls{flex-wrap:wrap}}
 html body.simple-mode #simple-menu .controls .side-row .board-view-tools,html body.simple-mode #simple-menu .side-row .reflection-controls{flex-wrap:wrap}
+
+/* Autoplay feedback stays in view above the board, including simple mode. */
+html body #message.error.autoplay-warning{position:fixed;top:8px;bottom:auto;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);width:max-content;z-index:100;max-height:25vh;overflow:auto;margin:0}
