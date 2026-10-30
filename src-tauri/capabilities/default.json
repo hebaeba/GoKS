@@ -1,1 +1,12 @@
-{"identifier":"main-window","description":"Local editor window only; no shell or filesystem privileges in this stage.","windows":["main"],"permissions":["core:default"]}
+{
+  "identifier": "main-window",
+  "description": "Go棋譜Studio本体と画像取り込み・地合い計算のローカル補助窓",
+  "windows": [
+    "main",
+    "aux-image",
+    "aux-score"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}
