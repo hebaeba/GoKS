@@ -1,5 +1,4 @@
-// Windows CI: all three bundles must be complete. Exercise Eigen on the hosted CPU runner.
-// AVX2 and OpenCL performance/startup require suitable hardware on the target PC.
+// Windows CI: verify the bundled Eigen files and exercise its GTP interface.
 const path=require('node:path'),{Engine}=require('../backend/engine.cjs'),{Bridge}=require('../web/gtp.js'),{bundledEngines}=require('../backend/bundled-engines.cjs');
 if(process.platform!=='win32'){console.error('This check requires Windows.');process.exit(1);}
 (async()=>{const bundle=bundledEngines(path.resolve(__dirname,'../dist/engines/katago'));for(const p of bundle.profiles)if(p.missing.length)throw Error(p.name+': '+p.missing.join(', '));

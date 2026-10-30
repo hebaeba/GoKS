@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../web');const server=http.createServer((req,res)=>{let p=path.join(root,decodeURIComponent(req.url.split('?')[0]));if(req.url==='/')p=path.join(root,'index.html');if(!p.startsWith(root)||!fs.existsSync(p)||!fs.statSync(p).isFile()){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':'text/html; charset=utf-8');res.end(fs.readFileSync(p));});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox','--disable-gpu','--use-gl=disabled','--disable-software-rasterizer','--single-process','--no-zygote']});
+
+ const p=await browser.newPage({viewport:{width:1600,height:940}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:'+server.address().port);
+ const sgf='(;GM[1]FF[4]SZ[9]KM[0];B[aa](;W[bb];B[cc];W[dd])(;W[ee](;B[ff];W[gg])(;B[hh];W[ii])))';
+ async function load(index){await p.evaluate(async({sgf,index})=>{await IndependentGo.loadAnalysisSnapshot({sgf,index,path:[0,1,1,0]});},{sgf,index});}
+ await load(0);await p.locator('#auto-play').click();await p.waitForFunction(()=>IndependentGo.getMove()===4&&document.querySelector('#auto-play').getAttribute('aria-pressed')==='false');assert.deepEqual(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().path),[0,0,0,0]);
+ await load(2);await p.locator('#auto-play').click();assert.deepEqual(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().path),[0,1,0,0]);await p.waitForFunction(()=>IndependentGo.getMove()===4&&document.querySelector('#auto-play').getAttribute('aria-pressed')==='false');
+ const end=await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot());await p.locator('#auto-play').click();assert.match(await p.locator('#message').textContent(),/この手順の末尾/);assert.deepEqual(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot()),end);assert.equal(await p.locator('#auto-play').getAttribute('aria-pressed'),'false');
+ await load(3);await p.locator('#auto-play').click();await p.waitForFunction(()=>IndependentGo.getMove()===4);assert.deepEqual(await p.evaluate(()=>IndependentGo.peekAnalysisSnapshot().path),[0,1,1,0]);
+ assert.match(await p.locator('#score').getAttribute('title'),/^双方の境界が確定した終局後に、元の碁盤で/);assert.deepEqual(errors,[]);console.log('update83: mainline, selected variation, nested variation, remembered future branches, end warning and score tooltip OK');
+ }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -560,7 +560,7 @@
   function recoveryData(){return {version:1,time:Date.now(),snapshot:snapshot(),editing,input:$('sgf').value,comment:$('comment-edit').value,info:[...allElements('[data-prop]')].map(input=>[input.dataset.prop,input.value])};}
   async function saveRecovery(manual){if(insertion||scoreSession)return;if(!manual&&!KifuRecordState.hasContent(root)&&!$('sgf').value.trim()&&!hasCommentDraft()&&!hasInfoDraft())return;try{const current=localStorage.getItem(recoveryKey);if(recoveryPending||current!==recoveryRaw){if(!manual||!(await KifuDialogs.confirm('端末内にある一時保存を、現在の棋譜で置き換えますか？',{accept:'上書き保存'}))){recoveryPending=true;recoveryStatus('前回または別の画面の一時保存があります。「復元」か「今すぐ保存」を選んでください。');return;}}const value=recoveryData(),raw=JSON.stringify(value);if(raw.length>4*1024*1024)throw Error('一時保存の上限を超えています');localStorage.setItem(recoveryKey,raw);recoveryRaw=raw;recoveryPending=false;recoveryStatus('端末内に一時保存しました（'+new Date(value.time).toLocaleTimeString('ja-JP')+'）');}catch(error){recoveryStatus('一時保存できません。棋譜をファイルに保存してください：'+error.message);}}
   function scheduleRecovery(){if(!recoveryReady||insertion||scoreSession)return;const signature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));if(signature===recoverySignature)return;recoverySignature=signature;clearTimeout(recoveryTimer);if($('auto-recovery').checked&&!recoveryPending&&(dirty||hasCommentDraft()||hasInfoDraft()||$('sgf').value.trim()))recoveryTimer=setTimeout(async ()=>(await saveRecovery(false)),700);}
-  function setupExtra(){const score=document.createElement('button');score.id='score';score.textContent='地合い計算';score.title='元の碁盤で死に石・セキを指定し、日本ルール・中国ルールの結果を表示します';$('turn').after(score);score.onclick=openScore;
+  function setupExtra(){const score=document.createElement('button');score.id='score';score.textContent='地合い計算';score.title='双方の境界が確定した終局後に、元の碁盤で死に石・セキを指定し、日本ルール・中国ルールの結果を表示します';$('turn').after(score);score.onclick=openScore;
     const recovery=document.createElement('details');recovery.id='recovery';recovery.innerHTML='<summary title="このブラウザー内に盤面を一時保存し、復元します">盤面の一時保存・復元</summary><label><input id="auto-recovery" type="checkbox" checked> 自動で一時保存</label><div><button id="recovery-save" title="現在の棋譜をこの端末に一時保存します">今すぐ保存</button><button id="recovery-restore" title="端末内の一時保存を確認して復元します">復元</button><button id="recovery-delete" title="端末内の一時保存だけを削除します">保存を削除</button></div><p>このブラウザーに１件保存します。サーバーへの送信や他の端末との共有は行いません。大切な棋譜は上部の「保存・印刷」→「棋譜を保存…」でファイルに保存してください。</p><p id="recovery-status" role="status"></p>';
     firstElement('.text-actions').after(recovery);try{recoveryRaw=localStorage.getItem(recoveryKey);recoveryPending=!!recoveryRaw;if(recoveryPending)recoveryStatus('前回の一時保存があります。「復元」で読み込めます。');}catch{recoveryStatus('このブラウザーでは一時保存を利用できません。');$('auto-recovery').checked=false;}
     $('recovery-save').onclick=async ()=>(await saveRecovery(true));$('auto-recovery').onchange=()=>{clearTimeout(recoveryTimer);if($('auto-recovery').checked){recoverySignature='';scheduleRecovery();}};
@@ -677,10 +677,10 @@
 
   function stopAuto(){clearTimeout(autoTimer);autoTimer=null;autoPlaying=false;syncAuto();}
   function syncAuto(){const button=$('auto-play');if(!button)return;
-    const blocked=!!(scoreSession||insertion||exportBusy||index>=route.length-1);
+    const blocked=!!(scoreSession||insertion||exportBusy);
     if(blocked&&autoPlaying){clearTimeout(autoTimer);autoTimer=null;autoPlaying=false;}
     button.disabled=blocked;button.innerHTML=autoPlaying?'停止 <span aria-hidden="true">Ⅱ</span>':'自動<span aria-hidden="true">►</span>';
-    button.setAttribute('aria-pressed',String(autoPlaying));button.title=autoPlaying?'自動再生を停止します':'現在の手数以降を自動で表示します';
+    button.setAttribute('aria-pressed',String(autoPlaying));button.title=autoPlaying?'自動再生を停止します':'表示中の手順を、別の変化へ移らず自動で表示します';
   }
   function scheduleAuto(){clearTimeout(autoTimer);if(!autoPlaying)return;autoTimer=setTimeout(async()=>{
     if(!autoPlaying||document.hidden)return stopAuto();
@@ -692,7 +692,13 @@
   function setupAuto(){
     const group=document.createElement('div');group.className='autoplay';group.innerHTML='<button type="button" id="auto-play" aria-pressed="false">自動<span aria-hidden="true">►</span></button><label><select id="auto-seconds" aria-label="自動再生の間隔" title="次の手を表示する間隔です">'+[1,2,3,4,5].map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select>秒</label>';
     const nav=firstElement('.navigation'),actions=firstElement('.actions');nav.append(group);
-    $('auto-play').onclick=()=>{if(autoPlaying)return stopAuto();if(!canLeaveSync())return;autoPlaying=true;syncAuto();scheduleAuto();};
+    $('auto-play').onclick=()=>{if(autoPlaying)return stopAuto();if(scoreSession||insertion||exportBusy||resolving||!canLeaveSync())return;
+      if(index>=route.length-1){report('この手順の末尾です。自動再生する続きがありません。',true);return;}
+      // Preserve the path already reached, but discard remembered future detours.
+      const prefix=route.slice(0,index+1);choices=new WeakMap();
+      for(let n=0;n<prefix.length-1;n++)choices.set(prefix[n],prefix[n].children.indexOf(prefix[n+1]));
+      rebuild();refresh();report('');
+      autoPlaying=true;syncAuto();scheduleAuto();};
     $('auto-seconds').onchange=()=>{if(autoPlaying)scheduleAuto();};
     for(const type of ['pointerdown','click','keydown','input','change'])document.addEventListener(type,event=>{if(autoPlaying&&!group.contains(event.target))stopAuto();},true);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAuto();});window.addEventListener('pagehide',stopAuto);

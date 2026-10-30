@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  await page.addInitScript(manifest=>{
   const legacy={id:'bundled-eigen',name:'KataGo Eigen（CPU）',exe:'C:/old/engines/eigen/katago.exe',model:'C:/old/engines/eigen/model.bin.gz',config:'C:/old/engines/eigen/default_gtp.cfg'};
   const external={id:'custom',name:'User GPU',exe:'C:/user/katago.exe',model:'C:/user/network.gz',config:'C:/user/user.cfg'};
-  localStorage.setItem('kifu-engine-profiles-v1',JSON.stringify([external,legacy]));localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(legacy));window.starts=[];window.events=[];let running=false;
+  localStorage.setItem('kifu-engine-profiles-v1',JSON.stringify([external,legacy,...['eigenavx2','opencl'].map(kind=>({id:'bundled-'+kind,name:'Retired '+kind,exe:'C:/app/engines/katago/katago-'+kind+'.exe',model:'C:/app/engines/katago/models/old.gz',config:'C:/app/engines/katago/configs/old.cfg'}))]));localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(legacy));window.starts=[];window.events=[];let running=false;
   window.__TAURI_INTERNALS__={invoke:async(cmd,args={})=>{if(cmd!=='engine_call')return{};const {action,payload}=args;
    if(action==='defaults'){const profiles=manifest.map(p=>({...p,exe:'C:/app/engines/katago/'+p.exe,model:'C:/app/engines/katago/'+p.model,config:'C:/app/engines/katago/'+p.config,workdir:'C:/app/engines/katago',missing:[]}));return {...profiles[0],profiles};}
    if(action==='start'){starts.push(payload);running=true;return{meta:{kind:'katago'}};}
@@ -17,7 +17,7 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
    return{};
   }};
  },manifest);
- await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.starts.length===1&&KifuAnalysisControl.profiles().length===4);
- const data=await page.evaluate(()=>({profiles:KifuAnalysisControl.profiles(),starts}));assert.deepEqual(data.profiles.map(p=>p.name),['User GPU','KataGo-Eigen','KataGo-EigenAVX2','KataGo-OpenCL']);assert.equal(await page.locator('#engine-active-name').textContent(),'KataGo-Eigen');assert.match(data.starts[0].model,/kata1-b10c128-/);assert.equal(data.starts[0].workdir,'C:/app/engines/katago');assert(!data.profiles.some(p=>p.exe.includes('/old/')));
- await page.locator('#tab-match').click();assert.equal(await page.locator('#match-white option').count(),6);assert.equal(await page.locator('#score').textContent(),'地合い計算');assert.deepEqual(errors,[]);console.log('bundle migration, three registrations, default startup and match options OK');
+ await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.starts.length===1&&KifuAnalysisControl.profiles().length===2);
+ const data=await page.evaluate(()=>({profiles:KifuAnalysisControl.profiles(),starts}));assert.deepEqual(data.profiles.map(p=>p.name),['User GPU','KataGo-Eigen']);assert.equal(await page.locator('#engine-active-name').textContent(),'KataGo-Eigen');assert.match(data.starts[0].model,/kata1-b10c128-/);assert.equal(data.starts[0].workdir,'C:/app/engines/katago');assert(!data.profiles.some(p=>p.exe.includes('/old/')));
+ await page.locator('#tab-match').click();assert.equal(await page.locator('#match-white option').count(),4);assert.equal(await page.locator('#score').textContent(),'地合い計算');assert.deepEqual(errors,[]);console.log('bundle migration, Eigen registration, default startup and match options OK');
  }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

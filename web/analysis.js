@@ -293,6 +293,9 @@ async function initBundledEngine(){
   const selected=$('engine-profile').value;
   bundledStartup=d;
   const bundles=d.profiles?.length?d.profiles:[{...d,id:'bundled-eigen'}];
+  // Remove only unchanged, retired built-in registrations. Keep external edits.
+  profiles=profiles.filter(p=>!(['bundled-eigenavx2','bundled-opencl'].includes(p.id)&&!p.userEdited&&/[/\\]engines[/\\]katago[/\\]katago-(?:eigenavx2|opencl)\.exe$/i.test(p.exe)));
+
   for(const item of bundles){
    const bundle={id:item.id,kind:'katago',name:item.name,exe:item.exe,model:item.model,config:item.config,workdir:item.workdir||''},idx=profiles.findIndex(p=>p.id===item.id);
    let hidden=false;try{hidden=localStorage.getItem('kifu-bundled-hidden-v80-'+item.id)==='1';}catch{}
