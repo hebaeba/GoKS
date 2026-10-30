@@ -5,19 +5,5 @@
     "exe": "katago-eigen.exe",
     "model": "models/kata1-b10c128-s1141046784-d204142634.txt.gz",
     "config": "configs/eigen-default_gtp.cfg"
-  },
-  {
-    "id": "bundled-eigenavx2",
-    "name": "KataGo-EigenAVX2",
-    "exe": "katago-eigenavx2.exe",
-    "model": "models/kata1-b15c192-s1672170752-d466197061.txt.gz",
-    "config": "configs/avx2-default_gtp.cfg"
-  },
-  {
-    "id": "bundled-opencl",
-    "name": "KataGo-OpenCL",
-    "exe": "katago-opencl.exe",
-    "model": "models/kata1-tf2-b10c384-s2941M-d5872M.bin.gz",
-    "config": "configs/opencl-default_gtp.cfg"
   }
 ]
