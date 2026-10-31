@@ -147,3 +147,8 @@ html body.simple-mode #simple-menu .controls .side-row .board-view-tools,html bo
 
 /* Autoplay feedback stays in view above the board, including simple mode. */
 html body.sidebar-layout #message.error.autoplay-warning{position:fixed;top:var(--warning-top);bottom:auto!important;left:var(--warning-left)!important;transform:none;max-width:var(--warning-width)!important;width:var(--warning-width);z-index:100;max-height:25vh;overflow:auto;margin:0}
+
+html body .engine-dock .analysis-primary .analysis-conditions{flex-wrap:nowrap;gap:6px;width:100%;flex-basis:100%;min-width:0}
+html body .engine-dock .analysis-conditions label{flex-wrap:nowrap;gap:3px;flex:0 0 auto}
+html body .engine-dock .analysis-conditions .analysis-visits{flex-wrap:nowrap;flex:0 0 auto;padding:0!important;gap:3px}
+#analysis-visits{display:inline-block;min-width:8ch;font-variant-numeric:tabular-nums;white-space:nowrap}

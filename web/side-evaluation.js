@@ -10,10 +10,10 @@
  window.addEventListener('kifu-evaluation-data',e=>{data=e.detail;render();});
  function mount(){const side=document.getElementById('board-sidebar');if(!side)return;
   panel=document.createElement('section');panel.id='side-evaluation';panel.setAttribute('aria-label','黒白の形勢と全局グラフ');
-  panel.innerHTML='<label class="graph-toggle">グラフ表示 <input id="graph-visible" type="checkbox" checked></label><div class="graph-content"><div class="side-win-labels"><span id="side-black-rate"></span><span id="side-white-rate"></span></div><div id="side-win-bar" aria-label="現在局面の黒白勝率"><span class="black-share"></span><span class="white-share"></span></div><div class="side-eval-legend"><span class="win-key">勝率（黒）</span><span class="score-key">目数差（黒）</span></div><svg id="side-eval-graph" role="img" aria-label="手数ごとの黒の勝率と目数差。クリックするとその局面へ移動"></svg></div>';
+  panel.innerHTML='<div class="graph-content"><div class="side-win-labels"><span id="side-black-rate"></span><span id="side-white-rate"></span></div><div id="side-win-bar" aria-label="現在局面の黒白勝率"><span class="black-share"></span><span class="white-share"></span></div></div><div class="side-eval-legend"><span id="graph-win-label" class="win-key">勝率（黒）</span><label class="graph-toggle">グラフ表示 <input id="graph-visible" type="checkbox" checked></label><span id="graph-score-label" class="score-key">目数差（黒）</span></div><svg id="side-eval-graph" role="img" aria-label="手数ごとの黒の勝率と目数差。クリックするとその局面へ移動"></svg>';
   side.append(panel);panel.querySelector('#graph-visible').onchange=render;render();new ResizeObserver(render).observe(panel);
  }
- function render(){if(!panel)return;panel.querySelector('.graph-content').hidden=!panel.querySelector('#graph-visible').checked;const svg=panel.querySelector('svg');svg.replaceChildren();svg.onclick=null;
+ function render(){if(!panel)return;panel.querySelector('.graph-content').hidden=!panel.querySelector('#graph-visible').checked;const svg=panel.querySelector('svg');svg.toggleAttribute('hidden',!panel.querySelector('#graph-visible').checked);svg.replaceChildren();svg.onclick=null;
   const width=Math.max(240,panel.clientWidth),height=300,left=44,right=width-33,top=10,bottom=270;
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
   const add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el;};
@@ -21,7 +21,7 @@
   const matched=keys(snapshot).flatMap((key,index)=>matchRecords.has(key)?[{...matchRecords.get(key),index}]:[]);
   const same=data?.snapshot&&KifuAnalysis.identity(data.snapshot)===KifuAnalysis.identity(snapshot);
   const source=window.KifuMatch?.locked?matched:same&&data.results.length?data.results:matched;
-  const dual=matchKind==='ai'&&source===matched;panel.querySelector('.side-eval-legend').innerHTML=dual?'<span class="black-key">黒勝率</span><span class="white-key">白勝率</span><span class="score-key" title="黒視点：実線は黒番AI、破線は白番AIの評価">目数差（黒）</span>':'<span class="win-key">勝率（黒）</span><span class="score-key">目数差（黒）</span>';svg.setAttribute('aria-label',dual?'黒番AIの黒勝率と白番AIの白勝率、黒視点の目数差':'黒視点の勝率と目数差');
+  const dual=matchKind==='ai'&&source===matched;panel.querySelector('#graph-win-label').textContent=dual?'勝率（黒・白）':'勝率（黒）';panel.querySelector('#graph-win-label').title=dual?'黒線：黒番AIの黒勝率／白線：白番AIの白勝率':'';panel.querySelector('#graph-score-label').textContent=dual?'目数差（各側）':source===matched&&matched.some(p=>p.color==='W')?'目数差（白）':'目数差（黒）';panel.querySelector('#graph-score-label').title=dual?'実線：黒番AIの黒視点／破線：白番AIの白視点':'';svg.setAttribute('aria-label',dual?'各AIから見た自分の勝率と目数差':'黒視点の勝率と目数差');
   const records=source.filter(p=>Number.isFinite(p.result?.rootInfo?.winrate)&&Number.isFinite(p.result?.rootInfo?.scoreLead)).sort((a,b)=>a.index-b.index);
   const go=async index=>{if(window.KifuMatch?.locked)return;try{await IndependentGo.analysisAt(index,snapshot.sgf);}catch{}};
   const current=records.find(p=>p.index===snapshot.index),bar=panel.querySelector('#side-win-bar');
@@ -46,13 +46,13 @@
    {metric:'winrate',color:'#000',side:'B',y:yw},
    {metric:'winrate',color:'#fff',side:'W',y:v=>yw(1-v)},
    {metric:'scoreLead',color:magenta,side:'B',y:ys},
-   {metric:'scoreLead',color:magenta,side:'W',y:ys,dash:'5 4'}
-  ]:[{metric:'winrate',color:green,y:yw},{metric:'scoreLead',color:magenta,y:ys}];
+   {metric:'scoreLead',color:magenta,side:'W',y:v=>ys(-v),dash:'5 4'}
+  ]:[{metric:'winrate',color:green,y:yw},{metric:'scoreLead',color:magenta,y:(v,p)=>ys(source===matched&&p.color==='W'?-v:v)}];
   for(const {metric,color,side,y,dash} of series){
    const points=side?records.filter(p=>p.color===side):records;
    const adjacent=(a,b)=>a&&b&&b.index-a.index===(side||source===matched&&matchKind==='human'?2:1)&&b.move-a.move===(side||source===matched&&matchKind==='human'?2:1);
    let d='';for(let i=0;i<points.length;i++){const item=points[i],connected=adjacent(points[i-1],item),following=adjacent(item,points[i+1]);
-    d+=(connected?' L':' M')+x(item.move)+' '+y(item.result.rootInfo[metric]);
+    d+=(connected?' L':' M')+x(item.move)+' '+y(item.result.rootInfo[metric],item);
     if(!connected&&!following)d+=' m -3 0 l 6 0';
    }
    add('path',{'data-metric':metric,'data-side':side||'',d,fill:'none',stroke:color,'stroke-width':metric==='winrate'?2.5:1.8,'stroke-dasharray':dash||'none','stroke-linejoin':'round'});

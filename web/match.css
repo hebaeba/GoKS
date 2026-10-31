@@ -84,3 +84,13 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
 #pane-match .match-resign-rule{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#pane-match .match-resign-early{flex-basis:100%}#match-resign-min-moves{--number-ch:4}
 
 #pane-match .match-resign-rule[hidden]{display:none!important}
+#match-settings{margin:0 0 6px;padding:0;border:0}
+#match-settings>summary{margin-bottom:4px}
+#match-options{margin:0;padding:6px;min-width:0}
+#match-ranking{margin:6px 0;padding-top:6px}
+.match-ranking-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.match-ranking-columns table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;font-variant-numeric:tabular-nums}
+.match-ranking-columns caption{font-size:14px;font-weight:bold;text-align:left}
+.match-ranking-columns th,.match-ranking-columns td{font-size:12px;padding:3px 1px;text-align:right;border-bottom:1px solid #d7dfd9;white-space:nowrap}
+.match-ranking-columns th:first-child,.match-ranking-columns td:first-child{width:24%;text-align:center}
+.match-ranking-sort{display:flex;justify-content:flex-end;margin:4px 0}
