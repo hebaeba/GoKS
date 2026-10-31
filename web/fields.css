@@ -46,3 +46,19 @@ html body :is(#field-policy #field-policy #field-policy,#match-black,#match-whit
 html body :is(#field-policy #field-policy #field-policy,#pane-match select,#analysis-rules){align-self:center!important;box-sizing:content-box!important;height:18px!important;min-height:18px!important;max-height:18px!important;line-height:18px!important;padding-top:3px!important;padding-bottom:3px!important;border-top-width:1px!important;border-bottom-width:1px!important}
 
 /* PV selector uses fields.js selected-text sizing and shared 3px padding. */
+
+/* Update87: keep analysis controls local to their tab and compact paired rankings. */
+.engine-dock .analysis-primary[hidden]{display:none!important}
+#board-rule{flex:0 0 auto;white-space:nowrap;font-size:14px;font-weight:normal}
+html body :is(#field-policy #field-policy #field-policy,#komi-input)#komi-input{box-sizing:content-box!important;width:calc(var(--komi-number-ch,3.5) * 1ch + 16px)!important;min-width:0!important;max-width:none!important;flex:0 0 auto!important;padding:3px!important}
+#analysis-worst .compact-rank-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#analysis-worst .worst-side{min-width:0}
+#analysis-worst h4{font-size:14px}
+#analysis-worst table{table-layout:fixed;width:100%;font-variant-numeric:tabular-nums}
+#analysis-worst th,#analysis-worst td{font-size:12px;padding:3px 1px;white-space:nowrap;text-align:right}
+#analysis-worst th:first-child,#analysis-worst td:first-child{width:24%;text-align:center}
+#analysis-worst td button{font-size:12px}
+
+#komi #board-rule{margin-right:6px;background:none}
+body.simple-mode #board-rule{display:none}
+html body.sidebar-layout:not(.simple-mode) .board-heading{grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto}

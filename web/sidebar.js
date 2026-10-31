@@ -23,11 +23,18 @@
  for(const selector of ['#black-name','#black-captures','.stones','#white-captures','#white-name','#komi','#move'])info.append(q(selector));slide.append($('slider'));block.append(info,slide);
  q('.players').hidden=true;q('.statusline').hidden=true;
  const head=q('.board-heading'),notes=document.createElement('button');notes.id='board-notes';notes.textContent='コメント・対局情報';notes.title='この局面のコメントと対局情報を表示します';notes.hidden=true;head.prepend(notes);head.append($('komi'));
+ const rule=document.createElement('span');rule.id='board-rule';rule.title='現在のルール';$('komi').prepend(rule);
+ let selectedRule=null,previousRule=null;
+ function syncRule(){const ru=GoSgf.parse(IndependentGo.peekAnalysisSnapshot().sgf).root.props.RU?.[0]||'';if(previousRule!==ru){selectedRule=null;previousRule=ru;}const mapped=KifuAnalysis.effectiveRules(ru);rule.textContent=selectedRule||(ru&&!mapped?ru:$('analysis-rules').selectedOptions[0]?.textContent||'日本ルール');}
+ $('analysis-rules').addEventListener('change',()=>{selectedRule=$('analysis-rules').selectedOptions[0]?.textContent;syncRule();});
+ window.addEventListener('kifu-record-replaced',()=>{selectedRule=null;const ru=GoSgf.parse(IndependentGo.peekAnalysisSnapshot().sgf).root.props.RU?.[0]||'';const mapped=KifuAnalysis.effectiveRules(ru);if(mapped)$('analysis-rules').value=mapped;syncRule();});
+ window.addEventListener('kifu-match-start',()=>{selectedRule=null;syncRule();});
+
  const dialog=document.createElement('dialog');dialog.id='board-notes-dialog';dialog.innerHTML='<div class="notes-heading"><strong>コメント・対局情報</strong><button type="button">閉じる</button></div><div class="notes-content"></div>';body.append(dialog);dialog.querySelector('button').onclick=()=>dialog.close();
  function fillNotes(){const dest=dialog.querySelector('.notes-content');dest.replaceChildren();const dl=$('metadata').cloneNode(true);dl.removeAttribute('id');if(dl.children.length)dest.append(dl);for(const el of $('comment').children)if(!el.classList.contains('root-info'))dest.append(el.cloneNode(true));}
  function openNotes(){fillNotes();if(!dialog.open)dialog.showModal();}
  notes.onclick=openNotes;
- function sync(){const hasInfo=$('metadata').children.length>0,hasComment=[...$('comment').children].some(e=>!e.classList.contains('root-info')&&e.textContent.trim());notes.hidden=!(hasInfo||hasComment);notes.textContent=hasInfo&&hasComment?'コメント・対局情報':hasInfo?'対局情報':'コメント';if(dialog.open)fillNotes();q('.side-branches').hidden=$('branches').hidden;
+ function sync(){syncRule();const hasInfo=$('metadata').children.length>0,hasComment=[...$('comment').children].some(e=>!e.classList.contains('root-info')&&e.textContent.trim());notes.hidden=!(hasInfo||hasComment);notes.textContent=hasInfo&&hasComment?'コメント・対局情報':hasInfo?'対局情報':'コメント';if(dialog.open)fillNotes();q('.side-branches').hidden=$('branches').hidden;
   for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');el.textContent=num;el.title=(id==='black-captures'?'黒':'白')+'のアゲハマ '+num;}
  }
  const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.textContent='右側を隠す';toggle.title='右側を隠して碁盤を広く表示します';sidebar.firstElementChild.append(toggle);

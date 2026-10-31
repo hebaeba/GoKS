@@ -43,10 +43,11 @@ function stopClock(){if(clock){players[clock.color].remaining=Math.max(0,clock.d
 function clockTick(){if(!clock)return;const left=Math.max(0,clock.deadline-performance.now());$('match-clock').textContent=(clock.color==='B'?'黒':'白')+' 残り '+(Math.ceil(left/100)/10).toFixed(1)+'秒';if(left<=0){const color=clock.color;stopClock();finish((color==='B'?'W':'B')+'+T',(color==='B'?'黒':'白')+'の時間切れです。');}}
 function startClock(color){if(!players[color].seconds)return;clock={color,deadline:performance.now()+players[color].remaining};$('match-clock').hidden=false;clockTimer=setInterval(clockTick,100);clockTick();}
 window.addEventListener('visibilitychange',clockTick);
+function errorText(error){return error instanceof Error?error.message:typeof error==='string'?error:JSON.stringify(error)||'原因不明の通信エラー';}
 class Worker{
- constructor(session){this.session=session;this.alive=true;this.polling=false;this.bridge=new KifuGTP.Bridge((action,payload)=>KifuAnalysisControl.rawCall(action,{...payload,session}));this.timer=setInterval(()=>this.poll(),50);}
+ constructor(session){this.session=session;this.alive=true;this.polling=false;this.bridge=new KifuGTP.Bridge((action,payload)=>KifuAnalysisControl.rawCall(action,{...payload,session}));this.timer=null;}
  async poll(){if(this.polling||!this.alive)return;this.polling=true;try{const r=await this.bridge.call('poll');for(const line of r.logs||[])log(this.session+': '+line);for(const e of r.events||[]){if(e.type==='exit'){log(e.message);this.bridge.reset();throw Error(e.message);}if(e.type==='log')log(e.message);}}catch(e){if(this.alive){this.error=e;this.bridge.reset();}}finally{this.polling=false;}}
- async start(config,settings){await this.bridge.call('start',{...config,matchMode:true,matchSettings:settings});const [name,commands]=await this.command(['name','list_commands']);if(!/katago/i.test(name))throw Error('KataGo専用です。選択したエンジン：'+name);for(const c of ['kata-genmove_analyze','kata-set-param','kata-set-rules','set_position','set_free_handicap'])if(!commands.split(/\s+/).includes(c))throw Error('必要なGTP命令がありません：'+c);log(config.name+' 起動完了（相手の手番中の思考なし）');log('対局条件：'+JSON.stringify(settings));}
+ async start(config,settings){log(config.name+' 起動要求：'+config.exe);await this.bridge.call('start',{...config,matchMode:true,matchSettings:settings});if(!this.alive)return;this.timer=setInterval(()=>this.poll(),50);const [name,commands]=await this.command(['name','list_commands']);if(!/katago/i.test(name))throw Error('KataGo専用です。選択したエンジン：'+name);for(const c of ['kata-genmove_analyze','kata-set-param','kata-set-rules','set_position','set_free_handicap'])if(!commands.split(/\s+/).includes(c))throw Error('必要なGTP命令がありません：'+c);log(config.name+' 起動完了（相手の手番中の思考なし）');log('対局条件：'+JSON.stringify(settings));}
  async sync(q){const base=JSON.stringify([q.boardXSize,q.rules,q.komi,q.initialStones,q.initialHandicap]);
   const old=this.position;
   if(!old||old.base!==base||old.moves.length>q.moves.length||old.moves.some((m,i)=>JSON.stringify(m)!==JSON.stringify(q.moves[i]))){await this.command(KifuGTP.positionCommands(q));}
@@ -59,7 +60,7 @@ class Worker{
 }
 async function release(){const old=workers;workers=[];await Promise.allSettled(old.map(w=>w.stop()));}
 async function halt(next,message){stopClock();epoch++;phase='stopping';controls();await release();phase=next;busy=false;status(message);controls();}
-async function fail(e,token){if(token!==epoch)return;log(e.message);await halt('paused','対局を中断しました：'+e.message);}
+async function fail(e,token){if(token!==epoch)return;const message=errorText(e);log(message);choosingStart=false;await halt('paused','対局を中断しました：'+message);$('match-log').closest('details').open=true;}
 async function boot(resume){if(locked()||choosingStart)return;let token;choosingStart=true;
  try{
   if(window.KifuRemote)throw Error('対局はWindows版またはPCのローカル起動で利用してください。');let s=snapshot();if(resume){if(!expected||key(s)!==key(expected))throw Error('中断後に局面が変わりました。「対局開始」で始め直してください。');}
@@ -70,7 +71,7 @@ async function boot(resume){if(locked()||choosingStart)return;let token;choosing
   // Separate engines even for identical profiles: keep each AI's own evaluation history.
   for(const color of ['B','W']){const p=players[color];if(p.human)continue;const w=new Worker(color==='B'?'black':'white');workers.push(w);p.worker=w;await w.start(p.config,M.engineSettings(resignPolicy,p.seconds,p.visits,s.size));if(token!==epoch)return;}
   phase='playing';busy=false;choosingStart=false;$('match-settings').open=false;window.dispatchEvent(new Event('kifu-match-ready'));controls();await advance(token);
- }catch(e){if(token===undefined){status(e.message,true);return;}await fail(e,token);}finally{if(token===undefined||token===epoch)choosingStart=false;}
+ }catch(e){if(token===undefined){const message=errorText(e);log(message);status(message,true);return;}await fail(e,token);}finally{choosingStart=false;}
 }
 async function advance(token){if(token!==epoch||phase!=='playing')return;
  try{const s=snapshot();if(key(s)!==key(expected))throw Error('対局中に局面が変わりました。');if(added>=2000){await halt('paused','2000手に達したため中断しました。');return;}const color=turn(),p=players[color];if(p.human){busy=false;status((color==='B'?'● 黒番':'○ 白番')+'：あなたの手番です。盤上をクリックしてください。');controls();startClock(color);return;}

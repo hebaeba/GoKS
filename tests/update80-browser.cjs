@@ -9,6 +9,7 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  await p.evaluate(()=>KifuMatch.humanMove(0));assert.equal(await p.evaluate(()=>IndependentGo.getMove()),2);assert.match(await p.locator('#match-status').textContent(),/石のある/);
  console.log('takeback',await p.locator('#match-status').textContent());await p.locator('#match-takeback').click();await p.waitForFunction(()=>KifuMatch.phase==='playing'&&IndependentGo.getMove()===1);await p.evaluate(()=>KifuMatch.humanMove(2));
  assert.match(await p.evaluate(()=>IndependentGo.getSgf()),/B\[aa\];W\[ca\]/);assert.doesNotMatch(await p.evaluate(()=>IndependentGo.getSgf()),/W\[ba\]/);
+ await p.locator('#match-settings>summary').click();
  for(const [width,height]of [[1280,940],[1280,740],[1600,940]]){await p.setViewportSize({width,height});assert.equal(await p.locator('#match-takeback').evaluate(e=>e.getBoundingClientRect().height),26);assert.equal(await p.locator('#match-rules').evaluate(e=>e.getBoundingClientRect().height),26);}
  await p.locator('#match-pass').click();await p.locator('#match-pass').click();await p.waitForFunction(()=>KifuMatch.phase==='finished');assert.equal(await p.locator('#match-score').textContent(),'地合い計算');assert.match(await p.locator('#match-sgf').inputValue(),/PB\[黒の人\]/);
  // An actual GTP Bridge with a mock transport exercises stop/reject and stale replies during takeback.
