@@ -321,7 +321,7 @@
       if(window.KifuMatch?.locked||scoreSession||insertion)return false;
       clearDrafts();
       clearTimeout(recoveryTimer);root=game.root;size=game.size;choices=new WeakMap();index=0;dirty=false;editing=document.body.classList.contains('simple-mode')&&!($('board-lock')?.checked);focusPoint=0;originalName=name.replace(/\.(?:sgf|ngf|ugf|ugi|gib|mgt)$/i,'')+'.sgf';
-      $('sgf').value='';$('size').value=String(size);resetHistory();rebuild();index=route.length-1;window.dispatchEvent(new Event('kifu-record-replaced'));refresh();$('load-menu').open=false;$('load-options').hidden=true;dragStatus('');report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
+      $('sgf').value='';$('size').value=String(size);resetHistory();rebuild();index=route.length-1;window.dispatchEvent(new CustomEvent('kifu-record-replaced',{detail:{source:'load'}}));refresh();$('load-menu').open=false;$('load-options').hidden=true;dragStatus('');report('SGFを読み込みました。閲覧モードで最終手の局面を表示しています。');return true;
     }catch(error){report('読込みできませんでした：'+error.message,true);return false;}finally{recordLoadPending=false;}
   }
   function serialized(){const old=root.props.CA,oldKomi=root.props.KM;root.props.CA=['UTF-8'];root.props.KM=[String(currentKomi())];try{return S.write(root);}finally{if(old)root.props.CA=old;else delete root.props.CA;if(oldKomi)root.props.KM=oldKomi;else delete root.props.KM;}}

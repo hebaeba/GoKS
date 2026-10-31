@@ -9,8 +9,10 @@ function parse(line,size){
  const scoreLead=number('scoreLead'),winrate=number('winrate');if(!Number.isFinite(scoreLead)||!Number.isFinite(winrate)||winrate<0||winrate>1)return null;
  return {ownership,scoreLead,winrate};
 }
-function canScore(snapshot,S,phase='idle'){
- if(['starting','playing','paused','stopping'].includes(phase)||snapshot.index!==snapshot.path.length)return false;
+function canScore(snapshot,S,phase='idle',loadedRecord=false){
+ if(['starting','playing','paused','stopping'].includes(phase))return false;
+ if(loadedRecord)return true;
+ if(snapshot.index!==snapshot.path.length)return false;
  let node=S.parse(snapshot.sgf).root;const result=node.props.RE?.[0]||'';
  if(/\+(?:R|Resign|T|Time|F|Forfeit)$/i.test(result))return false;
  const route=[node];for(const i of snapshot.path){node=node.children[i];if(!node)return false;route.push(node);}

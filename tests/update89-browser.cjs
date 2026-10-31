@@ -5,14 +5,14 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox','--disable-gpu','--use-gl=disabled','--disable-software-rasterizer','--single-process','--no-zygote']});
  console.log('browser launched');const p=await browser.newPage({viewport:{width:1600,height:940}}),errors=[];p.setDefaultTimeout(8000);p.on('pageerror',e=>{errors.push(e.message);console.log('PAGEERROR',e.message)});console.log('page created');await p.goto('http://127.0.0.1:'+server.address().port);console.log('loaded');if(fs.existsSync('/workspace/scratch/b72cb62d57dc/work/NotoSansCJKjp-Regular.otf')){await p.addStyleTag({content:'@font-face{font-family:TestJP;src:url(data:font/otf;base64,'+fs.readFileSync('/workspace/scratch/b72cb62d57dc/work/NotoSansCJKjp-Regular.otf').toString('base64')+')}*{font-family:TestJP,sans-serif!important}'});await p.evaluate(()=>document.fonts.ready);}await p.locator('#tab-match').click();
  await p.locator('#match-white').selectOption('human');await p.locator('#match-black-name').fill('黒の人');await p.locator('#match-white-name').fill('白の人');
- console.log('HH start');await p.locator('#match-start').click();await p.waitForFunction(()=>KifuMatch.phase==='playing');assert.equal(await p.locator('#match-takeback').isEnabled(),false);
+ assert.equal(await p.locator('#score').isEnabled(),false);console.log('HH start');await p.locator('#match-start').click();await p.waitForFunction(()=>KifuMatch.phase==='playing');assert.equal(await p.locator('#match-takeback').isEnabled(),false);assert.equal(await p.locator('#score').isEnabled(),false);
  await p.evaluate(()=>KifuMatch.humanMove(0));await p.evaluate(()=>KifuMatch.humanMove(1));assert.equal(await p.evaluate(()=>IndependentGo.getMove()),2);
  await p.evaluate(()=>KifuMatch.humanMove(0));assert.equal(await p.evaluate(()=>IndependentGo.getMove()),2);assert.match(await p.locator('#match-status').textContent(),/石のある/);
  console.log('takeback',await p.locator('#match-status').textContent());await p.locator('#match-takeback').click();await p.waitForFunction(()=>KifuMatch.phase==='playing'&&IndependentGo.getMove()===1);await p.evaluate(()=>KifuMatch.humanMove(2));
  assert.match(await p.evaluate(()=>IndependentGo.getSgf()),/B\[aa\];W\[ca\]/);assert.doesNotMatch(await p.evaluate(()=>IndependentGo.getSgf()),/W\[ba\]/);
  await p.locator('#match-settings>summary').click();
  for(const [width,height]of [[1280,940],[1280,740],[1600,940]]){await p.setViewportSize({width,height});assert.equal(await p.locator('#match-takeback').evaluate(e=>e.getBoundingClientRect().height),26);assert.equal(await p.locator('#match-rules').evaluate(e=>e.getBoundingClientRect().height),26);}
- await p.locator('#match-pass').click();await p.locator('#match-pass').click();await p.waitForFunction(()=>KifuMatch.phase==='finished');assert.equal(await p.locator('#match-score').textContent(),'地合い計算');assert.match(await p.locator('#match-sgf').inputValue(),/PB\[黒の人\]/);
+ await p.locator('#match-pass').click();await p.locator('#match-pass').click();await p.waitForFunction(()=>KifuMatch.phase==='finished');assert.equal(await p.locator('#score').isEnabled(),true);assert.equal(await p.locator('#match-score').isEnabled(),true);assert.equal(await p.locator('#match-score').textContent(),'地合い計算');assert.match(await p.locator('#match-sgf').inputValue(),/PB\[黒の人\]/);
  assert.deepEqual(await qlessNativeTest(p),[true,'設定ファイルがありません']);
  // An actual GTP Bridge with a mock transport exercises stop/reject and stale replies during takeback.
  await p.evaluate(async()=>{KifuDialogs.confirm=async()=>true;IndependentGo.matchSaved(IndependentGo.peekAnalysisSnapshot());await IndependentGo.loadSgf('(;SZ[19]KM[6.5])','test.sgf',0);window.sessions={};window.trace=[];window.hold=false;window.releaseLate=null;window.engineStarts=0;
@@ -72,9 +72,19 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  }
  for(const id of ['worst-metric','analysis-seconds']){const widths=await p.locator('#'+id).evaluate(e=>{const c=document.createElement('canvas').getContext('2d'),s=getComputedStyle(e);c.font=s.font;return [e.getBoundingClientRect().width,c.measureText(e.selectedOptions[0].textContent).width];});assert.ok(widths[0]<widths[1]+32,JSON.stringify(widths));}
  const stones=await p.locator('#analysis-worst .ranking-stone').evaluateAll(es=>es.map(e=>[e.offsetWidth,e.offsetHeight]));assert.deepEqual(stones,[[12,12],[12,12]]);
- assert.equal(await p.locator('#score').isEnabled(),false);assert.equal(await p.locator('#estimate-open').isEnabled(),false);
+ assert.equal(await p.locator('#score').isEnabled(),true);assert.equal(await p.locator('#estimate-open').isEnabled(),false);
  await p.screenshot({path:'/tmp/update89-layout.png'});
 
+
+ const loaded=await browser.newPage();await loaded.goto('http://127.0.0.1:'+server.address().port);
+ assert.equal(await loaded.locator('#score').isEnabled(),false);
+ await loaded.evaluate(async()=>{KifuDialogs.confirm=async()=>true;await IndependentGo.loadSgf('(;SZ[19];B[aa];W[bb])','finished.sgf');});
+ assert.equal(await loaded.locator('#score').isEnabled(),true);
+ await loaded.evaluate(()=>document.getElementById('new').click());
+ await loaded.waitForFunction(()=>!KifuEstimate.canScore());
+ await loaded.evaluate(()=>IndependentGo.loadSgf('(;SZ[19]RE[W+R];B[aa])','resigned.sgf'));
+ assert.equal(await loaded.locator('#score').isEnabled(),true);
+ 
  const child=await browser.newPage({viewport:{width:760,height:840}});child.on('pageerror',e=>errors.push(e.message));
  await child.addInitScript(()=>{window.auxCalls=[];window.__TAURI_INTERNALS__={invoke:async(command,payload)=>{auxCalls.push({command,payload});return{};}};});
  await child.goto('http://127.0.0.1:'+server.address().port+'/auxiliary.html?kind=estimate&id=test89');await child.waitForSelector('#estimate-board');

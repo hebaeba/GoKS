@@ -11,3 +11,16 @@ test('score gate rejects unfinished, resignation, timeout and active matches',()
  for(const result of ['B+R','W+Resign','B+T','W+F'])assert(!E.canScore(snap('(;SZ[19]RE['+result+'];B[];W[])',2,[0,0]),S));
  assert(E.canScore(snap('(;SZ[19]RE[W+6.5];B[aa])',1,[0]),S));assert(!E.canScore(snap('(;SZ[19]RE[W+6.5];B[aa])',0,[0]),S));
 });
+
+test('loaded records allow manual scoring without end markers but never during a match',()=>{
+ for(const sgf of ['(;SZ[19];B[aa];W[bb])','(;SZ[19]RE[W+R];B[aa];W[bb])']){
+  for(const index of [0,2]){
+   const record=snap(sgf,index,[0,0]);
+   assert(E.canScore(record,S,'idle',true));
+   for(const phase of ['starting','playing','paused','stopping'])assert(!E.canScore(record,S,phase,true));
+  }
+ }
+ assert(E.canScore(snap('(;SZ[19];B[];W[])',2,[0,0]),S,'finished',false));
+ assert(!E.canScore(snap('(;SZ[19]RE[W+R];B[aa])',1,[0]),S,'finished',false));
+ assert(!E.canScore(snap('(;SZ[19])',0,[]),S,'idle',false));
+});
