@@ -27,8 +27,8 @@ const progress=document.createElement('section');progress.id='batch-progress';pr
 const progressLabel=document.createElement('p');progressLabel.id='batch-progress-label';progressLabel.setAttribute('role','status');$('analysis-progress').setAttribute('aria-labelledby','batch-progress-label');progress.append(progressLabel,$('analysis-progress'));
 $('analysis-batch').after(progress);progress.after($('analysis-status'));
 const rank=document.createElement('section');rank.id='analysis-worst';rank.hidden=true;
-rank.innerHTML='<h3>目数／勝率低下ランキング</h3><p id="worst-note" class="analysis-note"></p>';
-for(const [color,name]of [['B','● 黒'],['W','○ 白']]){const section=document.createElement('section');section.className='worst-side';section.innerHTML='<h4>'+name+'</h4><div class="candidate-scroll"><table class="candidate-table"><thead><tr><th>順位</th><th>手数</th><th>目数</th><th>勝率</th></tr></thead><tbody id="worst-rows-'+color+'"></tbody></table></div>';rank.append(section);}
+rank.innerHTML='<h3>目数／勝率ランキング</h3><p id="worst-note" class="analysis-note"></p>';
+for(const [color,name]of [['B','● 黒'],['W','○ 白']]){const section=document.createElement('section');section.className='worst-side';section.innerHTML='<h4><span class="ranking-stone '+(color==='B'?'black':'white')+'" aria-hidden="true"></span> '+(color==='B'?'黒':'白')+'</h4><div class="candidate-scroll"><table class="candidate-table"><thead><tr><th>順位</th><th>手数</th><th>目数</th><th>勝率</th></tr></thead><tbody id="worst-rows-'+color+'"></tbody></table></div>';rank.append(section);}
 $('analysis-status').after(rank);
 
 const rotation=document.createElement('div');rotation.className='board-view-tools';rotation.innerHTML='<span>盤面の向き</span><button id="rotate-left" title="左へ90度回転します。棋譜は表示中の向きで保存します">↶ 左回転</button><button id="rotate-right" title="右へ90度回転します。棋譜は表示中の向きで保存します">↷ 右回転</button><button id="rotate-reset" title="元の表示方向に戻します">元に戻す</button><output id="rotation-state">0°</output>';

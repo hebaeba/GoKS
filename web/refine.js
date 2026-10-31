@@ -27,7 +27,7 @@ for(const p of document.querySelectorAll('#tools p')){if(p.querySelector('input,
 const toolHeading=q('#pane-tools > h2'),close=q('.close-tools');if(toolHeading&&close){const row=document.createElement('div');row.className='tools-heading';toolHeading.before(row);row.append(toolHeading,close);}
 // Match a select to the widest option; no fixed empty space or stretching.
 function sizeSelect(el){const span=document.createElement('span'),style=getComputedStyle(el);span.style.cssText='position:fixed;visibility:hidden;white-space:pre;font:'+style.font;document.body.append(span);let width=0;for(const o of el.options){span.textContent=o.textContent;width=Math.max(width,span.getBoundingClientRect().width);}span.remove();el.style.setProperty('width',Math.ceil(width+36)+'px','important');el.style.setProperty('min-width','0','important');el.style.setProperty('max-width','100%','important');}
-for(const id of ['analysis-seconds','worst-metric'])sizeSelect($(id));
+// fields.js owns select width; do not set inline !important widths.
 
 // Width reset belongs to the draggable separator, not the editing controls.
 $('tab-settings').textContent='エンジン設定';

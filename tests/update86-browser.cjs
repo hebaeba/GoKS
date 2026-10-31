@@ -11,7 +11,7 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  await p.evaluate(()=>{window.dispatchEvent(new CustomEvent('kifu-match-start',{detail:{blackHuman:false,whiteHuman:false}}));window.dispatchEvent(new Event('kifu-match-ready'));const snapshot=IndependentGo.peekAnalysisSnapshot();for(let index=0;index<6;index++)window.dispatchEvent(new CustomEvent('kifu-match-evaluation',{detail:{snapshot,index,move:index,color:index%2?'W':'B',result:{rootInfo:{winrate:index%2?.2:.6,scoreLead:index%2?-3:2}}}}));});
  assert.match(await p.locator('path[data-metric=scoreLead][data-side=W]').getAttribute('d'),/ 101(?: |$)/);
  await p.locator('#tab-match').click();assert(await p.locator('#match-ranking').getAttribute('open')!==null);assert.equal(await p.locator('.match-ranking-columns tbody').first().locator('tr').count(),3);
- assert.deepEqual(await p.locator('.match-ranking-columns tbody').first().locator('tr').first().locator('td').allTextContents(),['1','5.0','40.0']);
+ assert.deepEqual(await p.locator('.match-ranking-columns tbody').first().locator('tr').first().locator('td').allTextContents(),['1.','1','5.0','40.0']);
  for(const viewport of [{width:1280,height:940},{width:1280,height:740},{width:1600,height:940},{width:1752,height:940}]){
  await p.setViewportSize(viewport);await p.waitForTimeout(150);await p.locator('.panel-width-handle[data-side=left]').dblclick();await p.waitForTimeout(150);
  const box=await p.locator('#board-sidebar').boundingBox();assert(box.x<25,JSON.stringify({viewport,box}));

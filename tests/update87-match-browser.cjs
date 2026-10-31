@@ -63,7 +63,7 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  const archive=await p.evaluate(()=>({format:'kifu-katago-analysis',version:1,perspective:'BLACK',snapshot:IndependentGo.peekAnalysisSnapshot(),rules:'japanese',analysisRun:{scope:'all',seconds:0.1,started:Date.now()},results:[.6,.4,.7,.3,.8].map((winrate,index)=>({index,result:{rootInfo:{winrate,scoreLead:winrate*20-10,visits:500},moveInfos:[]}}))}));
  await p.locator('#analysis-file').setInputFiles({name:'ranking.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(archive))});
  await p.waitForFunction(()=>document.getElementById('worst-rows-B').children.length===2);await p.locator('#batch-disclosure').evaluate(e=>e.open=true);
- assert.deepEqual(await p.locator('#worst-rows-B tr').first().locator('td').allTextContents(),['3','8.0','40.0']);
+ assert.deepEqual(await p.locator('#worst-rows-B tr').first().locator('td').allTextContents(),['1.','3','8.0','40.0']);
  for(const [width,height]of [[1280,940],[1280,740],[1600,940]]){await p.setViewportSize({width,height});
   const sides=await p.locator('#analysis-worst .worst-side').evaluateAll(es=>es.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,width:e.getBoundingClientRect().width})));assert.equal(sides[0].y,sides[1].y);assert.ok(sides[1].x>sides[0].x+sides[0].width);
   const pair=await p.evaluate(()=>{const a=document.getElementById('board-rule').getBoundingClientRect(),b=document.getElementById('komi-input').getBoundingClientRect();return[a.x+a.width,b.x,a.y,b.y];});assert.ok(pair[0]<pair[1]);assert.ok(Math.abs(pair[2]-pair[3])<10);

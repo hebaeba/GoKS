@@ -4,6 +4,9 @@ const invoke=()=>window.__TAURI_INTERNALS__?.invoke;
 const params=new URLSearchParams(location.search),kind=params.get('kind'),id=params.get('id');
 const errorText=e=>e?.message||String(e||'補助窓の操作に失敗しました');
 function native(action,kind,payload={}){if(!invoke())return Promise.reject(Error('この機能はWindowsアプリで利用できます。'));return invoke()('auxiliary',{action,kind,payload});}
+if(kind==='estimate'){
+ document.title='対局中の推定値';const script=document.createElement('script');script.src='estimate-view.js';document.head.append(script);return;
+}
 if(kind==='image'||kind==='score'){
  document.body.classList.add('aux-'+kind);document.title=kind==='image'?'画像から局面を取り込む':'地合い計算';
  let request=0;const pending=new Map();
@@ -39,6 +42,7 @@ function notify(e){const target=document.getElementById('status')||document.quer
 function dimensions(kind){return {width:kind==='image'?Math.min(1100,Math.max(600,screen.availWidth-80)):480,height:Math.min(kind==='image'?900:800,Math.max(400,screen.availHeight-100))};}
 window.addEventListener('kifu-aux',async e=>{const m=e.detail,s=sessions.get(m.kind);if(!s||s.id!==m.id)return;
  if(m.type==='closed'){sessions.delete(m.kind);s.closed=true;s.onclose?.();return;}
+ if(m.kind==='estimate'){if(m.type==='ready'){s.ready=true;s.render();}return;}
  if(m.kind==='score'){
   if(m.type==='ready'){s.ready=true;s.render();return;}
   if(m.type==='control'){
@@ -62,6 +66,10 @@ window.addEventListener('kifu-aux',async e=>{const m=e.detail,s=sessions.get(m.k
  }
 });
 window.KifuAuxiliary={available:()=>!!invoke(),
+ async openEstimate(data){let s=sessions.get('estimate');if(s){s.data=data;s.render();return native('focus','estimate');}
+  s={id:uid(),kind:'estimate',data,ready:false,closed:false};s.render=()=>{if(s.ready&&!s.closed)send(s,'state',s.data).catch(notify);};sessions.set('estimate',s);
+  try{await native('open','estimate',{id:s.id,width:760,height:840});}catch(e){sessions.delete('estimate');throw Error(errorText(e));}
+ },updateEstimate(data){const s=sessions.get('estimate');if(s){s.data=data;s.render();}},
  async openImage(){const existing=sessions.get('image');if(existing)return native('focus','image');const s={id:uid(),kind:'image'};sessions.set('image',s);try{await native('open','image',{id:s.id,...dimensions('image')});}catch(e){sessions.delete('image');throw Error(errorText(e));}},
  async scoreWindow(onclose){
   const s={id:uid(),kind:'score',document:document.implementation.createHTMLDocument('地合い計算'),closed:false,ready:false,initialized:false,onclose};
