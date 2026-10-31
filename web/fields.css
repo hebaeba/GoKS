@@ -62,3 +62,9 @@ html body :is(#field-policy #field-policy #field-policy,#komi-input)#komi-input{
 #komi #board-rule{margin-right:6px;background:none}
 body.simple-mode #board-rule{display:none}
 html body.sidebar-layout:not(.simple-mode) .board-heading{grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto}
+
+/* Ranking: keep black/white paired, with a compact rank column. */
+#analysis-worst th:first-child,#analysis-worst td:first-child,
+.match-ranking-columns th:first-child,.match-ranking-columns td:first-child{width:18%;text-align:center}
+#analysis-worst th:nth-child(2),#analysis-worst td:nth-child(2),
+.match-ranking-columns th:nth-child(2),.match-ranking-columns td:nth-child(2){width:24%;text-align:center}
