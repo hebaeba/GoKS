@@ -675,6 +675,9 @@
     async loadSgf(text,name,move=100000,options={}){if(!await load(text,name))return false;if(options.edited){dirty=true;editing=true;}const target=Math.max(0,Number(move)||0);let n=frames.findIndex(f=>f.move>=target);await at(n<0?route.length-1:n);return true;}
   });
 
+  function positionAutoWarning(){const msg=$('message');if(!msg.classList.contains('autoplay-warning')||msg.hidden)return;const rect=firstElement('.canvas-wrap').getBoundingClientRect();document.body.append(msg);msg.style.setProperty('--warning-left',rect.left+'px');msg.style.setProperty('--warning-top',Math.max(0,rect.top)+'px');msg.style.setProperty('--warning-width',rect.width+'px');}
+  window.addEventListener('resize',positionAutoWarning);window.addEventListener('scroll',positionAutoWarning,true);
+  new ResizeObserver(positionAutoWarning).observe(firstElement('.canvas-wrap'));
   function stopAuto(){clearTimeout(autoTimer);autoTimer=null;autoPlaying=false;syncAuto();}
   function syncAuto(){const button=$('auto-play');if(!button)return;
     const blocked=!!(scoreSession||insertion||exportBusy);
@@ -693,7 +696,7 @@
     const group=document.createElement('div');group.className='autoplay';group.innerHTML='<button type="button" id="auto-play" aria-pressed="false">自動<span aria-hidden="true">►</span></button><label><select id="auto-seconds" aria-label="自動再生の間隔" title="次の手を表示する間隔です">'+[1,2,3,4,5].map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select>秒</label>';
     const nav=firstElement('.navigation'),actions=firstElement('.actions');nav.append(group);
     $('auto-play').onclick=()=>{if(autoPlaying)return stopAuto();if(scoreSession||insertion||exportBusy||resolving||!canLeaveSync())return;
-      if(index>=route.length-1){report('この手順の末尾です。自動再生する続きがありません。',true);$('message').classList.add('autoplay-warning');return;}
+      if(index>=route.length-1){report('この手順の末尾です。自動再生する続きがありません。',true);$('message').classList.add('autoplay-warning');positionAutoWarning();return;}
       // Preserve the path already reached, but discard remembered future detours.
       const prefix=route.slice(0,index+1);choices=new WeakMap();
       for(let n=0;n<prefix.length-1;n++)choices.set(prefix[n],prefix[n].children.indexOf(prefix[n+1]));

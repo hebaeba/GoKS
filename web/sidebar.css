@@ -146,4 +146,4 @@ html body .image-save-row{flex-wrap:wrap;gap:5px}
 html body.simple-mode #simple-menu .controls .side-row .board-view-tools,html body.simple-mode #simple-menu .side-row .reflection-controls{flex-wrap:wrap}
 
 /* Autoplay feedback stays in view above the board, including simple mode. */
-html body #message.error.autoplay-warning{position:fixed;top:8px;bottom:auto;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);width:max-content;z-index:100;max-height:25vh;overflow:auto;margin:0}
+html body.sidebar-layout #message.error.autoplay-warning{position:fixed;top:var(--warning-top);bottom:auto!important;left:var(--warning-left)!important;transform:none;max-width:var(--warning-width)!important;width:var(--warning-width);z-index:100;max-height:25vh;overflow:auto;margin:0}

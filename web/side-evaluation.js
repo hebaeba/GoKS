@@ -1,19 +1,19 @@
 /* PC sidebar: Black-perspective evaluations. Missing positions are never interpolated. */
 (()=>{'use strict';
- let data=null,panel=null,matchRecords=new Map();
+ let data=null,panel=null,matchRecords=new Map(),matchKind=null;
  function keys(snapshot){let node=GoSgf.parse(snapshot.sgf).root,history=[];const relevant=p=>Object.fromEntries(Object.entries(p).filter(([k])=>['SZ','KM','HA','RU','B','W','AB','AW','AE','PL','KO','XIGFORCE','XIGPENDING'].includes(k)));history.push(relevant(node.props));const out=[JSON.stringify([snapshot.size,snapshot.komi,history])];for(const choice of snapshot.path){node=node.children[choice];if(!node)break;history.push(relevant(node.props));out.push(JSON.stringify([snapshot.size,snapshot.komi,history]));}return out;}
- window.addEventListener('kifu-match-evaluation',e=>{const {snapshot,index,move,result}=e.detail;const key=keys(snapshot)[index];if(key)matchRecords.set(key,{index,move,result});render();});
- window.addEventListener('kifu-match-start',()=>{matchRecords.clear();render();});
- window.addEventListener('kifu-record-replaced',()=>{matchRecords.clear();data=null;render();});
+ window.addEventListener('kifu-match-evaluation',e=>{const {snapshot,index,move,result,color}=e.detail;const key=keys(snapshot)[index];if(key)matchRecords.set(key,{index,move,result,color});render();});
+ window.addEventListener('kifu-match-start',e=>{matchRecords.clear();data=null;matchKind=e.detail&&!e.detail.blackHuman&&!e.detail.whiteHuman?'ai':'human';if(panel)panel.querySelector('#graph-visible').checked=matchKind==='ai';render();});
+ window.addEventListener('kifu-record-replaced',()=>{matchRecords.clear();data=null;matchKind=null;if(panel)panel.querySelector('#graph-visible').checked=true;render();});
  window.addEventListener('kifu-position-change',render);
  const ns='http://www.w3.org/2000/svg',green='#00ee00',magenta='#ed00ed';
  window.addEventListener('kifu-evaluation-data',e=>{data=e.detail;render();});
  function mount(){const side=document.getElementById('board-sidebar');if(!side)return;
   panel=document.createElement('section');panel.id='side-evaluation';panel.setAttribute('aria-label','黒白の形勢と全局グラフ');
-  panel.innerHTML='<div class="side-win-labels"><span id="side-black-rate"></span><span id="side-white-rate"></span></div><div id="side-win-bar" aria-label="現在局面の黒白勝率"><span class="black-share"></span><span class="white-share"></span></div><div class="side-eval-legend"><span class="win-key">勝率（黒）</span><span class="score-key">目数差（黒）</span></div><svg id="side-eval-graph" role="img" aria-label="手数ごとの黒の勝率と目数差。クリックするとその局面へ移動"></svg>';
-  side.append(panel);render();new ResizeObserver(render).observe(panel);
+  panel.innerHTML='<label class="graph-toggle">グラフ表示 <input id="graph-visible" type="checkbox" checked></label><div class="graph-content"><div class="side-win-labels"><span id="side-black-rate"></span><span id="side-white-rate"></span></div><div id="side-win-bar" aria-label="現在局面の黒白勝率"><span class="black-share"></span><span class="white-share"></span></div><div class="side-eval-legend"><span class="win-key">勝率（黒）</span><span class="score-key">目数差（黒）</span></div><svg id="side-eval-graph" role="img" aria-label="手数ごとの黒の勝率と目数差。クリックするとその局面へ移動"></svg></div>';
+  side.append(panel);panel.querySelector('#graph-visible').onchange=render;render();new ResizeObserver(render).observe(panel);
  }
- function render(){if(!panel)return;const svg=panel.querySelector('svg');svg.replaceChildren();svg.onclick=null;
+ function render(){if(!panel)return;panel.querySelector('.graph-content').hidden=!panel.querySelector('#graph-visible').checked;const svg=panel.querySelector('svg');svg.replaceChildren();svg.onclick=null;
   const width=Math.max(240,panel.clientWidth),height=300,left=44,right=width-33,top=10,bottom=270;
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
   const add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el;};
@@ -21,6 +21,7 @@
   const matched=keys(snapshot).flatMap((key,index)=>matchRecords.has(key)?[{...matchRecords.get(key),index}]:[]);
   const same=data?.snapshot&&KifuAnalysis.identity(data.snapshot)===KifuAnalysis.identity(snapshot);
   const source=window.KifuMatch?.locked?matched:same&&data.results.length?data.results:matched;
+  const dual=matchKind==='ai'&&source===matched;panel.querySelector('.side-eval-legend').innerHTML=dual?'<span class="black-key">黒勝率</span><span class="white-key">白勝率</span><span class="score-key" title="黒視点：実線は黒番AI、破線は白番AIの評価">目数差（黒）</span>':'<span class="win-key">勝率（黒）</span><span class="score-key">目数差（黒）</span>';svg.setAttribute('aria-label',dual?'黒番AIの黒勝率と白番AIの白勝率、黒視点の目数差':'黒視点の勝率と目数差');
   const records=source.filter(p=>Number.isFinite(p.result?.rootInfo?.winrate)&&Number.isFinite(p.result?.rootInfo?.scoreLead)).sort((a,b)=>a.index-b.index);
   const go=async index=>{if(window.KifuMatch?.locked)return;try{await IndependentGo.analysisAt(index,snapshot.sgf);}catch{}};
   const current=records.find(p=>p.index===snapshot.index),bar=panel.querySelector('#side-win-bar');
@@ -41,13 +42,20 @@
   if(max%step&&max%step>step*.5)add('text',{x:right,y:height-4,'text-anchor':'end',fill:'#edf3ef','font-size':12},max+'手');
   if(!records.length)return;
   const index=snapshot.index,cursor=route[index];if(cursor)add('line',{class:'eval-cursor',x1:x(cursor.move),x2:x(cursor.move),y1:top,y2:bottom,stroke:'#b0c6ba','stroke-width':1});
-  for(const [metric,color,y]of [['winrate',green,yw],['scoreLead',magenta,ys]]){
-   let d='';for(let i=0;i<records.length;i++){const item=records[i],prev=records[i-1],next=records[i+1],connected=prev&&item.index===prev.index+1&&item.move===prev.move+1,following=next&&next.index===item.index+1&&next.move===item.move+1;
+  const series=dual?[
+   {metric:'winrate',color:'#000',side:'B',y:yw},
+   {metric:'winrate',color:'#fff',side:'W',y:v=>yw(1-v)},
+   {metric:'scoreLead',color:magenta,side:'B',y:ys},
+   {metric:'scoreLead',color:magenta,side:'W',y:ys,dash:'5 4'}
+  ]:[{metric:'winrate',color:green,y:yw},{metric:'scoreLead',color:magenta,y:ys}];
+  for(const {metric,color,side,y,dash} of series){
+   const points=side?records.filter(p=>p.color===side):records;
+   const adjacent=(a,b)=>a&&b&&b.index-a.index===(side||source===matched&&matchKind==='human'?2:1)&&b.move-a.move===(side||source===matched&&matchKind==='human'?2:1);
+   let d='';for(let i=0;i<points.length;i++){const item=points[i],connected=adjacent(points[i-1],item),following=adjacent(item,points[i+1]);
     d+=(connected?' L':' M')+x(item.move)+' '+y(item.result.rootInfo[metric]);
-    // An isolated result is a short stroke, never a circular marker or a bridge across missing data.
     if(!connected&&!following)d+=' m -3 0 l 6 0';
    }
-   add('path',{'data-metric':metric,d,fill:'none',stroke:color,'stroke-width':metric==='winrate'?2.5:1.8,'stroke-linejoin':'round'});
+   add('path',{'data-metric':metric,'data-side':side||'',d,fill:'none',stroke:color,'stroke-width':metric==='winrate'?2.5:1.8,'stroke-dasharray':dash||'none','stroke-linejoin':'round'});
   }
   svg.onclick=e=>{const rect=svg.getBoundingClientRect(),px=(e.clientX-rect.left)*width/rect.width;if(px<left||px>right)return;const target=Math.round((px-left)/(right-left)*max);const pos=route.find(p=>p.move===target);if(pos)go(pos.index);};
  }
