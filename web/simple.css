@@ -24,9 +24,6 @@ html body.simple-mode .board-block{border:0;padding:0;margin:0;background:transp
 html body.simple-mode .board-block>.board-heading,html body.simple-mode .board-block>.players,html body.simple-mode .board-block>.statusline,html body.simple-mode #comment-area,html body.simple-mode .board-panel>#message:not(.error),html body.simple-mode footer{display:none!important}
 html body.simple-mode .board-panel .board-block .canvas-wrap{flex:none;width:var(--fit-board-size)!important;max-width:100%!important;margin:0 auto}
 html body.simple-mode #board{display:block;width:100%;height:auto}
-html body.simple-mode .inspector{display:none;position:fixed;right:6px;top:38px;bottom:6px;width:min(620px,calc(100vw - 12px));height:auto!important;max-height:calc(100dvh - 44px)!important;z-index:35;background:#f6faf8;border:1px solid #769a8e;box-shadow:0 4px 20px #0004;overflow:auto}
-html body.simple-mode.simple-panel-open .inspector{display:block}
-#simple-panel-close{position:sticky;top:0;float:right;z-index:10;margin:4px;background:white}
 #simple-menu .topline{display:flex;flex-wrap:wrap;gap:6px;max-width:420px}
 #simple-menu .controls{max-width:650px}
 #simple-menu .controls .slider-label{display:none}
@@ -41,11 +38,8 @@ html body.simple-mode.simple-panel-open .inspector{display:block}
 html body.simple-mode #message.error{position:fixed;bottom:28px;left:12px;right:12px;z-index:60;background:#fff1cf;border:1px solid #ad8245;padding:6px;max-height:20vh;overflow:auto}
 #simple-engine-status[data-state=ready]{color:#c73732}#simple-engine-status[data-state=error]{color:#a32b25}
 html body.simple-mode .inspector-navigation{position:relative;clear:both;z-index:1}
-html body.simple-mode #simple-panel-close{display:block;float:none;position:sticky;top:0;margin:4px 4px 4px auto;z-index:100}
-html body.simple-mode #simple-panel-close[hidden]{display:none}
 html body.simple-mode .board-block{width:100%;max-width:none}
 html body.simple-mode .workspace{max-width:none}
-html body.simple-mode .inspector{position:fixed!important}
 #simple-info #komi,#simple-info #move{background:#edf3ed;border-radius:4px;padding:0 3px}
 @media(pointer:coarse){#simple-menu>details>summary{box-sizing:border-box;min-height:40px;display:flex;align-items:center}}
 
@@ -55,3 +49,5 @@ html body.simple-mode .simple-top-slot .coordinate-choice{display:none!important
 #shortcut-dialog .shortcut-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 #shortcut-dialog .shortcut-heading h2{margin:0 0 12px}
 #shortcut-dialog .shortcut-heading button{flex:none;white-space:nowrap}
+/* Details are always in a separate native window, never over the board. */
+html body.simple-mode .inspector{display:none!important}

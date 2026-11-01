@@ -2,7 +2,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),q=s=>document.querySelector(s),api=IndependentGo;
 const inspector=q('.inspector'),settings=$('pane-settings'),analysis=$('pane-analysis');
-settings.innerHTML='<h2>エンジン・接続の設定</h2>';
+settings.replaceChildren();
 settings.append(q('.engine-actions'),$('engine-settings'),$('engine-notice'),$('engine-error'),q('.engine-log'));
 const dock=document.createElement('section');dock.className='engine-dock';dock.setAttribute('aria-label','解析エンジンの状態と操作');
 const primary=q('.analysis-primary'),conditions=q('.analysis-conditions'),engineName=$('engine-active');primary.querySelector('span').remove();primary.append(conditions);engineName.append($('engine-state'));dock.append(engineName,primary);
