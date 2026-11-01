@@ -21,7 +21,8 @@ function control(e,type){
  const el=e.target.closest('[data-panel-target]');if(!el)return;
  send('control',{target:el.dataset.panelTarget,type,value:el.value,checked:el.checked});
 }
-host.addEventListener('click',e=>{
+document.addEventListener('pointerdown',()=>send('dismiss-notice'));
+ host.addEventListener('click',e=>{
  const svg=e.target.closest('#side-eval-graph');
  if(svg){const r=svg.getBoundingClientRect();send('control',{target:svg.dataset.panelTarget,type:'click',x:(e.clientX-r.left)/r.width});return;}
  const el=e.target.closest('button,summary,a,[role=button],input[type=file]');if(!el)return;e.preventDefault();send('control',{target:el.dataset.panelTarget,type:'click'});

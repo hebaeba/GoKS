@@ -19,7 +19,7 @@ const ranking=$('analysis-worst').querySelector('.compact-heading');ranking.inse
 const archive=document.createElement('button');archive.id='analysis-save-current';archive.textContent='解析を保存';archive.onclick=()=>$('analysis-save').click();q('.analysis-files').prepend(archive);function syncArchive(){archive.disabled=$('analysis-save').disabled;archive.hidden=!$('analysis-worst').hidden;}new MutationObserver(syncArchive).observe($('analysis-save'),{attributes:true});new MutationObserver(syncArchive).observe($('analysis-worst'),{attributes:true});syncArchive();
 const detail=$('compact-analysis-details');detail.open=true;detail.querySelector('summary').hidden=true;
 // Save tab: save the complete record directly and leave specialized options available.
-const tab=$('tab-storage'),old=tab.onclick;tab.onclick=()=>{old();$('save').click();};tab.title='棋譜全体を名前を付けて保存し、その他の保存項目を表示します';$('save').hidden=false;const saves=q('.record-save-row');saves.prepend($('save'));$('save').textContent='棋譜全体を保存';
+const tab=$('tab-storage'),old=tab.onclick;tab.onclick=()=>old();tab.title='棋譜・盤面の保存項目を表示します';$('save').hidden=false;const saves=q('.record-save-row');saves.prepend($('save'));$('save').textContent='棋譜全体を保存';$('save').style.fontWeight='700';
 $('gif-options').querySelector('summary').click();$('gif-options').open=true;$('gif-options').querySelector('summary').onclick=e=>e.preventDefault();
 for(const h of document.querySelectorAll('#pane-storage > h3'))if(h.textContent==='一時保存')h.hidden=true;
 // Tool descriptions are retained on their related controls.
@@ -73,5 +73,6 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  document.querySelector('.engine-running-details').after(d);
  for(const key of ['exe','model','config']){const input=document.getElementById('engine-'+key),row=input.closest('.engine-path-row'),label=document.querySelector('label[for="'+input.id+'"]');d.append(label,row);}
  d.append(document.getElementById('engine-advanced'),document.querySelector('.engine-registration'));
+ d.querySelector('.engine-profiles').after(document.getElementById('engine-name').parentElement);
  const sync=()=>KifuAnalysisControl.setFieldsCollapsed(!d.open);d.addEventListener('toggle',sync);sync();
 })();

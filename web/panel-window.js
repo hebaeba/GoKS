@@ -35,8 +35,9 @@ function render(){
 }
 async function event(m){
  if(!session||m.id!==session.id)return;
- if(m.type==='ready'){session.ready=true;session.html=null;render();return;}
- if(m.type==='closed'){clearInterval(session.timer);session.channel?.close();session=null;return;}
+ if(m.type==='ready'){session.ready=true;clearTimeout(session.connectionTimer);session.html=null;render();return;}
+ if(m.type==='closed'){clearInterval(session.timer);clearTimeout(session.connectionTimer);session.channel?.close();session=null;return;}
+ if(m.type==='dismiss-notice'){const notice=document.getElementById('engine-profile-message');if(notice)notice.textContent='';return;}
  if(m.type==='viewport'){window.KifuSideEvaluation?.setViewportWidth(m.data?.width);return;}
  if(m.type!=='control')return;
  const d=m.data||{},el=targets.get(d.target);if(!el||!el.isConnected||el.disabled||el.closest('[inert]'))return;
@@ -61,7 +62,8 @@ window.KifuPanelWindow={async open(tab){
   if(native())await native()('auxiliary',{action:'open',kind:'panel',payload:{id:current.id,width:680,height:840}});
   else{current.channel=new BroadcastChannel('kifu-panel-'+current.id);current.channel.onmessage=e=>event(e.data);current.popup=window.open('panel.html?id='+current.id,'kifu-panel','popup,width=680,height=840,resizable=yes,scrollbars=yes');if(!current.popup)throw Error('ポップアップを許可してください。');}
   current.timer=setInterval(render,250);
+  current.connectionTimer=setTimeout(async()=>{if(session===current&&!current.ready){await KifuDialogs.confirm('独立窓との接続を確認できませんでした。webとsrc-tauriを更新92で揃えてビルドし直し、画面左下が「更新92」になっていることを確認してください。',{accept:'閉じる'});}},8000);
  }catch(e){session=null;await KifuDialogs.confirm(e.message||String(e),{accept:'閉じる'});}
 }};
-window.addEventListener('pagehide',()=>{if(!session)return;clearInterval(session.timer);if(native())native()('auxiliary',{action:'close',kind:'panel',payload:{}}).catch(()=>{});else{session.popup?.close();session.channel?.close();}});
+window.addEventListener('pagehide',()=>{if(!session)return;clearInterval(session.timer);clearTimeout(session.connectionTimer);if(native())native()('auxiliary',{action:'close',kind:'panel',payload:{}}).catch(()=>{});else{session.popup?.close();session.channel?.close();}});
 })();

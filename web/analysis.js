@@ -74,6 +74,7 @@ function engineKindUI(){
 $('engine-kind').onchange=()=>{engineKindUI();clearConfigurationError();controls();};
 engineKindUI();
 function profileMessage(text){$('engine-profile-message').textContent=text;}
+ document.addEventListener('click',()=>profileMessage(''),true);
 function paths(){return {kind:$('engine-kind').value,...Object.fromEntries(['exe','model','config','workdir'].map(k=>[k,readPath(k).trim().replace(/^"|"$/g,'')])),extraArgs:KifuEngineArgs.parse($('engine-extraArgs').value)};}
 function renderProfiles(selected=''){$('engine-settings').classList.remove('profile-editing');$('engine-profile').replaceChildren(new Option('新しく登録する',''));for(const p of profiles)$('engine-profile').append(new Option(p.name,p.id));$('engine-profile').value=selected;$('engine-profile-save').textContent=selected?'登録を更新':'リストに追加';$('engine-profile-delete').disabled=!selected;renderOrder(selected);}
 function renderOrder(selected){
@@ -239,7 +240,7 @@ function renderWorst(){
  for(const color of ['B','W']){const body=$('worst-rows-'+color);body.replaceChildren();
  rows.filter(r=>r.color===color).forEach((r,i)=>{const tr=document.createElement('tr'),button=document.createElement('button');button.textContent=String(r.move);button.title='この着手後の局面を表示します';button.disabled=!matches();button.onclick=async ()=>(await go(r.index));
  for(const value of [String(i+1)+'.',button,r.loss.toFixed(1),r.winrateLoss.toFixed(1)]){const td=document.createElement('td');typeof value==='string'?td.textContent=value:td.append(value);tr.append(td);}body.append(tr);});
- if(!body.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='評価待ち';tr.append(td);body.append(tr);}}
+ if(!body.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='評価待ち';tr.append(td);body.append(tr);}KifuRanking.apply(body);}
 }
 window.addEventListener('kifu-ranking-change',renderWorst);
 function renderGraph(){window.dispatchEvent(new CustomEvent('kifu-evaluation-data',{detail:{snapshot:snap(),results:matches()?[...results.values()]:[],go}}));renderWorst();const run=session?.analysisRun;$('analysis-run-info').textContent=run?(run.scope==='all'?'全局':run.scope==='live'?'連続':'現在局面')+'解析 ／ '+(session.rules==='japanese'?'日本ルール':'中国ルール')+' ／ １局面 '+(run.infinite?'無限':run.seconds+'秒')+' ／ 開始 '+new Date(run.started).toLocaleTimeString('ja-JP')+' ／ '+results.size+'局面'+(active?'（更新中）':''):results.size?'保存済み解析（解析開始時刻の記録なし）':'';}
