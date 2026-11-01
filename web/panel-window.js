@@ -9,6 +9,7 @@ function copy(el){
  original.forEach((a,i)=>{const b=clones[i];b.setAttribute('data-panel-target',token(a));
   if(a.matches('input,textarea,select')){if(a.type!=='file'){b.setAttribute('data-panel-value',a.value);if(a.tagName==='TEXTAREA')b.textContent=a.value;else b.setAttribute('value',a.value);}if(a.checked)b.setAttribute('checked','');else b.removeAttribute('checked');}
  });
+ window.KifuI18n?.restoreClone(el,c);
  c.querySelectorAll('script').forEach(n=>n.remove());return c;
 }
 function send(type,data){if(!session)return;const payload={id:session.id,type,data};if(native())native()('auxiliary',{action:'send',kind:'panel',payload}).catch(()=>{});else session.channel?.postMessage(payload);}

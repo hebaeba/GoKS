@@ -25,8 +25,8 @@
  const head=q('.board-heading'),notes=document.createElement('button');notes.id='board-notes';notes.textContent='コメント・対局情報';notes.title='この局面のコメントと対局情報を表示します';notes.hidden=true;head.prepend(notes);head.append($('komi'));
  const rule=document.createElement('span');rule.id='board-rule';rule.title='現在のルール';$('komi').prepend(rule);
  let selectedRule=null,previousRule=null;
- function syncRule(){const ru=GoSgf.parse(IndependentGo.peekAnalysisSnapshot().sgf).root.props.RU?.[0]||'';if(previousRule!==ru){selectedRule=null;previousRule=ru;}const mapped=KifuAnalysis.effectiveRules(ru);rule.textContent=selectedRule||(ru&&!mapped?ru:$('analysis-rules').selectedOptions[0]?.textContent||'日本ルール');}
- $('analysis-rules').addEventListener('change',()=>{selectedRule=$('analysis-rules').selectedOptions[0]?.textContent;syncRule();});
+ function syncRule(){const ru=GoSgf.parse(IndependentGo.peekAnalysisSnapshot().sgf).root.props.RU?.[0]||'';if(previousRule!==ru){selectedRule=null;previousRule=ru;}const mapped=KifuAnalysis.effectiveRules(ru);rule.textContent=selectedRule||(ru&&!mapped?ru:(window.KifuI18n?.rawText($('analysis-rules').selectedOptions[0])||$('analysis-rules').selectedOptions[0]?.textContent)||'日本ルール');}
+ $('analysis-rules').addEventListener('change',()=>{selectedRule=(window.KifuI18n?.rawText($('analysis-rules').selectedOptions[0])||$('analysis-rules').selectedOptions[0]?.textContent);syncRule();});
  window.addEventListener('kifu-record-replaced',()=>{selectedRule=null;const ru=GoSgf.parse(IndependentGo.peekAnalysisSnapshot().sgf).root.props.RU?.[0]||'';const mapped=KifuAnalysis.effectiveRules(ru);if(mapped)$('analysis-rules').value=mapped;syncRule();});
  window.addEventListener('kifu-match-start',()=>{selectedRule=null;syncRule();});
 
