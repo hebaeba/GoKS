@@ -1,6 +1,8 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) { throw 'Rust and Visual Studio C++ Build Tools are required on the build machine.' }
+node scripts/check-window-assets.cjs
+if ($LASTEXITCODE -ne 0) { throw 'Update all independent-window files together before building.' }
 # Cargo embeds web assets. End users do not need Node.js or Rust.
 cargo build --release --manifest-path src-tauri/Cargo.toml --features custom-protocol
 if ($LASTEXITCODE -ne 0) { throw 'Windows build failed. No release was created.' }

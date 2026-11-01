@@ -26,9 +26,10 @@ function render(){
   for(const el of inspector.children){
    if(el.matches('#simple-panel-close,#normal-panel-close,.workspace-mode,.workspace-tabs,.inspector-navigation'))continue;
    if(el.hidden)continue;
+   if(session.tab==='analysis'&&el.id==='pane-analysis')host.append(copy(document.getElementById('side-evaluation')));
    host.append(copy(el));
   }
-  if(session.tab==='analysis')host.append(copy(document.getElementById('side-evaluation')));
+
  }
  // Keep file pickers, confirmations and other native actions in the owner window.
  const html=host.outerHTML;if(html!==session.html){session.html=html;send('state',{html,title:titles[session.tab],styles:[...document.querySelectorAll('link[rel=stylesheet]')].map(e=>e.href)});}
@@ -62,7 +63,7 @@ window.KifuPanelWindow={async open(tab){
   if(native())await native()('auxiliary',{action:'open',kind:'panel',payload:{id:current.id,width:680,height:840}});
   else{current.channel=new BroadcastChannel('kifu-panel-'+current.id);current.channel.onmessage=e=>event(e.data);current.popup=window.open('panel.html?id='+current.id,'kifu-panel','popup,width=680,height=840,resizable=yes,scrollbars=yes');if(!current.popup)throw Error('ポップアップを許可してください。');}
   current.timer=setInterval(render,250);
-  current.connectionTimer=setTimeout(async()=>{if(session===current&&!current.ready){await KifuDialogs.confirm('独立窓との接続を確認できませんでした。webとsrc-tauriを更新92で揃えてビルドし直し、画面左下が「更新92」になっていることを確認してください。',{accept:'閉じる'});}},8000);
+  current.connectionTimer=setTimeout(async()=>{if(session===current&&!current.ready){await KifuDialogs.confirm('独立窓との接続を確認できませんでした。webとsrc-tauriを更新93で揃えてビルドし直し、画面左下が「更新93」になっていることを確認してください。',{accept:'閉じる'});}},8000);
  }catch(e){session=null;await KifuDialogs.confirm(e.message||String(e),{accept:'閉じる'});}
 }};
 window.addEventListener('pagehide',()=>{if(!session)return;clearInterval(session.timer);clearTimeout(session.connectionTimer);if(native())native()('auxiliary',{action:'close',kind:'panel',payload:{}}).catch(()=>{});else{session.popup?.close();session.channel?.close();}});
