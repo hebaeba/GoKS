@@ -1,0 +1,13 @@
+{
+  "update": 93,
+  "files": {
+    "web/index.html": "67142b67efe9f59ba23b4f4371fecca23ab8989e77b46a4ed768456addfbca16",
+    "web/simple-window-menu.js": "e409bc442fc63c8e246d2484ef701b18e5e4a23fff0cb490a6795c31ef62b2b9",
+    "web/simple.css": "4d1454d3d1e8de1a85aae945b9803feed101b9ee816df05621d0454c54aee690",
+    "web/panel-window.js": "47dcc5acd0e0361543219987ad5467a6fff5ea29479b1b8fdf7c717e7ed26b6d",
+    "web/panel-view.js": "4a8cebfd0450e0c285f1c716a32aac871e9619bc360f877e3b4e4ddba27574ae",
+    "web/auxiliary.js": "8925d5b667a2b47e58811a2265e0c4d11b937bdde1b3c9b124b2e69c01e70321",
+    "web/auxiliary.html": "c2d65685e03855ab561800e2ce4d2f94deb4790a338c0727a6e43c4a12954e30",
+    "src-tauri/src/auxiliary.rs": "c449b6387ccd46f2548efcc4c09c1b8d0c36b7130da3c93bf4ad16e3c46dc5b5"
+  }
+}
