@@ -4,8 +4,9 @@ const invoke=()=>window.__TAURI_INTERNALS__?.invoke;
 const params=new URLSearchParams(location.search),kind=params.get('kind'),id=params.get('id');
 const errorText=e=>e?.message||String(e||'補助窓の操作に失敗しました');
 function native(action,kind,payload={}){if(!invoke())return Promise.reject(Error('この機能はWindowsアプリで利用できます。'));return invoke()('auxiliary',{action,kind,payload});}
+if(kind==='panel'){const script=document.createElement('script');script.src='panel-view.js';document.head.append(script);return;}
 if(kind==='estimate'){
- document.title='対局中の推定値';const script=document.createElement('script');script.src='estimate-view.js';document.head.append(script);return;
+ document.title='推定値';const script=document.createElement('script');script.src='estimate-view.js';document.head.append(script);return;
 }
 if(kind==='image'||kind==='score'){
  document.body.classList.add('aux-'+kind);document.title=kind==='image'?'画像から局面を取り込む':'地合い計算';

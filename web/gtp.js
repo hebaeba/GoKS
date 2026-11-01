@@ -33,7 +33,7 @@ function positionCommands(q){
 }
 function analyzeCommand(q){
  const last=q.moves?.at(-1),turn=last?(last[0]==='B'?'W':'B'):(q.initialPlayer||'B');
- let cmd='kata-analyze '+turn+' 10 rootInfo true';
+ let cmd='kata-analyze '+turn+' 10 rootInfo true'+(q.includeOwnership?' ownership true':'');
  for(const restriction of q.allowMoves||[]){
   if(!['B','W'].includes(restriction.player))throw Error('領域の手番が不正です');
   const allowed=new Set(restriction.moves.map(p=>p.toUpperCase())),avoid=[];
@@ -59,7 +59,7 @@ class Bridge{
   }
   const p=this.response;
   if(!line.trim()){if(!p)return;this.response=null;clearTimeout(p.timeout);this.pending.delete(p.id);if(p.failed)p.reject(Error(p.command.split(' ')[0]+'：'+p.lines.join('\n')));else p.resolve(p.lines.join('\n'));return;}
-  if(p?.stream&&/^(info |rootInfo )/.test(line)){const data=parseInfo(line,p.stream.query.analysisPVLen);if(data){p.stream.last=data;this.events.push({type:'result',data:{id:p.stream.query.id,...data,isDuringSearch:true}});}return;}
+  if(p?.stream&&/^(info |rootInfo )/.test(line)){const data=parseInfo(line,p.stream.query.analysisPVLen);if(data){if(p.stream.query.includeOwnership){const tokens=line.trim().split(/\s+/),at=tokens.indexOf('ownership'),n=p.stream.query.boardXSize**2,values=at<0?[]:tokens.slice(at+1,at+1+n).map(Number);if(values.length===n&&values.every(v=>Number.isFinite(v)&&Math.abs(v)<=1))data.ownership=values;}p.stream.last=data;this.events.push({type:'result',data:{id:p.stream.query.id,...data,isDuringSearch:true}});}return;}
   if(p)p.lines.push(line);else this.events.push({type:'log',message:line});
  }
  interrupt(job){if(job.stopping)return;job.stopping=true;clearTimeout(job.timer);this.commands(['stop']).catch(e=>{if(this.current===job)this.events.push({type:'result',data:{id:job.query.id,error:e.message}});});}

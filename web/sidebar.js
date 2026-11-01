@@ -49,5 +49,5 @@
  // Resizing into simple mode must not overwrite the normal panel preference.
  // Narrow screens use the existing overlay CSS without changing the saved state.
  window.addEventListener('kifu-position-change',sync);sync();
- window.KifuSidebar={openNotes,enterSimple(){normalCollapsed=body.classList.contains('inspector-collapsed');},leaveSimple(){if(normalCollapsed!==null)setCollapsed(normalCollapsed);normalCollapsed=null;}};
+ window.KifuSidebar={notesContent(){fillNotes();return dialog.querySelector('.notes-content');},openNotes,enterSimple(){normalCollapsed=body.classList.contains('inspector-collapsed');},leaveSimple(){if(normalCollapsed!==null)setCollapsed(normalCollapsed);normalCollapsed=null;}};
 })();

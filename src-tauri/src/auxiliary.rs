@@ -1,6 +1,6 @@
 use serde_json::{json,Value};
 use tauri::{Manager,WebviewWindow,AppHandle,WebviewWindowBuilder,WebviewUrl};
-fn label(kind:&str)->Result<&'static str,String>{match kind{"image"=>Ok("aux-image"),"score"=>Ok("aux-score"),"estimate"=>Ok("aux-estimate"),_=>Err("補助窓の種類が不正です".into())}}
+fn label(kind:&str)->Result<&'static str,String>{match kind{"image"=>Ok("aux-image"),"score"=>Ok("aux-score"),"estimate"=>Ok("aux-estimate"),"panel"=>Ok("aux-panel"),_=>Err("補助窓の種類が不正です".into())}}
 fn deliver(window:&WebviewWindow,message:Value)->Result<(),String>{
  window.eval(format!("window.dispatchEvent(new CustomEvent('kifu-aux',{{detail:{}}}));",message)).map_err(|e|e.to_string())
 }
@@ -18,7 +18,7 @@ pub async fn auxiliary(app:AppHandle,window:WebviewWindow,action:String,kind:Str
   let height=payload["height"].as_f64().unwrap_or(820.0).clamp(320.0,1000.0);
   let url=format!("auxiliary.html?kind={}&id={}",kind,id);
   let w=WebviewWindowBuilder::new(&app,target,WebviewUrl::App(url.into()))
-    .title(if kind=="image"{"画像から局面を取り込む"}else if kind=="estimate"{"対局中の推定値"}else{"地合い計算"})
+    .title(if kind=="image"{"画像から局面を取り込む"}else if kind=="estimate"{"推定値"}else if kind=="panel"{"詳細メニュー"}else{"地合い計算"})
     .inner_size(width,height).min_inner_size(400.0,320.0).resizable(true)
     .maximizable(true).minimizable(true).decorations(true).always_on_top(kind=="score")
     .build().map_err(|e|e.to_string())?;
@@ -26,6 +26,7 @@ pub async fn auxiliary(app:AppHandle,window:WebviewWindow,action:String,kind:Str
   w.on_window_event(move|event|{if matches!(event,tauri::WindowEvent::Destroyed){if let Some(main)=owner.get_webview_window("main"){let _=deliver(&main,json!({"kind":k,"id":session,"type":"closed"}));}}});
   w.set_focus().map_err(|e|e.to_string())?;Ok(json!({"opened":true}))
  },
+ "owner-focus"=>{if let Some(w)=app.get_webview_window("main"){let _=w.unminimize();w.set_focus().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "close"=>{if let Some(w)=app.get_webview_window(target){w.destroy().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "focus"=>{if let Some(w)=app.get_webview_window(target){let _=w.unminimize();w.set_focus().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "send"=>{

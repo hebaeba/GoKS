@@ -1,6 +1,7 @@
 /* PC sidebar: Black-perspective evaluations. Missing positions are never interpolated. */
 (()=>{'use strict';
- let data=null,panel=null,matchRecords=new Map(),matchKind=null;
+ let data=null,panel=null,matchRecords=new Map(),matchKind=null,floatingWidth=0;
+ window.KifuSideEvaluation={setViewportWidth(width){if(Number.isFinite(width)&&width>=240&&width!==floatingWidth){floatingWidth=width;render();}}};
  function keys(snapshot){let node=GoSgf.parse(snapshot.sgf).root,history=[];const relevant=p=>Object.fromEntries(Object.entries(p).filter(([k])=>['SZ','KM','HA','RU','B','W','AB','AW','AE','PL','KO','XIGFORCE','XIGPENDING'].includes(k)));history.push(relevant(node.props));const out=[JSON.stringify([snapshot.size,snapshot.komi,history])];for(const choice of snapshot.path){node=node.children[choice];if(!node)break;history.push(relevant(node.props));out.push(JSON.stringify([snapshot.size,snapshot.komi,history]));}return out;}
  window.addEventListener('kifu-match-evaluation',e=>{const {snapshot,index,move,result,color}=e.detail;const key=keys(snapshot)[index];if(key)matchRecords.set(key,{index,move,result,color});render();});
  window.addEventListener('kifu-match-start',e=>{matchRecords.clear();data=null;matchKind=e.detail&&!e.detail.blackHuman&&!e.detail.whiteHuman?'ai':'human';if(panel)panel.querySelector('#graph-visible').checked=matchKind==='ai';render();});
@@ -14,7 +15,7 @@
   side.append(panel);panel.querySelector('#graph-visible').onchange=render;render();new ResizeObserver(render).observe(panel);
  }
  function render(){if(!panel)return;panel.querySelector('.graph-content').hidden=!panel.querySelector('#graph-visible').checked;const svg=panel.querySelector('svg');svg.toggleAttribute('hidden',!panel.querySelector('#graph-visible').checked);svg.replaceChildren();svg.onclick=null;
-  const width=Math.max(240,panel.clientWidth),height=300,left=44,right=width-33,top=10,bottom=270;
+  const width=Math.max(240,panel.clientWidth||floatingWidth),height=300,left=44,right=width-33,top=10,bottom=270;
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
   const add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el;};
   const snapshot=IndependentGo.peekAnalysisSnapshot();
@@ -57,7 +58,7 @@
    }
    add('path',{'data-metric':metric,'data-side':side||'',d,fill:'none',stroke:color,'stroke-width':metric==='winrate'?2.5:1.8,'stroke-dasharray':dash||'none','stroke-linejoin':'round'});
   }
-  svg.onclick=e=>{const rect=svg.getBoundingClientRect(),px=(e.clientX-rect.left)*width/rect.width;if(px<left||px>right)return;const target=Math.round((px-left)/(right-left)*max);const pos=route.find(p=>p.move===target);if(pos)go(pos.index);};
+  svg.onclick=e=>{const rect=svg.getBoundingClientRect(),px=Number.isFinite(e.panelFraction)?e.panelFraction*width:(e.clientX-rect.left)*width/rect.width;if(px<left||px>right)return;const target=Math.round((px-left)/(right-left)*max);const pos=route.find(p=>p.move===target);if(pos)go(pos.index);};
  }
  if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();

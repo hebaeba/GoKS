@@ -15,3 +15,5 @@ body.aux-score .seki-choice{background:#d7eef8;color:#163f52;padding:6px}
 body.aux-score .close-row{text-align:center}
 body.aux-score .white-square{display:inline-block;width:10px;height:10px;border:1px solid #555;background:white}
 body.aux-score #problem{color:#a21}
+
+.score-window-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}

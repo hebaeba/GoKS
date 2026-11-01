@@ -117,6 +117,7 @@ function engineError(message){stopBatchProgress();requestedScope=null;if(!ready)
 for(const kind of ['exe','model','config'])$('engine-pick-'+kind).onclick=async()=>{pendingCalls++;controls();try{const picked=await call('pick',{kind});if(picked.path){writePath(kind,picked.path);clearConfigurationError();}}catch(e){engineError(e.message);}finally{pendingCalls--;controls();}};
 async function rawCall(action,payload={}){if(window.KifuRemote)return window.KifuRemote.call(action,payload);if(native()){try{return await native()('engine_call',{action,payload});}catch(error){throw error instanceof Error?error:new Error(typeof error==='string'?error:JSON.stringify(error)||'エンジンとの通信に失敗しました。');}}if(!token)throw Error('Windowsの解析用ランチャーまたはTauri版から起動してください。');const response=await fetch('/api/engine',{method:'POST',headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action,payload})});const data=await response.json();if(!data.ok)throw Error(data.error||'接続エラー');return data.result;}
 const gtpBridge=new KifuGTP.Bridge(rawCall);
+let estimateJob=null,estimateSerial=0;
 function call(action,payload={}){return gtpBridge.call(action,payload);}
 function uid(){return 'kifu-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);}
 function snap(){try{return api.peekAnalysisSnapshot();}catch{return null;}}
@@ -128,10 +129,10 @@ function controls(){
  const quick=$('engine-quick');if(quick){quick.textContent=running?'終了':'起動';quick.disabled=!available||pendingCalls>0;quick.title=running?'解析を停止し、エンジンを終了します':'選択中のエンジンを起動します';}
  syncSummary();
  const busy=!!active||live;
- $('analyze-live').disabled=!analysisAllowed()||!available||pendingCalls>0||!!handshake;
+ $('analyze-live').disabled=!analysisAllowed()||!available||pendingCalls>0||!!handshake||!!estimateJob;
  $('analyze-live').textContent=busy?'解析を停止':'解析を開始';$('analyze-live').setAttribute('aria-pressed',String(busy));
  $('analyze-live').title=busy?'実行中の解析を停止します。エンジンの接続は維持します':'時間制限なしで現在の局面を解析し、局面の移動に追従します';
- $('analyze-all').disabled=!analysisAllowed()||$('analysis-region').checked||!available||busy||pendingCalls>0||!!handshake;$('analyze-all').textContent=active&&!live?'全局解析中…':'全局解析を開始';
+ $('analyze-all').disabled=!analysisAllowed()||$('analysis-region').checked||!available||busy||pendingCalls>0||!!handshake||!!estimateJob;$('analyze-all').textContent=active&&!live?'全局解析中…':'全局解析を開始';
  $('analysis-pv-length').disabled=busy;$('engine-disconnect').disabled=!running||pendingCalls>0;$('engine-connect').disabled=!available||pendingCalls>0;$('engine-connect').textContent=running?'適用して再起動':'選択したエンジンを起動';$('engine-connect').title=running?'現在のエンジンを終了し、入力中の設定で起動し直します':'入力中の設定でエンジンを起動します';
  for(const key of ['kind','extraArgs','workdir'])$('engine-'+key).disabled=pendingCalls>0;
  for(const key of ['exe','model','config']){$('engine-'+key).disabled=pendingCalls>0;$('engine-pick-'+key).disabled=!available||pendingCalls>0;}
@@ -246,8 +247,9 @@ function renderGraph(){window.dispatchEvent(new CustomEvent('kifu-evaluation-dat
 async function go(index){if(!matches()){note('表示中の棋譜が異なります。保存した解析を読み直してください。');return;}try{await api.analysisAt(index,session.snapshot.sgf);}catch(e){note(e.message);}}
 $('analysis-rules').onchange=displayState;
 async function connect(){if(running||handshake)return;engineEpoch++;note('');$('engine-error').hidden=true;logs=[];$('engine-log').textContent='';pendingCalls++;controls();try{const config=paths();if(!window.KifuRemote&&(!config.exe||(config.kind!=='gtp'&&!config.model)))throw Error('実行ファイルとモデルのフルパスを指定してください。');try{localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(config));}catch{}startupAt=Date.now();startupName=window.KifuRemote?'PCのエンジン':$('engine-name').value.trim()||config.exe.split(/[\\/]/).pop();engineState('starting','エンジンを起動しています','モデルを読み込み、準備しています。CUDA・TensorRT等の初回起動ではチューニングに数分以上かかる場合があります。しばらくお待ちください。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});const r=await call('start',config);runningConfig={...config,name:startupName};$('engine-active-name').title='実行ファイル：'+config.exe+'\nモデル：'+config.model+'\n設定：'+(config.config||'標準設定');if($('engine-running-files'))$('engine-running-files').textContent=$('engine-active-name').title;running=true;ready=false;timer??=setInterval(poll,50);engineMeta=r.meta;if(window.KifuRemote)startupName=r.meta?.engine||'PCのエンジン';handshake={id:uid(),time:Date.now()};await call('send',{id:handshake.id,action:'query_version'});note('');timer??=setInterval(poll,50);}catch(e){log(e.message);engineError(e.message);}finally{pendingCalls--;controls();}}
-async function disconnect(){stopBatchProgress();engineEpoch++;pendingCalls++;controls();requestedScope=null;endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;runningConfig=null;$('engine-active-name').removeAttribute('title');if($('engine-running-files'))$('engine-running-files').textContent='エンジンは停止しています。';pendingCalls--;note('');engineState('idle','エンジン停止','「起動・接続」で再び起動できます。');controls();}
+async function disconnect(){estimateSerial++;if(estimateJob){const job=estimateJob;estimateJob=null;clearTimeout(job.timeout);job.reject(Error('推定を停止しました。'));}stopBatchProgress();engineEpoch++;pendingCalls++;controls();requestedScope=null;endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;runningConfig=null;$('engine-active-name').removeAttribute('title');if($('engine-running-files'))$('engine-running-files').textContent='エンジンは停止しています。';pendingCalls--;note('');engineState('idle','エンジン停止','「起動・接続」で再び起動できます。');controls();}
 async function poll(){startingStatus();if(polling)return;polling=true;const epoch=engineEpoch;try{const r=await call('poll');if(epoch!==engineEpoch)return;for(const l of r.logs||[])log(l);for(const event of r.events||[]){if(event.type==='log'){log(event.message);continue;}if(event.type==='exit'){log(event.message);ready=false;if(dismissedRunEpoch!==epoch)engineError(event.message);endLive();active=null;continue;}if(event.type!=='result')continue;const data=event.data;
+if(estimateJob&&data.id===estimateJob.id){const job=estimateJob;if(data.ownership){job.last=data;job.onResult?.(data);}if(data.error||data.isDuringSearch===false){estimateJob=null;clearTimeout(job.timeout);data.error?job.reject(Error(data.error)):job.last?job.resolve(job.last):job.reject(Error('領域の推定結果を取得できませんでした。'));}continue;}
 if(handshake&&data.id===handshake.id){if(data.error){log(data.error);if(dismissedRunEpoch!==epoch)engineError(data.error);handshake=null;continue;}if(data.version){engineMeta={...engineMeta,version:data.version,supportsAnalysis:data.supportsAnalysis!==false};ready=true;handshake=null;engineState('ready',engineMeta.supportsAnalysis?'起動完了・解析できます':'GTP接続完了（解析未対応）',startupName+' ／ '+data.version);if(!engineMeta.supportsAnalysis)note('GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});$('engine-error').hidden=true;note(engineMeta.supportsAnalysis?'':'GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if(requestedScope&&engineMeta.supportsAnalysis){const scope=requestedScope;requestedScope=null;setTimeout(async ()=>scope==='all'?(await analyze(true)):(await toggleLive()),0);}}continue;}
 if(stopping&&data.id===stopping.id){if(data.rootInfo){const item=stopping.plan[stopping.cursor];results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result:A.normalizedResult(data,session.snapshot.size),queryId:data.id,seconds:stopping.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}if(data.isDuringSearch===false)stopping=null;continue;}if(!active||data.id!==active.id)continue;if(data.error){stopBatchProgress();note('解析エラー：'+data.error);log(JSON.stringify(data));endLive();active=null;continue;}if(data.warning){log('注意：'+data.warning);note('KataGoの注意：'+data.warning);}if(data.rootInfo){const item=active.plan[active.cursor],result=A.normalizedResult(data,session.snapshot.size);results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result,queryId:data.id,seconds:active.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}
 if(data.isDuringSearch===false&&data.rootInfo){active.cursor++;$('analysis-progress').value=active.cursor;if(active.cursor<active.plan.length){progressText();await sendNext();}else{if(session?.analysisRun?.scope==='all')batchProgress('complete',active.plan.length,active.plan.length);note((live?'連続解析：次の着手・手順移動を待っています。 ':'解析完了：')+active.plan.length+'局面 ／ '+((Date.now()-active.started)/1000).toFixed(1)+'秒。結果を保存できます。');active=null;renderGraph();if(live)scheduleLive(true);}}
@@ -267,7 +269,7 @@ function scheduleLive(force=false){
  followTimer=setTimeout(()=>{followQueue=followQueue.then(async()=>{if(!live||!ready||version!==followVersion)return;await analyze(false,true);}).catch(e=>{endLive();note(e.message);controls();});},120);
  controls();
 }
-async function toggleLive(){if(!analysisAllowed()){note('このエンジンの解析には未対応です。KataGoを選択してください。');return;}if(!ready){(await requestAnalysis('live'));return;}if(live||active){cancel();return;}if(!ready||active||pendingCalls>0)return;live=true;note('');scheduleLive(true);controls();}
+async function toggleLive(){if(estimateJob)return;if(!analysisAllowed()){note('このエンジンの解析には未対応です。KataGoを選択してください。');return;}if(!ready){(await requestAnalysis('live'));return;}if(live||active){cancel();return;}if(!ready||active||pendingCalls>0)return;live=true;note('');scheduleLive(true);controls();}
 async function playFirst(){
  if(document.querySelector('dialog[open]')||document.body.classList.contains('scoring-mode')||!matches())return;
  const s=snap(),candidate=results.get(s.index)?.result.moveInfos[0];if(!candidate){note('現在の局面を解析してからF2を押してください。');return;}
@@ -282,7 +284,7 @@ window.addEventListener('kifu-board-view',()=>{clearPreview();renderResult();});
 $('analyze-live').onclick=toggleLive;
 $('analysis-shade').onclick=()=>{$('edit').click();if(!document.body.classList.contains('editing-mode'))return;document.querySelector('[data-tool="DD"]')?.click();};
 $('analysis-region').onchange=async()=>{await cancel();clearPreview();controls();displayState();};
-async function requestAnalysis(scope){
+async function requestAnalysis(scope){if(estimateJob)return;
  if(!analysisAllowed()){note('選択したエンジンは接続確認用です。解析にはKataGoを選択してください。');return;}
  if(ready){if(scope==='all')return (await analyze(true));return (await toggleLive());}
  if(!available||pendingCalls>0||handshake)return;requestedScope=scope;await connect();
@@ -340,5 +342,25 @@ window.addEventListener('kifu-record-replaced',()=>{
 window.addEventListener('kifu-position-change',()=>{clearPreview();const s=snap();if(live)scheduleLive();else if(active?.infinite&&s&&(s.index!==active.index||A.identity(s)!==A.identity(session.snapshot)))cancel();displayState();});window.addEventListener('workspace-layout',()=>{clearPreview();overlay.hidden=false;displayState();});KifuDialogs.addExitCheck(()=>!!active||live||unsaved);window.addEventListener('beforeunload',e=>{if(!window.__TAURI_INTERNALS__&&(active||live||unsaved)){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{if(window.KifuRemote)window.KifuRemote.call('stop').catch(()=>{});else if(native())native()('engine_call',{action:'stop',payload:{}}).catch(()=>{});else if(token)fetch('/api/engine',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action:'stop',payload:{}})}).catch(()=>{});});
 controls();displayState();
-window.KifuAnalysisControl={setFieldsCollapsed,playFirst,suspend:async()=>{await disconnect();clearPreview();overlay.replaceChildren();},rawCall,profiles:()=>profiles.map(p=>({...p})),config:()=>({...paths(),name:$('engine-name').value.trim()||'KataGo'})};
+async function stopEstimate(){
+ estimateSerial++;const job=estimateJob;if(!job)return;estimateJob=null;clearTimeout(job.timeout);
+ try{await call('send',{action:'terminate',terminateId:job.id});}finally{job.reject(Error('推定を停止しました。'));}
+}
+async function estimatePosition(snapshot,onResult){
+ await stopEstimate();const generation=estimateSerial;await cancel();await gtpBridge.queue;
+ if(generation!==estimateSerial)throw Error('推定を停止しました。');
+ if(!ready){if(!running&&!handshake)await connect();const until=Date.now()+600000;
+  while(!ready){if(generation!==estimateSerial)throw Error('推定を停止しました。');if(!running&&!handshake||Date.now()>until)throw Error('解析用エンジンを起動できませんでした。エンジン設定・接続ログを確認してください。');await new Promise(r=>setTimeout(r,50));}
+ }
+ if(generation!==estimateSerial)throw Error('推定を停止しました。');
+ const q=A.plan(snapshot,$('analysis-rules').value,{seconds:2,pvLength:1},false)[0].request;
+ q.id=uid();q.includeOwnership=true;
+ return new Promise((resolve,reject)=>{const job={id:q.id,resolve,reject,onResult,last:null};
+ job.timeout=setTimeout(()=>{if(estimateJob===job)stopEstimate().catch(()=>{});},30000);
+ estimateJob=job;controls();call('send',q).catch(e=>{if(estimateJob===job){estimateJob=null;clearTimeout(job.timeout);reject(e);}});
+ });
+}
+window.KifuAnalysisControl={setFieldsCollapsed,playFirst,estimate:estimatePosition,stopEstimate,
+ runningName:()=>runningConfig?.name||$('engine-name').value.trim()||'KataGo',
+ suspend:async()=>{await stopEstimate();await cancel();await gtpBridge.queue;clearPreview();overlay.replaceChildren();},rawCall,profiles:()=>profiles.map(p=>({...p})),config:()=>({...paths(),name:$('engine-name').value.trim()||'KataGo'})};
 })();
