@@ -1,0 +1,16 @@
+/* Localization layout only; shared font, height and padding rules stay unchanged. */
+.language-row{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1 0 100%;width:100%}
+.language-switch{display:flex;gap:3px;margin-left:auto;white-space:nowrap}
+.language-switch button[aria-pressed=true]{background:#285e56;color:white}
+html[lang=en] .workspace-tabs{display:flex;justify-content:space-between;gap:3px;flex-wrap:nowrap}
+html[lang=en] .workspace-tabs button{flex:0 0 auto;white-space:nowrap}
+html[lang=en] .analysis-primary,html[lang=en] .analysis-config-row{gap:6px}
+html[lang=en] button,html[lang=en] summary{overflow-wrap:normal}
+html[lang=en] .tool-description{white-space:normal}
+html[lang=en] .match-name-label,html[lang=en] .match-game-name{min-width:0}
+html[lang=en] .match-rules{flex-wrap:wrap}
+html[lang=en] #analysis-visits{font-variant-numeric:tabular-nums;white-space:nowrap}
+html[lang=en] .side-eval-legend{gap:2px}
+
+html[lang=en] #pane-match .match-player{grid-template-columns:max-content minmax(0,1fr) auto}
+html[lang=en] #pane-match .match-player>strong{padding-right:2px}

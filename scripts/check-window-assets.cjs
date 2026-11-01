@@ -6,7 +6,7 @@ function check(base=root){
  for(const [name,hash]of Object.entries(manifest.files)){
   const file=path.join(base,name);
   if(!fs.existsSync(file)||crypto.createHash('sha256').update(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n')).digest('hex')!==hash)
-   throw Error('Independent-window files are mixed or missing: '+name+'. Upload web, src-tauri, scripts and tests from the same update93 ZIP.');
+   throw Error('Independent-window files are mixed or missing: '+name+'. Upload web, src-tauri, scripts and tests from the same release ZIP.');
  }
  console.log('Independent-window assets: update'+manifest.update+' OK');
 }

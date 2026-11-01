@@ -30,6 +30,7 @@ pub async fn auxiliary(app:AppHandle,window:WebviewWindow,action:String,kind:Str
   w.on_window_event(move|event|{if matches!(event,tauri::WindowEvent::Destroyed){if let Some(main)=owner.get_webview_window("main"){let _=deliver(&main,json!({"kind":k,"id":session,"type":"closed"}));}}});
   w.set_focus().map_err(|e|e.to_string())?;Ok(json!({"opened":true}))
  },
+ "title"=>{if window.label()!=target{return Err("補助窓から操作してください".into());}let title=payload["title"].as_str().unwrap_or("");if title.len()>256{return Err("Title too long".into());}window.set_title(title).map_err(|e|e.to_string())?;Ok(json!({}))},
  "drag"=>{if window.label()!=target{return Err("補助窓から操作してください".into());}window.start_dragging().map_err(|e|e.to_string())?;Ok(json!({}))},
  "owner-focus"=>{if let Some(w)=app.get_webview_window("main"){let _=w.unminimize();w.set_focus().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "close"=>{if let Some(w)=app.get_webview_window(target){w.destroy().map_err(|e|e.to_string())?;}Ok(json!({}))},
