@@ -4,7 +4,49 @@ const KEY='gokifu-language',dictionary=window.KifuEnglish||{},texts=new WeakMap(
 let language='ja';try{language=localStorage.getItem(KEY)==='en'?'en':'ja';}catch{}
 const protectedSelector='script,style,textarea,code,[data-no-i18n],.game-title,#simple-title,#black-name,#white-name,#comment,#metadata dd,.notes-content p,.notes-content dd,#engine-active-name,#engine-nearby-name,#engine-order button:first-child,#engine-profile option:not([value=""]),#match-black option:not([value="human"]):not([value="current"]),#match-white option:not([value="human"]):not([value="current"]),#engine-files';
 const fragments=Object.keys(dictionary).filter(k=>k.length>=4&&/[ぁ-龯]/.test(k)).sort((a,b)=>b.length-a.length);
-function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];let m;
+function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];if(!/[ぁ-龯]/.test(s))return s;let m;
+ if(m=s.match(/^端末内に一時保存しました（(.*)）$/))return 'Local backup saved ('+m[1]+')';
+ if(m=s.match(/^(.*) の一時保存を復元しますか？現在の棋譜を置き換えます。$/))return 'Restore the backup from '+m[1]+'? This replaces the current game.';
+ if(m=s.match(/^(一時保存できません。棋譜をファイルに保存してください：|復元できません：)(.*)$/))return (m[1].startsWith('復元')?'Could not restore: ':'Local backup failed. Save the game to a file: ')+english(m[2]);
+ // Runtime messages: translate the whole template before substituting fragments.
+ if(s.includes('\n'))return s.split('\n').map(english).join('\n');
+ if(m=s.match(/^(解析エラー：|接続エラー：|読込みできませんでした：|読み込めません：|保存できません：|保存できませんでした：|編集を反映できませんでした：|対局を中断しました：|注意：|KataGoの注意：)(.*)$/))return ({'解析エラー：':'Analysis error: ','接続エラー：':'Connection error: ','読込みできませんでした：':'Could not load: ','読み込めません：':'Could not open: ','保存できません：':'Could not save: ','保存できませんでした：':'Could not save: ','編集を反映できませんでした：':'Could not apply edits: ','対局を中断しました：':'Game paused: ','注意：':'Notice: ','KataGoの注意：':'KataGo notice: '})[m[1]]+english(m[2]);
+ if(m=s.match(/^(解析完了：|連続解析：次の着手・手順移動を待っています。\s*)(\d+)局面 ／ ([\d.]+)秒。結果を保存できます。$/))return (m[1].startsWith('解析完了')?'Complete: ':'Live analysis: waiting for the next move. ')+m[2]+' positions / '+m[3]+' s. Results can be saved.';
+ if(m=s.match(/^(\d+)局面・(\d+)×(\d+)px・(\d+)KB。保存できます。$/))return m[1]+' frames · '+m[2]+'×'+m[3]+' px · '+m[4]+' KB. Ready to save.';
+ if(m=s.match(/^GIFを作成しています：(\d+)／(\d+)局面$/))return 'Creating GIF: '+m[1]+' / '+m[2]+' frames';
+ if(m=s.match(/^保存済み解析を読み込みました。(\d+)局面。グラフから局面を選べます。$/))return 'Loaded '+m[1]+' analyzed positions. Select a position on the graph.';
+ if(m=s.match(/^領域制限中：(\d+)交点とパス。評価値は全局の評価です。$/))return 'Restricted to '+m[1]+' intersections and pass. Evaluation is for the entire board.';
+ if(m=s.match(/^「(.*)」を保存しました。次回もリストから選べます。$/))return 'Saved “'+m[1]+'”. Select it from the list next time.';
+ if(m=s.match(/^「(.*)」をエンジンリストから削除しますか？$/))return 'Remove “'+m[1]+'” from the engine list?';
+ if(m=s.match(/^(.*)を(上|下)へ移動$/))return 'Move '+m[1]+(m[2]==='上'?' up':' down');
+ if(m=s.match(/^経過 (\d+)秒$/))return 'Elapsed '+m[1]+' s';
+ if(m=s.match(/^解析対象：(.*) ／ 初期局面～(\d+)手$/))return 'Scope: '+english(m[1])+' / Start–'+m[2];
+ if(m=s.match(/^変化（([\d・]+)手で分岐）$/))return 'Variation (branches at '+m[1].replaceAll('・',', ')+')';
+ if(m=s.match(/^実戦の次の手：(黒|白) (.*?)(?: ／ 推奨順位 (\d+)位|（今回の候補結果にありません）)$/))return 'Next played move: '+(m[1]==='黒'?'Black':'White')+' '+english(m[2])+(m[3]?' / Rank '+m[3]:' (not in current candidates)');
+ if(m=s.match(/^(黒|白)＋([\d.]+)$/))return (m[1]==='黒'?'Black':'White')+' +'+m[2];
+ if(m=s.match(/^挿入中：(\d+)手。終了すると元の続きがつながります。$/))return 'Inserting: '+m[1]+' moves. Finish to rejoin the original continuation.';
+ if(m=s.match(/^(\d+)手を挿入しました。(.*)$/))return 'Inserted '+m[1]+' moves. '+english(m[2]);
+ if(m=s.match(/^後の(\d+)局面に確認が必要な着手があります。その手に進むと選択できます。$/))return m[1]+' later positions need confirmation. Go to each move to choose how to proceed.';
+ if(m=s.match(/^(\d+)交点を網掛けしました。取り消しで元に戻せます。$/))return 'Shaded '+m[1]+' intersections. Use Undo to restore them.';
+ if(m=s.match(/^(\d+)手目を記録しました。(.*)$/))return 'Recorded move '+m[1]+'. '+english(m[2].trim());
+ if(m=s.match(/^(\d+)路の新しい碁盤です。編集モードで石を打てます。$/))return 'New '+m[1]+'×'+m[1]+' board. Play stones in edit mode.';
+ if(m=s.match(/^移動先は0～(\d+)の整数で入力してください。$/))return 'Enter a whole move number from 0 to '+m[1]+'.';
+ if(m=s.match(/^(\d+)子の置碁を設定しました。白番・編集モードです。$/))return m[1]+'-stone handicap set. White to play, edit mode.';
+ if(m=s.match(/^(\d+)手付近：(.*)$/))return 'Near move '+m[1]+': '+english(m[2]);
+ if(m=s.match(/^(\d+)手目：(.*)$/))return 'Move '+m[1]+': '+english(m[2]);
+ if(m=s.match(/^(.*)（位置 (\d+)）$/))return english(m[1])+' (position '+m[2]+')';
+ if(m=s.match(/^(\w+) に値がありません$/))return 'Missing value for '+m[1];
+ if(m=s.match(/^([A-Z])：(本譜|変化\d+)を表示中$/))return m[1]+': '+english(m[2]);
+ if(m=s.match(/^(\d+)路、(\d+)手。(黒|白)番。(編集モード。矢印で交点を選びEnterで着手。|閲覧モード。石を押すとその手へ移動。)$/))return m[1]+'×'+m[1]+', move '+m[2]+'. '+(m[3]==='黒'?'Black':'White')+' to play. '+(m[4].startsWith('編集')?'Edit mode. Use arrow keys and Enter to play.':'View mode. Select a stone to go to that move.');
+ if(m=s.match(/^(左|右)パネルの幅$/))return (m[1]==='左'?'Left':'Right')+' panel width';
+ if(m=s.match(/^(.+)を端末内から選択$/))return 'Browse for '+english(m[1]);
+ if(m=s.match(/^(実行ファイル|モデル|設定ファイル|エンジン|設定)を指定してください[。]?$/))return 'Specify '+english(m[1])+'.';
+ if(m=s.match(/^(.+?)が見つかりません：(.*)$/))return english(m[1])+' not found: '+m[2];
+ if(m=s.match(/^(.+) の拡張子が対応していません（exe \/ bin.gz・bin・txt.gz・txt \/ cfg）$/))return 'Unsupported extension for '+m[1]+'. Expected exe / bin.gz, bin, txt.gz, txt / cfg.';
+ if(m=s.match(/^(?:エンジン|KataGo)が終了しました（(.*)）(.*)$/))return 'Engine exited ('+m[1]+')'+english(m[2]);
+ if(m=s.match(/^(.*) 起動要求：(.*)$/))return m[1]+' start request: '+m[2];
+ if(m=s.match(/^(.*) 起動完了（相手の手番中の思考なし）$/))return m[1]+' ready (pondering disabled)';
+
  if(m=s.match(/^盤上 (\d+)手 ／ 取得済み (\d+)候補（一覧はすべて表示）(.*)$/))return 'On board: '+m[1]+' moves / '+m[2]+' candidates received (expand for ranks 11+). '+english(m[3]);
  if(m=s.match(/^読み筋 (\d+)手（マウスを外すと戻ります）。クリックすると候補手の１手だけを着手します。(.*)$/))return 'PV: '+m[1]+' moves. Move the pointer away to return; click to play only the first move. '+english(m[2].trim());
  if(m=s.match(/^現在の棋譜を置き換えて、(\d+)子の置碁を始めますか？$/))return 'Replace the current game with a '+m[1]+'-stone handicap game?';
@@ -16,7 +58,7 @@ function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];let m;
  if(m=s.match(/^経過 (.*)秒 ／ 残り約 (.*)秒(.*)$/))return 'Elapsed '+m[1]+' s / about '+m[2]+' s remaining'+(m[3]?' (earlier ko history and captures excluded)':'');
  if(m=s.match(/^黒 (.*?)％／(.*?)目　白 (.*?)％／(.*?)目（(黒|白)AIの着手前評価）$/))return 'Black '+m[1]+'% / '+m[2]+' pts · White '+m[3]+'% / '+m[4]+' pts ('+(m[5]==='黒'?'Black':'White')+' AI, before move)';
  if(m=s.match(/^(日本|中国)ルールでの計算結果$/))return 'Score under '+(m[1]==='日本'?'Japanese':'Chinese')+' rules';
- if(s.startsWith('黒：')&&s.includes('（地）'))return s.replaceAll('黒：','Black: ').replaceAll('白：','White: ').replaceAll('（地）',' (territory)').replaceAll('（取られた石）',' (captured)').replaceAll('（石）',' (stones)').replaceAll('（コミ）',' (komi)').replaceAll('（補正）',' (adjustment)');
+ if(/^[黒白]：/.test(s)&&s.includes('（地）'))return s.replaceAll('黒：','Black: ').replaceAll('白：','White: ').replaceAll('（地）',' (territory)').replaceAll('（取られた石）',' (captured)').replaceAll('（石）',' (stones)').replaceAll('（コミ）',' (komi)').replaceAll('（補正）',' (adjustment)');
  if(s.startsWith('実行ファイル：'))return s.replace(/^実行ファイル：/,'Engine: ').replace(/\nモデル：/,'\nModel: ').replace(/\n設定：/,'\nConfig: ');
  if(m=s.match(/^(\d+)路、(\d+)手。(黒|白)番。(閲覧|編集)モード。矢印で交点を選びEnterで着手。$/))return m[1]+'×'+m[1]+', move '+m[2]+'. '+(m[3]==='黒'?'Black':'White')+' to play. '+(m[4]==='編集'?'Edit':'View')+' mode. Select a point with arrow keys and press Enter to play.';
  if(m=s.match(/^(\d+)路$/))return m[1]+'×'+m[1];
@@ -50,9 +92,9 @@ function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];let m;
  let out=s;for(const key of fragments)if(out.includes(key))out=out.split(key).join(dictionary[key]);return out;
 }
 function t(s){return language==='en'?english(String(s)):String(s);}
-function textNode(n){const p=n.parentElement;if(!p||p.closest(protectedSelector)||(p.closest('pre')&&!p.closest('#engine-running-files,#engine-log,#match-log')))return;
+function textNode(n){const p=n.parentElement;if(!p||p.closest(protectedSelector)||(p.closest('pre')&&!p.closest('#engine-running-files,#engine-log,#match-log,#engine-error-text')))return;
  let r=texts.get(n);if(!r||n.data!==r.shown)r={raw:n.data,shown:n.data};
- const core=r.raw.trim(),log=p.closest('#engine-log,#match-log'),next=log?(language==='en'?r.raw.split('\n').map(line=>Object.hasOwn(dictionary,line)?dictionary[line]:line.replace(/^KataGoの注意：/,'KataGo notice: ').replace(/^同梱エンジンの確認：/,'Bundled engine check: ')).join('\n'):r.raw):r.raw.replace(core,t(core));r.shown=next;texts.set(n,r);if(n.data!==next)n.data=next;
+ const core=r.raw.trim(),log=p.closest('#engine-log,#match-log'),next=log?(language==='en'?r.raw.split('\n').map(line=>/[ぁ-龯]/.test(line)?english(line.replace(/^同梱エンジンの確認：/,'Bundled engine check: ')):line).join('\n'):r.raw):r.raw.replace(core,t(core));r.shown=next;texts.set(n,r);if(n.data!==next)n.data=next;
 }
 function attr(e,key){let a=attributes.get(e);if(!a){a={};attributes.set(e,a);}const current=e.getAttribute(key);if(current===null)return;let r=a[key];if(!r||current!==r.shown)r={raw:current};const next=t(r.raw);r.shown=next;a[key]=r;if(current!==next)e.setAttribute(key,next);}
 let observer,queued=false,titleState=null,nativeTitle="";

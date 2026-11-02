@@ -15,3 +15,12 @@ pub fn parts(name:&str)->(String,Option<(&'static str,&'static str)>){
  #[test]fn upper_case_and_other_exports(){assert_eq!(parts("TEST.SGF").0,"TEST");assert_eq!(parts("盤面.png").1.unwrap().1,"png");assert_eq!(parts("結果.json").0,"結果");}
  #[test]fn unknown_extension_is_not_removed(){assert_eq!(parts("record.xyz"),("record.xyz".into(),None));}
 }
+
+/// App-owned file type labels follow the UI language; the OS owns dialog buttons.
+pub fn label<'a>(japanese:&'a str,extension:&str,language:Option<&str>)->&'a str{
+ if language!=Some("en"){return japanese;}
+ match extension{"sgf"=>"SGF Game (*.sgf)","json"=>"Analysis Data (*.json)","png"=>"PNG Image (*.png)","jpg"=>"JPEG Image (*.jpg)","gif"=>"GIF Image (*.gif)","csv"=>"CSV Data (*.csv)",_=>japanese}
+}
+#[cfg(test)]mod localization_tests{use super::*;
+ #[test]fn labels_follow_language(){assert_eq!(label("SGF棋譜 (*.sgf)","sgf",Some("en")),"SGF Game (*.sgf)");assert_eq!(label("SGF棋譜 (*.sgf)","sgf",None),"SGF棋譜 (*.sgf)");}
+}
