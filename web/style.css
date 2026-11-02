@@ -85,3 +85,8 @@ body.editing-mode .controls{background:#335e60;border-color:#335e60;color:white}
 #load-options{flex-direction:column;align-items:stretch}
 #load-options>button,#load-options>.encoding-menu{flex:none;width:100%;margin:0}
 #load-options>.encoding-menu>summary{display:block;width:100%}
+
+/* Update98: clip the variation viewport; connectors have bounded paint areas. */
+#move-strip{contain:layout paint}
+.branch-connectors{position:absolute;inset:0;pointer-events:none}
+.branch-connector{position:absolute;display:block;background:#658680;pointer-events:none}
