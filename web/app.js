@@ -421,7 +421,7 @@
     const paths=entries.map(linePath),rowOf=new Map(entries.map(entry=>[entry,lanes.indexOf(entry.lane)])),step=40,labelWidth=0,rowHeight=46;
     const width=labelWidth+Math.max(...paths.map(path=>path.length))*step+6;
     const labels=document.createElement('div');labels.className='variation-labels';const viewport=document.createElement('div');viewport.className='variation-viewport';host.append(labels,viewport);const graph=document.createElement('div');graph.className='variation-graph';graph.style.width=width+'px';graph.style.minWidth='100%';viewport.append(graph);
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.classList.add('branch-lines');svg.setAttribute('width',width);svg.setAttribute('height',lanes.length*rowHeight);graph.append(svg);
+    const connectors=document.createElement('div');connectors.className='branch-connectors';graph.append(connectors);
     const strips=new Map();
     for(const lane of lanes){const group=entries.filter(entry=>entry.lane===lane),row=document.createElement('div');row.className='variation-row';row.classList.toggle('active-line',selected.lane===lane);
       const title=document.createElement('button');title.className='line-title';title.textContent=lane?'変化'+lane:'本譜';title.title=lane?'クリックするたびに、この行の次の分岐へ移動します':'本譜へ戻ります';title.disabled=!!insertion;title.onclick=async ()=>{if(!lane){(await mainline());return;}const entry=group.find(entry=>entry.start>frames[index].move)||group[0];(await chooseLine(entry,entry.anchor));};const labelRow=document.createElement('div');labelRow.className='variation-label-row';labelRow.classList.toggle('active-line',selected.lane===lane);labelRow.append(title);labels.append(labelRow);
@@ -431,7 +431,11 @@
       const center=path.indexOf(route[index]),start=Math.max(anchor,center-80),visible=records.slice(start,start+200);
       for(const record of visible){const button=document.createElement('button');button.type='button';button.textContent=String(record.move);button.title=(entry.number?'変化'+entry.lane:'本譜')+' '+record.move+'手の局面へ移動します';button.className='move-chip';button.style.left=record.column*step+'px';button.classList.toggle('white',!!record.node.props.W);button.classList.toggle('current',record.node===route[index]);button.disabled=!!insertion;button.onclick=async ()=>(await chooseLine(entry,record.node));strip.append(button);}
       if(entry.number){const parent=parentIndex.get(entry.anchor),parentEntry=lineEntry(parent),parentRow=rowOf.get(parentEntry);const x=labelWidth+(anchor-1)*step+12,y=r*rowHeight+23,toX=x+step;
-        const line=document.createElementNS(svg.namespaceURI,'path');line.setAttribute('d',parentRow===undefined?'M '+(x+18)+' '+(y-16)+' V '+y+' H '+toX:'M '+x+' '+(parentRow*rowHeight+23)+' H '+(x+18)+' V '+y+' H '+toX);svg.append(line);
+        // Small border segments avoid a full-game-wide SVG raster surface.
+        const fromY=parentRow===undefined?y-16:parentRow*rowHeight+23;
+        const segment=(left,top,w,h)=>{const el=document.createElement('i');el.className='branch-connector';Object.assign(el.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});connectors.append(el);};
+        if(parentRow!==undefined)segment(x,fromY,18,1.5);
+        segment(x+18,Math.min(fromY,y),1.5,Math.abs(y-fromY)+1.5);segment(x+18,y,toX-x-18,1.5);
 
       }
     });
