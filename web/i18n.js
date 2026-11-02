@@ -3,7 +3,20 @@
 const KEY='gokifu-language',dictionary=window.KifuEnglish||{},texts=new WeakMap(),attributes=new WeakMap();
 let language='ja';try{language=localStorage.getItem(KEY)==='en'?'en':'ja';}catch{}
 const protectedSelector='script,style,textarea,code,[data-no-i18n],.game-title,#simple-title,#black-name,#white-name,#comment,#metadata dd,.notes-content p,.notes-content dd,#engine-active-name,#engine-nearby-name,#engine-order button:first-child,#engine-profile option:not([value=""]),#match-black option:not([value="human"]):not([value="current"]),#match-white option:not([value="human"]):not([value="current"]),#engine-files';
+const fragments=Object.keys(dictionary).filter(k=>k.length>=4&&/[ぁ-龯]/.test(k)).sort((a,b)=>b.length-a.length);
 function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];let m;
+ if(m=s.match(/^盤上 (\d+)手 ／ 取得済み (\d+)候補（一覧はすべて表示）(.*)$/))return 'On board: '+m[1]+' moves / '+m[2]+' candidates received (expand for ranks 11+). '+english(m[3]);
+ if(m=s.match(/^読み筋 (\d+)手（マウスを外すと戻ります）。クリックすると候補手の１手だけを着手します。(.*)$/))return 'PV: '+m[1]+' moves. Move the pointer away to return; click to play only the first move. '+english(m[2].trim());
+ if(m=s.match(/^現在の棋譜を置き換えて、(\d+)子の置碁を始めますか？$/))return 'Replace the current game with a '+m[1]+'-stone handicap game?';
+ if(m=s.match(/^(.*)の推定$/))return 'Estimate by '+m[1];
+ if(m=s.match(/^(.*)が投了しました。$/))return m[1]+' resigned.';
+ if(m=s.match(/^(黒|白)視点：勝率％／目数差（＋は(黒|白)有利）$/))return (m[1]==='黒'?'Black':'White')+' perspective: win % / score lead (+ favors '+(m[2]==='黒'?'Black':'White')+').';
+ if(m=s.match(/^変化([0-9０-９]+)(.*)$/))return 'Variation '+m[1]+m[2].replace(/（(\d+)手で分岐）/,' (branches at move $1)').replace(/（(\d+)手〜）/,' (from move $1)');
+ if(m=s.match(/^(解析済み|解析完了|解析中止|解析中断) (\d+)／(\d+)局面$/))return dictionary[m[1]]+' '+m[2]+' / '+m[3]+' positions';
+ if(m=s.match(/^経過 (.*)秒 ／ 残り約 (.*)秒(.*)$/))return 'Elapsed '+m[1]+' s / about '+m[2]+' s remaining'+(m[3]?' (earlier ko history and captures excluded)':'');
+ if(m=s.match(/^黒 (.*?)％／(.*?)目　白 (.*?)％／(.*?)目（(黒|白)AIの着手前評価）$/))return 'Black '+m[1]+'% / '+m[2]+' pts · White '+m[3]+'% / '+m[4]+' pts ('+(m[5]==='黒'?'Black':'White')+' AI, before move)';
+ if(m=s.match(/^(日本|中国)ルールでの計算結果$/))return 'Score under '+(m[1]==='日本'?'Japanese':'Chinese')+' rules';
+ if(s.startsWith('黒：')&&s.includes('（地）'))return s.replaceAll('黒：','Black: ').replaceAll('白：','White: ').replaceAll('（地）',' (territory)').replaceAll('（取られた石）',' (captured)').replaceAll('（石）',' (stones)').replaceAll('（コミ）',' (komi)').replaceAll('（補正）',' (adjustment)');
  if(s.startsWith('実行ファイル：'))return s.replace(/^実行ファイル：/,'Engine: ').replace(/\nモデル：/,'\nModel: ').replace(/\n設定：/,'\nConfig: ');
  if(m=s.match(/^(\d+)路、(\d+)手。(黒|白)番。(閲覧|編集)モード。矢印で交点を選びEnterで着手。$/))return m[1]+'×'+m[1]+', move '+m[2]+'. '+(m[3]==='黒'?'Black':'White')+' to play. '+(m[4]==='編集'?'Edit':'View')+' mode. Select a point with arrow keys and press Enter to play.';
  if(m=s.match(/^(\d+)路$/))return m[1]+'×'+m[1];
@@ -32,12 +45,14 @@ function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];let m;
  if(m=s.match(/^「(.+)」を読み込みました。上部の起動／再起動ボタンで反映します。$/))return 'Selected “'+m[1]+'”. Start or restart the engine to apply it.';
  if(m=s.match(/^(黒|白)の([\d.]+)目勝ち$/))return (m[1]==='黒'?'Black':'White')+' wins by '+m[2];
  if(m=s.match(/^(.*) \((Home|End|M|C|Ctrl\+Home)\)$/)){const v=english(m[1]);if(v!==m[1])return v+' ('+m[2]+')';}
- return s;
+ // Translate known sentence fragments in dynamically assembled UI messages.
+ // Game metadata and protocol logs are excluded by textNode.
+ let out=s;for(const key of fragments)if(out.includes(key))out=out.split(key).join(dictionary[key]);return out;
 }
 function t(s){return language==='en'?english(String(s)):String(s);}
-function textNode(n){const p=n.parentElement;if(!p||p.closest(protectedSelector)||(p.closest('pre')&&!p.closest('#engine-running-files')))return;
+function textNode(n){const p=n.parentElement;if(!p||p.closest(protectedSelector)||(p.closest('pre')&&!p.closest('#engine-running-files,#engine-log,#match-log')))return;
  let r=texts.get(n);if(!r||n.data!==r.shown)r={raw:n.data,shown:n.data};
- const core=r.raw.trim(),next=r.raw.replace(core,t(core));r.shown=next;texts.set(n,r);if(n.data!==next)n.data=next;
+ const core=r.raw.trim(),log=p.closest('#engine-log,#match-log'),next=log?(language==='en'?r.raw.split('\n').map(line=>Object.hasOwn(dictionary,line)?dictionary[line]:line.replace(/^KataGoの注意：/,'KataGo notice: ').replace(/^同梱エンジンの確認：/,'Bundled engine check: ')).join('\n'):r.raw):r.raw.replace(core,t(core));r.shown=next;texts.set(n,r);if(n.data!==next)n.data=next;
 }
 function attr(e,key){let a=attributes.get(e);if(!a){a={};attributes.set(e,a);}const current=e.getAttribute(key);if(current===null)return;let r=a[key];if(!r||current!==r.shown)r={raw:current};const next=t(r.raw);r.shown=next;a[key]=r;if(current!==next)e.setAttribute(key,next);}
 let observer,queued=false,titleState=null,nativeTitle="";
