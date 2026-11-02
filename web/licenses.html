@@ -1,6 +1,6 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>著作権・ライセンス — 碁盤編集ツール</title><style>body{font:15px/1.8 system-ui,sans-serif;color:#183c40;max-width:850px;margin:auto;padding:22px}h1{font-size:24px}h2{font-size:19px;margin-top:1.7em}a{color:#17676a}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f5;padding:14px;font:13px/1.7 ui-monospace,monospace}li{margin:6px 0}nav{margin-top:24px}</style></head><body>
-<h1>著作権・ライセンス</h1><p>棋譜編集ツール</p>
-<p>解析接続・画面も上記の独立碁盤に追加した実装です。Windows版にはKataGoのEigenエンジンと対応モデルを同梱しています。他のエンジン・モデルは設定から指定できます。KataGoの著作権・利用条件はengines/katago内のREADME.txtとKataGo-LICENSE.txtをご覧ください。</p><h2>碁盤編集ツール</h2><p>Copyright © 2026 Eba。独立碁盤の本体はMITライセンスです。<a href="LICENSE.txt">ライセンス原文</a></p>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>著作権・ライセンス — Go棋譜Studio</title><style>body{font:15px/1.8 system-ui,sans-serif;color:#183c40;max-width:850px;margin:auto;padding:22px}h1{font-size:24px}h2{font-size:19px;margin-top:1.7em}a{color:#17676a}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f5;padding:14px;font:13px/1.7 ui-monospace,monospace}li{margin:6px 0}nav{margin-top:24px}</style></head><body>
+<h1>著作権・ライセンス</h1><p>Go棋譜Studio</p>
+<p>Go棋譜Studioは、独立実装の碁盤に解析接続・画面を追加したアプリです。Windows版にはKataGoのEigenエンジンと対応モデルを同梱しています。他のエンジン・モデルは設定から指定できます。KataGoの著作権・利用条件はengines/katago内のREADME.txtとKataGo-LICENSE.txtをご覧ください。</p><h2>碁盤編集ツール</h2><p>Copyright © 2026 Eba。独立碁盤の本体はMITライセンスです。<a href="LICENSE.txt">ライセンス原文</a></p>
 <pre>MIT License
 
 Copyright (c) 2026 Eba
@@ -44,8 +44,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </pre>
-<h2>掲示板と組み合わせて使用する場合</h2><ul><li>掲示板：<a href="https://www.kent-web.com/">Web Forum — KENT-WEB</a>（改変版）。<a href="https://www.kent-web.com/pubc/kitei.html">利用規定</a>・<a href="https://www.kent-web.com/pubc/saihaifu.html">再配布規定</a>。</li><li>碁盤と掲示板の融合への貢献：Juno , Qitailang。</li><li>改造・配布：<a href="https://www.h-eba.jp/">Eba</a>。</li></ul><p>掲示板および同梱のPerlライブラリには、それぞれの原著作者の利用条件が適用されます。配布物全体をMITライセンスとするものではありません。改造部分のお問い合わせは配布者へお願いします。</p>
-<h2>ソースと実装について</h2><p>碁盤はEidoGoの実行コード・画像・playerフォルダを使用しない独立実装です。実行している非圧縮JavaScriptがソースで、goフォルダに含まれています。</p><ul><li>engine.js：着手と囲碁ルールの処理。</li><li>sgf.js・import.js：SGFおよび他形式の読込み。</li><li>score.js：地合い計算。</li><li>export.js：画像・GIF・棋譜の書出し。</li><li>app.js：画面操作と編集。</li><li>forum-bridge.js：掲示板記事の棋譜読込み。</li></ul><nav class="return-board"><a href="index.html" id="return-board">碁盤に戻る</a></nav>
+<h2>ソースと実装について</h2><p>碁盤はEidoGoの実行コード・画像・playerフォルダを使用しない独立実装です。実行している非圧縮JavaScriptがソースで、webフォルダに含まれています。</p><ul><li>engine.js：着手と囲碁ルールの処理。</li><li>sgf.js・import.js：SGFおよび他形式の読込み。</li><li>score.js：地合い計算。</li><li>export.js：画像・GIF・棋譜の書出し。</li><li>app.js：画面操作と編集。</li></ul><nav class="return-board"><a href="index.html" id="return-board">碁盤に戻る</a></nav>
 <script>
 document.getElementById('return-board').addEventListener('click',function(event){
   event.preventDefault();
