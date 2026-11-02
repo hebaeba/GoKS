@@ -90,7 +90,7 @@ source.addEventListener('contextmenu',async e=>{
   if(!dialog.open||token!==loadToken)return;
   for(const item of items){const type=item.types.find(t=>/^image\/(png|jpeg|webp)$/.test(t));if(!type)continue;
    const blob=await item.getType(type);if(!dialog.open||token!==loadToken)return;
-   return receiveImages([new File([blob],'貼り付けた画像.'+(type==='image/jpeg'?'jpg':type.split('/')[1]),{type})]);
+   return receiveImages([new File([blob],(window.KifuI18n?.t('貼り付けた画像')||'貼り付けた画像')+'.'+(type==='image/jpeg'?'jpg':type.split('/')[1]),{type})]);
   }
   imageHint('コピーされた画像がありません。「画像をコピー」またはスクリーンショットを実行し、Ctrl+Vで貼り付けてください。');
  }catch{if(dialog.open&&token===loadToken)imageHint('クリップボードの読み取りが許可されませんでした。この窓で Ctrl+V を押して貼り付けてください。');}
