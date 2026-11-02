@@ -1187,3 +1187,5 @@ Object.assign(window.KifuEnglish, {
   "先に盤面を進めて、挿入後の確認が必要な着手を処理してください。": "Advance the board and resolve moves needing confirmation after insertion first.",
   "画像を保存しました。": "Image saved."
 });
+
+Object.assign(window.KifuEnglish, {"自由置碁":"Free Handicap","置き石を配置":"Place Black Stones","自由置碁の盤面を作成します。現在の棋譜を置き換えますか？":"Create a free-handicap board and replace the current game?","自由置碁は黒石を2個以上配置してから開始してください。":"Place at least two black setup stones before starting a free-handicap game.","文字コードを読み取れません。「文字化けする場合」で文字コードを選び直してください。":"Cannot decode this file. Choose the correct encoding under Encoding."});

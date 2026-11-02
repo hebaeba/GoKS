@@ -23,29 +23,32 @@
       }
       fail('SGFの ] がありません');
     }
-    function tree(depth) {
-      if (depth > 128) fail('変化の入れ子が深すぎます');
+    function tree() {
       if (text[cursor++] !== '(') fail('SGFの ( がありません');
-      spaces(); let first = null, last = null;
-      while (text[cursor] === ';') {
-        cursor++; if (++count > LIMIT) fail('局面数が多すぎます（上限20,000）');
-        const current = node();
-        if (last) last.children.push(current); else first = current;
-        last = current; spaces();
-        while (/[A-Z]/.test(text[cursor] || '') && cursor < text.length) {
-          let key = '';
-          while (/[A-Z]/.test(text[cursor] || '') && cursor < text.length) key += text[cursor++];
-          spaces(); const list = [];
-          while (text[cursor] === '[') { list.push(value()); spaces(); }
-          if (!list.length) fail(key + ' に値がありません');
-          if (Object.hasOwn(current.props, key)) fail('SGFのプロパティが重複しています：' + key);
-          current.props[key] = list;
-        }
+      const stack=[{first:null,last:null,branched:false}];
+      while(stack.length){
+        spaces();const frame=stack[stack.length-1],char=text[cursor];
+        if(char===';'){
+          if(frame.branched)fail('SGFの ) がありません');
+          cursor++;if(++count>LIMIT)fail('局面数が多すぎます（上限20,000）');
+          const current=node();if(frame.last)frame.last.children.push(current);else frame.first=current;frame.last=current;spaces();
+          while(/[A-Z]/.test(text[cursor]||'')&&cursor<text.length){
+            let key='';while(/[A-Z]/.test(text[cursor]||'')&&cursor<text.length)key+=text[cursor++];
+            spaces();const list=[];while(text[cursor]==='['){list.push(value());spaces();}
+            if(!list.length)fail(key+' に値がありません');
+            // Some exporters append their AP metadata to an existing AP. Last producer wins.
+            if(Object.hasOwn(current.props,key)&&key!=='AP')fail('SGFのプロパティが重複しています：'+key);
+            current.props[key]=list;
+          }
+        }else if(char==='('){
+          if(!frame.last)fail('SGFに局面がありません');
+          frame.branched=true;cursor++;stack.push({first:null,last:null,branched:false});
+        }else if(char===')'){
+          if(!frame.first)fail('SGFに局面がありません');
+          cursor++;stack.pop();if(!stack.length)return frame.first;
+          stack[stack.length-1].last.children.push(frame.first);
+        }else fail('SGFの ) がありません');
       }
-      if (!first) fail('SGFに局面がありません');
-      while (text[cursor] === '(') { last.children.push(tree(depth + 1)); spaces(); }
-      if (text[cursor++] !== ')') fail('SGFの ) がありません');
-      return first;
     }
     spaces(); const game = tree(0); spaces();
     if (cursor !== text.length) fail('複数棋譜の一括読込みには対応していません。1局ずつ読み込んでください');

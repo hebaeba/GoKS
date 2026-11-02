@@ -167,6 +167,7 @@
       const text=tool==='label'?$('label-text').value:tool==='number'?String(serial):String.fromCharCode((tool==='upper'?65:97)+(serial-1)%26);
       if(!text)throw Error('配置する文字を入力してください。');removeAt(props,point,markerKeys);(props.LB??=[]).push(coordinate+':'+text);if(tool==='label')(props.XIGTEXT??=[]).push(coordinate);if(tool!=='label')serial++;
     }else {const existed=R.expanded(props[tool]||[],size).includes(point);removeAt(props,point,markerKeys);if(!existed)(props[tool]??=[]).push(coordinate);}
+    if(root.props.XIGFREEHANDICAP&&!root.children.length){const count=R.expanded(root.props.AB||[],size).length;root.props.HA=[String(count)];root.props.PL=['W'];}
   },'盤上の編集を反映しました。',true);}
   $('delete-move').onclick=async ()=>{if(!editing||insertion||index===0||!(await canLeave()))return;transaction(()=>{const parent=route[index-1],child=route[index];parent.children.splice(parent.children.indexOf(child),1);choices.set(parent,0);index--;},'表示中の局面とその先を削除しました。取り消しで元に戻せます。');};
   $('undo').onclick=async ()=>(await history(true));$('redo').onclick=async ()=>(await history(false));$('insert').onclick=startOrFinishInsert;
@@ -235,7 +236,7 @@
       }else if(latest&&!marks.has(point)){c.strokeStyle=renderMonochrome?(color===R.BLACK?'#fff':'#000'):color===R.BLACK?'#ff9980':'#b5261a';c.lineWidth=Math.max(1.5,gap*.07);c.beginPath();c.arc(x,y,r*.28,0,Math.PI*2);c.stroke();}
     });
     if(!scoreSession)drawMarkup(c,{gap,start,extent},marks,state);drawScore(c,{gap,start,extent});
-    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion&&(tool==='play'||!editing)){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point]||marks.has(point))continue;const text=lineEntry(child).label,{x,y}=displayXY(point);c.save();const font=16*extent/(canvas.clientWidth||extent);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle=ink('#ebc365','#fff');c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle=ink('#06ad01');c.fillText(text,x,y);c.restore();}}
+    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point])continue;const text=lineEntry(child).label;let {x,y}=displayXY(point);const marked=marks.has(point);if(marked){x+=gap*.29;y-=gap*.29;}c.save();const font=gap*(marked?.4:.6);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle=ink('#ebc365','#fff');c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle=ink('#06ad01');c.fillText(text,x,y);c.restore();}}
 
     if(keyboardBoard){const {x,y}=displayXY(focusPoint);c.strokeStyle=ink('#006675');c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
   }
@@ -585,6 +586,14 @@
       if(insertion||scoreSession||exportBusy||!canLeaveSync())throw Error('編集中の操作を終了してください。');
       const komi=currentKomi();editing=true;if(!transaction(()=>{root=S.create(size);root.props.KM=[String(komi)];originalName='kifu.sgf';choices=new WeakMap();index=0;commentTarget=null;infoTarget=null;analysisPreview=null;},'新しい対局用に盤面をクリアしました。'))throw Error('盤面をクリアできませんでした。');
       window.dispatchEvent(new Event('kifu-record-replaced'));
+    },
+    async matchFreeSetup(){
+      if(window.KifuMatch?.locked||!await canLeave())return false;
+      if(!root.props.XIGFREEHANDICAP||root.children.length){
+        if(GoExport.hasRecord(root)&&!await KifuDialogs.confirm('自由置碁の盤面を作成します。現在の棋譜を置き換えますか？',{accept:'盤面を作成'}))return false;
+        this.matchReset();root.props.XIGFREEHANDICAP=['1'];root.props.HA=['0'];root.props.KM=['0.5'];root.props.PL=['W'];
+      }
+      editing=true;tool='AB';$('tool').value='AB';$('tool').onchange();infoTarget=null;rebuild();refresh();return true;
     },
     matchSetup(h){
       if(!Number.isInteger(h)||h<0||h>9||h===1)throw Error('置き石数が不正です。');
