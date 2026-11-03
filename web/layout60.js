@@ -5,11 +5,11 @@
  function defaultRight(){const tabs=document.querySelector('.workspace-tabs');const buttons=tabs?[...tabs.querySelectorAll('button')].filter(e=>!e.hidden):[];return Math.ceil(Math.max(420,buttons.reduce((n,e)=>n+e.getBoundingClientRect().width,0)+buttons.length*8+28));}
  function fit(){
   if(document.body.classList.contains('simple-mode')){positionHandles();return;}
-  const block=document.querySelector('.board-block'),desktop=matchMedia('(min-width:900px) and (pointer:fine)').matches;
+  const block=document.querySelector('.board-block'),desktop=true;
   const other=['.board-heading','#normal-info','#normal-slider'].reduce((n,s)=>n+(block.querySelector(s)?.getBoundingClientRect().height||0),0)+18;
-  const available=desktop?grid.clientHeight-other:innerHeight-other-30,shown=innerWidth>1100&&!document.body.classList.contains('inspector-collapsed');
+  const available=desktop?grid.clientHeight-other:innerHeight-other-30,shown=true;
   let left=Math.min(leftWidth,Math.max(280,grid.clientWidth-360)),right=shown?Math.min(rightWidth||defaultRight(),Math.max(340,grid.clientWidth-left-220)):0;
-  const width=desktop?grid.clientWidth-left-20-(right?right+8:0):block.clientWidth-12;
+  const width=Math.max(240,grid.clientWidth-left-20-(right?right+8:0));
   const size=Math.floor(Math.max(80,Math.min(width,available)));
   if(desktop){const spare=Math.max(0,grid.clientWidth-left-20-(right?right+8:0)-size);left+=spare;}
   grid.style.setProperty('--side-width',left+'px');grid.style.setProperty('--right-width',right+'px');grid.style.setProperty('--normal-board-size',size+'px');

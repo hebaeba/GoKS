@@ -81,3 +81,5 @@ Update100: user-selectable appearance replaces fixed-size-only policy. Standard 
 
 ## Update101
 Appearance Apply and Revert keep the window open; only Close exits. Native appearance uses auxiliary IPC with acknowledgement, not only BroadcastChannel. Preserve per-language font sizes and Windows installed-font enumeration. Shared engine movement buttons operate on the selected row; startup radio is a separate persistent preference. Author-owned code/assets use MIT.
+
+Update102: bundled engine paths are relative to the desktop executable, not the process working directory. Preserve external engine paths. Cancellable search does not play its result: send play explicitly only after epoch validation. Pause/takeback stop searches without killing supported engines. Keep legacy fallback for noncancellable searches. Normal/simple layout must not depend on stale breakpoint grid placement.

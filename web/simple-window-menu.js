@@ -53,20 +53,20 @@
   for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');const text=num;if(el.textContent!==text)el.textContent=text;el.setAttribute('aria-label',(id==='black-captures'?'黒':'白')+'のアゲハマ '+num);}
  }
 
- let nativeQueue=Promise.resolve(),lastNativeWidth=null,nativeTimer;
+ let nativeQueue=Promise.resolve(),lastNativeWidth=null,nativeTimer,nativeRevision=0;
  function desiredWidth(){return Math.max(360,Math.floor(innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14)+12);}
  function resizeNative(value,force=false){
   const invoke=window.__TAURI_INTERNALS__?.invoke;if(!invoke)return;
   const width=value?desiredWidth():0;
   if(!force&&lastNativeWidth===width)return;
-  lastNativeWidth=width;clearTimeout(nativeTimer);
-  const run=()=>{nativeQueue=nativeQueue.catch(()=>{}).then(()=>invoke('desktop_simple_window',{simple:value,width})).catch(error=>{console.error('Window resize:',error);});};
+  lastNativeWidth=width;clearTimeout(nativeTimer);const revision=++nativeRevision;
+  const run=()=>{nativeQueue=nativeQueue.catch(()=>{}).then(()=>revision===nativeRevision?invoke('desktop_simple_window',{simple:value,width}):undefined).catch(error=>{console.error('Window resize:',error);});};
   if(force)run();else nativeTimer=setTimeout(run,100);
  }
  function setMode(value){if(simple===value)return;hideMenus();closePanel();if(value)window.KifuSidebar?.enterSimple();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
   if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#komi','#black-name','#black-captures','.stones','#white-captures','#white-name','#move'])move(q(selector),info);move($('slider'),slide);}
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
-  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();
+  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();window.scrollTo(0,0);q('.workspace').scrollLeft=0;q('.board-panel').scrollLeft=0;
  }
  function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');resizeNative(true);}
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);

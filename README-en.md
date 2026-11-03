@@ -1,6 +1,6 @@
 # GoKifuStudio
 
-Version **0.8.0-preview.2**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
+Version **0.8.0-preview.3**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
 
 Extract the entire Windows ZIP and run `GoKifuStudio.exe`. Keep `engines/` beside the executable. End users do not need Node.js or Rust. The bundled engine is KataGo-Eigen. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
@@ -28,3 +28,6 @@ Repository: https://github.com/hebaeba/GoKifuStudio
 Appearance & Sound and Keyboard Shortcuts are in the left panel. Apply saves without closing. Select an installed Windows font or enter its family name and press Enter. Shaded, flat and image stones each offer three original presets per color, plus custom image import.
 
 The radio button at each engine row's right selects the next startup engine. The shared up/down pair moves the selected row. Missing startup registrations or files produce a warning. The initial startup choice is bundled KataGo-Eigen.
+
+## Update 102
+Bundled paths are portable and resolved relative to the Windows executable. Takeback and pause reuse running KataGo processes with cancellable-search support; older versions may restart during an active search. Normal/simple layout transitions are corrected. Outer background is separate from panel background; the warm board theme applies subtle grain without changing its board color.
