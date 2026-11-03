@@ -215,11 +215,11 @@ function renderResult(){if(window.KifuMatch?.locked){overlay.replaceChildren();r
 
  shown.forEach(m=>{const i=moves.indexOf(m);const p=A.point(m.move,s.size);if(p===null)return;const {x,y}=xy(p),g=svgElement('g',{class:'candidate-mark',role:'button',tabindex:0,'aria-label':'候補'+(i+1)+' '+m.move+' '+side+'勝率'+win(m)+'%' });
  svgElement('circle',{cx:x,cy:y,r:gap*.49,fill:A.candidateColor(m,moves[0],position.state.turn,i),stroke:i===0?'#045771':'#748839','stroke-width':i===0?1.8:1.2,'stroke-opacity':Math.max(.12,1/(1+i*.6))},undefined,g);
- const values=display.detail===3?[win(m),A.shortVisits(m.visits),leadText(m)]:[win(m),leadText(m)];const ys=display.detail===3?[-.28,.055,.35]:[-.20,.22];values.forEach((v,row)=>svgElement('text',{x,y:y+gap*ys[row],class:'candidate-value','text-anchor':'middle','dominant-baseline':'central','font-size':gap*(display.detail===3?(row===0?.36:.31):.39),'font-weight':800,fill:i===0?'#ffffff':'#071f18'},v,g));
+ const values=display.detail===3?[win(m),A.shortVisits(m.visits),leadText(m)]:[win(m),leadText(m)];const ys=display.detail===3?[-.28,.055,.35]:[-.20,.22];values.forEach((v,row)=>svgElement('text',{x,y:y+gap*ys[row],class:'candidate-value','text-anchor':'middle','dominant-baseline':'central','font-size':(window.KifuAppearance?.settings.boardText||1)*gap*(display.detail===3?(row===0?.36:.31):.39),'font-weight':800,fill:i===0?'#ffffff':'#071f18'},v,g));
  for(const text of g.querySelectorAll('.candidate-value'))if(text.getComputedTextLength()>gap*.80){text.setAttribute('textLength',gap*.80);text.setAttribute('lengthAdjust','spacingAndGlyphs');}
  const badgeText=m.move===actual?'実・'+(i+1):String(i+1),badgeWidth=gap*(m.move===actual?.85:i>=99?.50:i>=9?.38:.28);
  svgElement('rect',{class:'candidate-rank-badge',x:x+gap*.32,y:y-gap*.65,width:badgeWidth,height:gap*.30,rx:gap*.07,fill:'#fff',stroke:'#31554a','stroke-width':.5},undefined,g);
- svgElement('text',{class:'candidate-rank',x:x+gap*.32+badgeWidth/2,y:y-gap*.50,'text-anchor':'middle','dominant-baseline':'central','font-size':gap*.24,fill:'#154b43'},badgeText,g);
+ svgElement('text',{class:'candidate-rank',x:x+gap*.32+badgeWidth/2,y:y-gap*.50,'text-anchor':'middle','dominant-baseline':'central','font-size':gap*.24*(window.KifuAppearance?.settings.boardText||1),fill:'#154b43'},badgeText,g);
  boardTargets.push({m,s,i,x,y,r:gap*.52});bindCandidate(g,m,s,i);
  });
  if(actual&&actual!=='pass'){const p=A.point(actual,s.size);if(p!==null){const {x,y}=xy(p);const frame=svgElement('g',{class:'actual-move-frame','pointer-events':'none'});for(const [stroke,width]of [['#493600',.13],['#ffd447',.065]])svgElement('rect',{x:x-gap*.47,y:y-gap*.47,width:gap*.94,height:gap*.94,rx:gap*.15,fill:'none',stroke,'stroke-width':gap*width},undefined,frame);}}

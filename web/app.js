@@ -1,4 +1,4 @@
-/* Independent Go Basic — application. Newly implemented, 2026-10-05. MIT. */
+/* Independent Go Basic — application. Newly implemented, 2026-10-05. Noncommercial; see LICENSE.txt. */
 'use strict';
 (() => {
   let toolRoot=null,toolWindow=null,closeToolWindow=null,toolOpening=false;
@@ -140,7 +140,7 @@
     c.strokeStyle='#f4fcff';c.lineWidth=ink+1.8*pixel;c.stroke();
     c.strokeStyle='#075ca8';c.lineWidth=ink;c.stroke();c.restore();
   }
-  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':drawHatching(c,x,y,gap,g.extent/(canvas.clientWidth||g.extent));break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle=renderMonochrome?'#fff':'#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?(renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):'blue'):renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillText(text,x,y);break;}}c.restore();}}}
+  function drawMarkup(c,g,marks,state){const {gap,start}=g;for(const [point,items] of marks){const {x,y}=displayXY(point,g),r=gap*.28;for(const item of items){c.save();c.strokeStyle=renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillStyle=c.strokeStyle;c.lineWidth=Math.max(1.4,gap*.055);c.beginPath();switch(item.key){case 'DD':drawHatching(c,x,y,gap,g.extent/(canvas.clientWidth||g.extent));break;case 'CR':c.arc(x,y,r,0,Math.PI*2);c.stroke();break;case 'SQ':c.strokeRect(x-r,y-r,r*2,r*2);break;case 'TR':c.moveTo(x,y-r*1.2);c.lineTo(x+r,y+r*.75);c.lineTo(x-r,y+r*.75);c.closePath();c.stroke();break;case 'MA':c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.stroke();break;case 'LB':{const text=item.text;let font=item.free?10*g.extent/(canvas.clientWidth||g.extent):gap*.52;c.font='600 '+font+'px system-ui,sans-serif';if(!item.free){const m=c.measureText(text);font*=gap*.56*(window.KifuAppearance?.settings.boardText||1)/Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);c.font='600 '+font+'px system-ui,sans-serif';}let width=c.measureText(text).width;if(!item.free&&width>gap*.84){font*=gap*.84/width;c.font='600 '+font+'px system-ui,sans-serif';width=c.measureText(text).width;}if(!state.board[point]){c.fillStyle=renderMonochrome?'#fff':'#ebc365';c.fillRect(x-width/2-1,y-font*.6,width+2,font*1.2);}c.fillStyle=item.free?(renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):'blue'):renderMonochrome?(state.board[point]===R.BLACK?'#fff':'#000'):(state.board[point]===R.BLACK?'#fff3bf':'#7c251b');c.fillText(text,x,y);break;}}c.restore();}}}
   function fillHatchedAreaAt(event){
     if(tool!=='DD')return false;
     // Consume this context click only in the region tool; ordinary right-click menus stay intact.
@@ -213,7 +213,7 @@
     context.setTransform(canvas.width / extent, 0, 0, canvas.height / extent, 0, 0);
     const marks=pv?new Map():markupMap();const c = context; c.clearRect(0,0,extent,extent);
     c.fillStyle = ink('silver','#fff'); c.fillRect(0,0,extent,extent); c.strokeStyle = ink('#1d2926'); c.lineWidth = extent/width; c.strokeRect(c.lineWidth/2,c.lineWidth/2,extent-c.lineWidth,extent-c.lineWidth);
-    c.fillStyle = ink('#ebc365','#fff'); c.fillRect(wood,wood,span,span);
+    c.fillStyle = ink(window.KifuAppearance?.settings.board||'#ebc365','#fff'); c.fillRect(wood,wood,span,span);if(!renderMonochrome)window.KifuAppearance?.paintBoard(c,wood,span);
     c.strokeStyle=ink('#564424');c.lineWidth=extent/width;c.strokeRect(wood,wood,span,span);
     c.strokeStyle = ink('#564424'); c.lineWidth = .85; c.beginPath();
     for (let n=0;n<size;n++) { const pos=start+n*gap; c.moveTo(start,pos); c.lineTo(start+(size-1)*gap,pos); c.moveTo(pos,start); c.lineTo(pos,start+(size-1)*gap); } c.stroke();
@@ -227,16 +227,16 @@
       const gradient=c.createRadialGradient(x-r*.35,y-r*.4,r*.08,x,y,r);
       if(color===R.BLACK){gradient.addColorStop(0,'#555b5c');gradient.addColorStop(1,'#111415');}
       else{gradient.addColorStop(0,'#ffffff');gradient.addColorStop(1,'#dce2df');}
-      c.fillStyle=renderMonochrome?(color===R.BLACK?'#000':'#fff'):gradient;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle=renderMonochrome?'#000':color===R.BLACK?'#0a1111':'#87958f';c.lineWidth=.7;c.stroke();
+      c.fillStyle=renderMonochrome?(color===R.BLACK?'#000':'#fff'):gradient;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle=renderMonochrome?'#000':color===R.BLACK?'#0a1111':'#87958f';c.lineWidth=.7;c.stroke();if(!renderMonochrome)window.KifuAppearance?.paintStone(c,color,x,y,r);
       const pvLabel=pv?.labels.get(point),label=pv?pvLabel:numberFrames[index][point],latest=state.last?.point===point;
       if((pvLabel||numbers)&&label&&(pvLabel||!$('recent').checked||label>state.move-recentCount())&&!marks.has(point)){
-        const text=String(label);let font=r*1.12;c.font='600 '+font+'px Arial,sans-serif';
+        const text=String(label);let font=r*1.12*(window.KifuAppearance?.settings.boardText||1);c.font='600 '+font+'px Arial,sans-serif';
         const actual=c.measureText(text).width;if(actual>r*1.55)font*=r*1.55/actual;
         c.font='600 '+font+'px Arial,sans-serif';c.fillStyle=renderMonochrome?(color===R.BLACK?'#fff':'#000'):latest?(color===R.BLACK?'#ff9e89':'#b12212'):(color===R.BLACK?'#fff':'#192824');c.fillText(text,x,y+.4);
       }else if(latest&&!marks.has(point)){c.strokeStyle=renderMonochrome?(color===R.BLACK?'#fff':'#000'):color===R.BLACK?'#ff9980':'#b5261a';c.lineWidth=Math.max(1.5,gap*.07);c.beginPath();c.arc(x,y,r*.28,0,Math.PI*2);c.stroke();}
     });
     if(!scoreSession)drawMarkup(c,{gap,start,extent},marks,state);drawScore(c,{gap,start,extent});
-    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point])continue;const text=lineEntry(child).label;let {x,y}=displayXY(point);const marked=marks.has(point);if(marked){x+=gap*.29;y-=gap*.29;}c.save();const font=gap*(marked?.4:.6);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle=ink('#ebc365','#fff');c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle=ink('#06ad01');c.fillText(text,x,y);c.restore();}}
+    if(!pv&&!scoreSession&&route[index].children.length>1&&!insertion){for(const child of route[index].children){const value=child.props.B?.[0]??child.props.W?.[0];if(!value)continue;const point=R.coordinate(value,size,true);if(point===null||state.board[point])continue;const text=lineEntry(child).label;let {x,y}=displayXY(point);const marked=marks.has(point);if(marked){x+=gap*.29;y-=gap*.29;}c.save();const font=gap*(marked?.4:.6)*(window.KifuAppearance?.settings.boardText||1);c.font='700 '+font+'px Arial,sans-serif';const width=c.measureText(text).width;c.fillStyle=ink(window.KifuAppearance?.settings.board||'#ebc365','#fff');c.fillRect(x-width/2-1,y-font*.5,width+2,font);c.fillStyle=ink('#06ad01');c.fillText(text,x,y);c.restore();}}
 
     if(keyboardBoard){const {x,y}=displayXY(focusPoint);c.strokeStyle=ink('#006675');c.lineWidth=2;c.strokeRect(x-gap*.45,y-gap*.45,gap*.9,gap*.9);}
   }
@@ -283,7 +283,7 @@
           const before=snapshot(),parent=route[n-1],child=route[n];parent.children.splice(parent.children.indexOf(child),1);choices.set(parent,0);index=n-1;remember(before);rebuild();refresh();report('対象の手と、その先の手順・分岐を削除しました。取り消しで戻せます。');return;
         }else{refresh();report('手順移動を中止しました。未確認の着手はそのまま残っています。');return;}
       }
-      index=next;refresh();report(route[index].props.XIGFORCE?'利用者が承認した例外着手です。通常の囲碁のルールでは不正な局面を含みます。':frames[index].last?.point===null&&frames[index].last?'パスの局面です。':editing?'編集モードです。続きの着手を記録できます。':'閲覧モードです。棋譜は変更されません。');
+      const soundChanged=next!==index;index=next;refresh();if(soundChanged)window.KifuAppearance?.play(autoPlaying?'autoplay':'navigation');report(route[index].props.XIGFORCE?'利用者が承認した例外着手です。通常の囲碁のルールでは不正な局面を含みます。':frames[index].last?.point===null&&frames[index].last?'パスの局面です。':editing?'編集モードです。続きの着手を記録できます。':'閲覧モードです。棋譜は変更されません。');
     }finally{resolving=false;}
   }
 
@@ -299,7 +299,7 @@
       const saved=snapshot();const before=frames[index],next=R.play(before,point),current=route[index],key=before.turn===R.BLACK?'B':'W',value=R.encode(point,size);
       let chosen=current.children.findIndex(child=>child.props[key]?.[0]===value);
       if(chosen<0){let total=0;visitTree(()=>total++);if(total>=S.LIMIT||saved.sgf.length>2*1024*1024-40)throw Error('編集できる棋譜の上限に達しました。');const child=S.node({[key]:[value]});current.children.push(child);chosen=current.children.length-1;dirty=true;}
-      choices.set(current,chosen);index++;rebuild();if(!insertion&&S.write(root)!==saved.sgf)remember(saved);refresh();report(point===null?'パスを記録しました。':next.move+'手目を記録しました。'+(chosen>0?' 元の続きは本譜として残っています。':''));
+      choices.set(current,chosen);index++;rebuild();if(!insertion&&S.write(root)!==saved.sgf)remember(saved);refresh();if(point!==null)window.KifuAppearance?.play('moves');report(point===null?'パスを記録しました。':next.move+'手目を記録しました。'+(chosen>0?' 元の続きは本譜として残っています。':''));
     }catch(error){report(error.message,true);}
   }
   async function okayToReplace(){if(insertion||!(await canLeave()))return false;return !dirty||(await KifuDialogs.confirm('保存していない変更があります。現在の棋譜を置き換えますか？',{accept:'置き換える'}));}
@@ -784,5 +784,6 @@
   const boardTop=firstElement('.topline');boardTop.before(boardBlock);
   for(const selector of ['.topline','#drop-status','.canvas-wrap','.players','.statusline','#comment-area'])boardBlock.append(firstElement(selector));
   window.addEventListener('workspace-layout',()=>{drawMoveStrip();draw();});
+  window.addEventListener('kifu-appearance-change',()=>{draw();invalidateGif();window.dispatchEvent(new Event('kifu-board-view'));});
   setupAuto();new ResizeObserver(()=>{draw();window.dispatchEvent(new Event("kifu-board-view"));}).observe(canvas);rebuild();refresh();recoveryReady=true;recoverySignature=serialized()+'\n'+$('sgf').value+'\n'+$('comment-edit').value+'\n'+JSON.stringify([...allElements('[data-prop]')].map(input=>input.value));
 })();

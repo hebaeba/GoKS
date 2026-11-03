@@ -1,0 +1,42 @@
+{
+  "format": "GoKifuStudio-theme-prototype-1",
+  "note": "Preview palette; requires application integration.",
+  "themes": {
+    "warm": {
+      "name": "木肌 / Warm wood",
+      "board": "#E7C47B",
+      "grain": "#B98C45",
+      "background": "#EDF3F0",
+      "panel": "#F8FBF9",
+      "text": "#203A34",
+      "accent": "#215E50",
+      "graph": "#495650",
+      "winrate": "#69F044",
+      "score": "#F36BE8"
+    },
+    "paper": {
+      "name": "白灰 / Paper",
+      "board": "#E8E7DF",
+      "grain": "#CBC9BD",
+      "background": "#F0F1F2",
+      "panel": "#FFFFFF",
+      "text": "#1F2933",
+      "accent": "#285E71",
+      "graph": "#F4F5F6",
+      "winrate": "#16763C",
+      "score": "#9D237D"
+    },
+    "night": {
+      "name": "夜 / Night",
+      "board": "#B49B71",
+      "grain": "#88724E",
+      "background": "#202A2B",
+      "panel": "#2D393A",
+      "text": "#F0F5F3",
+      "accent": "#397E6A",
+      "graph": "#1B2528",
+      "winrate": "#7AED6B",
+      "score": "#F488E7"
+    }
+  }
+}

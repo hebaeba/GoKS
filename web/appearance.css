@@ -1,0 +1,25 @@
+/* Colors and appearance layout only. Typography is centralized in ui-policy.css / fields.css. */
+html body{background:var(--app-background,#edf3f0);color:var(--app-text,#203a34)}
+html body :is(.board-panel,.board-block,#board-sidebar,.inspector,.inspector-pane,.files-panel,#floating-content){background:var(--app-panel,#f8fbf9)!important;color:var(--app-text,#203a34)!important}
+html body #floating-header,html body .appearance-window{background:var(--app-panel,#f8fbf9)!important;color:var(--app-text,#203a34)!important}
+html body [data-appearance-editor]{box-sizing:border-box;padding:12px;max-width:100%;line-height:1.5}
+.appearance-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--app-panel);z-index:2;padding:6px 0}
+.appearance-heading h1{margin:0}.appearance-tabs{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid #9baaa4;padding:8px 0}
+.appearance-tabs [aria-selected=true]{background:#215e50;color:white}
+.appearance-section{padding:10px 0}.appearance-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin:9px 0}
+.appearance-row label{display:inline-flex;align-items:center;gap:6px;max-width:100%}.appearance-row input[type=text]{max-width:180px}
+.appearance-row input[type=file]{max-width:100%}.appearance-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;position:sticky;bottom:0;padding:10px 0;background:var(--app-panel)}
+.appearance-example{border:1px solid #91a99e;padding:10px;margin:10px 0}.appearance-hint{opacity:.85}
+.appearance-window [hidden]{display:none!important}.appearance-window input[type=color]{width:42px;height:26px;padding:3px;box-sizing:border-box}
+#appearance-error{color:#b12319;background:#fff2e7;white-space:pre-wrap}#appearance-error:empty{display:none}
+#side-eval-graph{background:var(--graph-background,#4b5650)}.side-eval-legend .win-key:before{background:var(--graph-win,#00ee00)}.side-eval-legend .score-key:before{background:var(--graph-score,#ed00ed)}
+
+#side-eval-graph{font-family:var(--ui-font,system-ui)}
+/* Theme paired foreground/background surfaces together; keep warning and engine badges semantic. */
+html body :is(.engine-dock,#candidate-settings,.analysis-config-row,.analysis-conditions,.analysis-primary,.compact-options,.match-config,.match-player,.match-ranking-side,.worst-side){background:var(--app-panel,#f8fbf9)!important;color:var(--app-text,#203a34)!important}
+html body :is(.controls,.recent-label,.board-view-tools,.region-analysis-toggle,.analysis-visits,.muted,.analysis-status,.compact-explanation){color:var(--app-text,#203a34)!important}
+html body #komi{background:var(--app-panel,#f8fbf9)!important;color:var(--app-text,#203a34)!important}
+html body #black-captures,html body #white-captures{color:#213d39!important}
+html body .controls .side-row .board-view-tools,html body .side-row .reflection-controls{flex-wrap:wrap;max-width:100%}
+html body .board-view-tools #rotation-label{color:var(--app-text,#203a34)}
+html body.sidebar-layout .controls .side-row :is(.recent-label,.jump,.autoplay,output),html body #analysis-visits,html body #rotation-state{color:var(--app-text,#203a34)!important}

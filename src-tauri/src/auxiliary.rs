@@ -1,6 +1,6 @@
 use serde_json::{json,Value};
 use tauri::{Manager,WebviewWindow,AppHandle,WebviewWindowBuilder,WebviewUrl};
-fn label(kind:&str)->Result<&'static str,String>{match kind{"image"=>Ok("aux-image"),"score"=>Ok("aux-score"),"estimate"=>Ok("aux-estimate"),"panel"=>Ok("aux-panel"),_=>Err("補助窓の種類が不正です".into())}}
+fn label(kind:&str)->Result<&'static str,String>{match kind{"image"=>Ok("aux-image"),"score"=>Ok("aux-score"),"estimate"=>Ok("aux-estimate"),"panel"=>Ok("aux-panel"),"appearance"=>Ok("aux-appearance"),_=>Err("補助窓の種類が不正です".into())}}
 fn deliver(window:&WebviewWindow,message:Value)->Result<(),String>{
  window.eval(format!("window.dispatchEvent(new CustomEvent('kifu-aux',{{detail:{}}}));",message)).map_err(|e|e.to_string())
 }
@@ -22,7 +22,7 @@ pub async fn auxiliary(app:AppHandle,window:WebviewWindow,action:String,kind:Str
     return Ok(json!({"existing":true}));
   }
   let w=WebviewWindowBuilder::new(&app,target,WebviewUrl::App(url.into()))
-    .title(if kind=="image"{"画像から局面を取り込む"}else if kind=="estimate"{"推定値"}else if kind=="panel"{"詳細メニュー"}else{"地合い計算"})
+    .title(if kind=="appearance"{"表示・音 / Appearance & Sound"}else if kind=="image"{"画像から局面を取り込む"}else if kind=="estimate"{"推定値"}else if kind=="panel"{"詳細メニュー"}else{"地合い計算"})
     .inner_size(width,height).min_inner_size(400.0,320.0).resizable(true)
     .maximizable(true).minimizable(true).decorations(true).always_on_top(kind=="score")
     .build().map_err(|e|e.to_string())?;

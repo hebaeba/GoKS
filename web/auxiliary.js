@@ -4,9 +4,10 @@ const invoke=()=>window.__TAURI_INTERNALS__?.invoke;
 const params=new URLSearchParams(location.search),kind=params.get('kind'),id=params.get('id');
 const errorText=e=>e?.message||String(e||'補助窓の操作に失敗しました');
 function native(action,kind,payload={}){if(!invoke())return Promise.reject(Error('この機能はWindowsアプリで利用できます。'));return invoke()('auxiliary',{action,kind,payload});}
-if(kind==='panel'){const script=document.createElement('script');script.src='panel-view.js?v=99';document.head.append(script);return;}
+if(kind==='appearance')return;
+if(kind==='panel'){const script=document.createElement('script');script.src='panel-view.js?v=100';document.head.append(script);return;}
 if(kind==='estimate'){
- document.title='推定値';const script=document.createElement('script');script.src='estimate-view.js?v=99';document.head.append(script);return;
+ document.title='推定値';const script=document.createElement('script');script.src='estimate-view.js?v=100';document.head.append(script);return;
 }
 if(kind==='image'||kind==='score'){
  document.body.classList.add('aux-'+kind);document.title=kind==='image'?'画像から局面を取り込む':'地合い計算';
@@ -31,7 +32,7 @@ if(kind==='image'||kind==='score'){
  window.KifuAuxChild={kind,close};
  if(kind==='image'){
   window.IndependentGo={loadSgf(sgf,name){const n=++request;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(n);reject(Error('本体からの応答がありません。本体の確認画面をご確認ください。'));},300000);pending.set(n,{resolve,reject,timer});send('image-import',{request:n,sgf,name}).catch(e=>{clearTimeout(timer);pending.delete(n);reject(Error(errorText(e)));});});}};
-  const script=document.createElement('script');script.src='image-board.js?v=99';script.onload=()=>{document.getElementById('aux-loading')?.remove();document.getElementById('workspace-image-open').click();};script.onerror=()=>problem(Error('画像取り込み機能を読み込めませんでした。'));document.head.append(script);
+  const script=document.createElement('script');script.src='image-board.js?v=100';script.onload=()=>{document.getElementById('aux-loading')?.remove();document.getElementById('workspace-image-open').click();};script.onerror=()=>problem(Error('画像取り込み機能を読み込めませんでした。'));document.head.append(script);
  }else send('ready').catch(problem);
  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.querySelector('#app-confirm-dialog')){e.preventDefault();close().catch(problem);}});
  return;

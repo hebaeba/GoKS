@@ -14,9 +14,11 @@ node scripts/check-bundled-engine.cjs
 if ($LASTEXITCODE -ne 0) { throw 'Bundled KataGo startup or analysis check failed.' }
 if (Test-Path dist/engines/katago/gtp_logs) { Remove-Item dist/engines/katago/gtp_logs -Recurse -Force }
 if (Test-Path dist/engines/katago/KataGoData) { Remove-Item dist/engines/katago/KataGoData -Recurse -Force }
-Copy-Item WINDOWS-TEST.md dist/README.txt -Force
+Copy-Item README.md, README-en.md, Manual.html, THIRD_PARTY_NOTICES.md dist -Force
 Copy-Item web/LICENSE.txt dist/LICENSE.txt -Force
-Copy-Item web/licenses.html dist/licenses.html -Force
+Copy-Item web/licenses.html, web/licenses-en.html dist -Force
 Copy-Item web/licenses dist/licenses -Recurse -Force
+node scripts/check-release-docs.cjs dist
+if ($LASTEXITCODE -ne 0) { throw 'Release documentation is incomplete.' }
 Get-FileHash dist/GoKifuStudio.exe -Algorithm SHA256 | Format-List | Out-File dist/SHA256.txt -Encoding utf8
 Write-Host 'Created dist/GoKifuStudio.exe. Test on Windows before distribution.'
