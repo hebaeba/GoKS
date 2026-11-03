@@ -82,8 +82,8 @@ function render(){
   const sample=document.createElement('div');sample.className='appearance-example';sample.textContent=text('文字の見本：黒番・白番・候補手 0123456789','Preview: Black / White / Candidates 0123456789');sample.append(button(text('ボタンの見本','Sample button'),()=>{}));section.append(sample);
   hint(text('大きい文字では折り返しやスクロールが増え、碁盤が小さくなる場合があります。','Larger text may wrap, require scrolling, or reduce board size.'));
  }else if(tab==='board'){
-  select(row(),text('テーマ','Theme'),draft.theme,[['warm',text('木肌','Warm wood')],['paper',text('白灰','Paper')],['night',text('夜','Night')]],v=>{draft.theme=v;Object.assign(draft,C.themes[v]);preview();render();});
-  for(const [k,ja,en]of [['board','碁盤色','Board'],['background','画面背景','Background'],['panel','パネル背景','Panels'],['text','文字色','Text']])color(row(),text(ja,en),k);
+  select(row(),text('テーマ','Theme'),draft.theme,[['warm',text('木肌','Warm wood')],['paper',text('白灰','Paper')],['night',text('夜','Night')]],v=>{draft.theme=v;Object.assign(draft,C.themes[v]);draft.texture=v==='warm'?'grain':'plain';preview();render();});
+  for(const [k,ja,en]of [['board','碁盤色','Board'],['background','画面の余白色','Outer background'],['panel','パネル背景','Panels'],['text','文字色','Text']])color(row(),text(ja,en),k);
   select(row(),text('碁盤の模様','Board texture'),draft.texture,[['plain',text('無地','Plain')],['grain',text('木目','Wood grain')],['image',text('画像','Image')]],v=>{draft.texture=v;render();});file(row(),text('碁盤画像','Board image'),'boardImage');
   select(row(),text('碁石','Stones'),draft.stone,[['gradient',text('立体','Shaded')],['flat',text('単色','Flat')],['image',text('画像','Images')]],v=>{draft.stone=v;render();});
   for(const side of ['black','white']){
@@ -98,7 +98,7 @@ function render(){
  }else if(tab==='graph'){
   for(const [k,ja,en]of [['graph','グラフ背景','Graph background'],['graphText','目盛り文字','Axis labels'],['win','勝率の線','Win-rate line'],['score','目数差の線','Score line']])color(row(),text(ja,en),k);
   select(row(),text('線の太さ','Line width'),String(draft.lineWidth),[1,1.5,2,2.5,3,3.5,4].map(v=>[String(v),v+'px']),v=>draft.lineWidth=Number(v));select(row(),text('線の種類','Line style'),draft.lineStyle,[['solid',text('実線','Solid')],['dash',text('破線','Dashed')]],v=>draft.lineStyle=v);
-  hint(text('AI同士の対局では勝率を黒線・白線で区別します。目数差の白側評価は破線を維持します。','AI games retain black/white win-rate lines and a dashed line for White’s score estimate.'));
+  hint(text('AI同士の対局では勝率を黒線・白線で区別します。目数差の白側評価は破線で示します。','AI games retain black/white win-rate lines and a dashed line for White’s score estimate.'));
  }else{
   select(row(),text('石音','Stone sound'),draft.sound,[['soft',text('柔らかい音','Soft')],['clear',text('明瞭な音','Clear')],['low',text('低めの音','Low')],['custom',text('WAVファイル','WAV file')]],v=>draft.sound=v);file(row(),text('音声ファイル','Audio file'),'soundData',true);
   const v=document.createElement('input');v.type='range';v.min=0;v.max=100;v.value=draft.volume;const value=document.createElement('span');value.textContent=draft.volume+'%';v.oninput=()=>{draft.volume=Number(v.value);value.textContent=v.value+'%';preview();};const r=row();label(r,text('音量','Volume'),v);r.append(value,button(text('試聴','Play sample'),()=>play()));

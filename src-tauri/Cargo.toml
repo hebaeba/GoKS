@@ -1,6 +1,6 @@
 [package]
 name = "kifu-editor"
-version = "0.8.0-preview.2"
+version = "0.8.0-preview.3"
 description = "Standalone Go record editor"
 edition = "2021"
 [build-dependencies]

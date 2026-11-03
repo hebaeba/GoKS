@@ -18,6 +18,6 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
   }};
  },manifest);
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.starts.length===1&&KifuAnalysisControl.profiles().length===2);
- const data=await page.evaluate(()=>({profiles:KifuAnalysisControl.profiles(),starts}));assert.deepEqual(data.profiles.map(p=>p.name),['User GPU','KataGo-Eigen']);assert.equal(await page.locator('#engine-active-name').textContent(),'KataGo-Eigen');assert.match(data.starts[0].model,/kata1-b10c128-/);assert.equal(data.starts[0].workdir,'C:/app/engines/katago');assert(!data.profiles.some(p=>p.exe.includes('/old/')));
+ const data=await page.evaluate(()=>({profiles:KifuAnalysisControl.profiles(),starts}));assert.deepEqual(data.profiles.map(p=>p.name),['User GPU','KataGo-Eigen']);assert.equal(await page.locator('#engine-active-name').textContent(),'KataGo-Eigen');assert.match(data.starts[0].model,/kata1-b10c128-/);assert.equal(data.starts[0].workdir,'./engines/katago');assert(!data.profiles.some(p=>p.exe.includes('/old/')));
  await page.locator('#tab-match').click();assert.equal(await page.locator('#match-white option').count(),4);assert.equal(await page.locator('#score').textContent(),'地合い計算');assert.deepEqual(errors,[]);console.log('bundle migration, Eigen registration, default startup and match options OK');
  }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
