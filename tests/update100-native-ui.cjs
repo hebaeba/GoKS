@@ -30,6 +30,7 @@ const server=http.createServer((req,res)=>{
  await context.exposeBinding('nativeInvoke',async({page},command,args)=>{
   if(command==='auxiliary'&&args.action==='drag'){trace.push(['native-panel-drag']);return {};}
   if(command==='engine_call')return raw(args.action,args.payload);
+  if(command==='desktop_fonts')return ['Arial','Segoe UI','Yu Gothic'];
   if(command!=='auxiliary')return {};
   const {action,kind,payload}=args;
   if(action==='open'){
@@ -220,8 +221,9 @@ const server=http.createServer((req,res)=>{
  const appearance=windows.get('appearance');await appearance.waitForSelector('[data-appearance-editor]');
  await appearance.locator('select').first().selectOption('large');await main.waitForTimeout(150);
  assert.equal(await main.locator('#next').evaluate(e=>getComputedStyle(e).fontSize),'16px');
- await appearance.getByRole('button',{name:'Cancel',exact:true}).click();await main.waitForTimeout(150);
+ await appearance.getByRole('button',{name:'Revert',exact:true}).click();await main.waitForTimeout(150);
  assert.equal(await main.locator('#next').evaluate(e=>getComputedStyle(e).fontSize),'14px');
+ await appearance.getByRole('button',{name:'Close',exact:true}).click();
  console.log('Native appearance preview and cancel synchronize without a second engine');
  // Audit every retained DOM text/attribute, including hidden controls, after a full language round trip.
  for(const page of [main,...windows.values()]){if(page.isClosed())continue;

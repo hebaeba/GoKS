@@ -1,4 +1,4 @@
-/* Independent Go Basic — application. Newly implemented, 2026-10-05. Noncommercial; see LICENSE.txt. */
+/* Independent Go Basic — application. Newly implemented, 2026-10-05. MIT. */
 'use strict';
 (() => {
   let toolRoot=null,toolWindow=null,closeToolWindow=null,toolOpening=false;

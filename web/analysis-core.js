@@ -1,4 +1,4 @@
-/* KataGo protocol mapping and portable analysis records. Noncommercial (LICENSE.txt), 2026 Eba. */
+/* KataGo protocol mapping and portable analysis records. MIT, 2026 Eba. */
 (function(global){'use strict';
 const R=typeof module!=='undefined'?require('./engine.js'):global.GoRules;
 const S=typeof module!=='undefined'?require('./sgf.js'):global.GoSgf;
