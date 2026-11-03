@@ -1,1 +1,1 @@
-# kifu-editor
+# GoKifuStudio
