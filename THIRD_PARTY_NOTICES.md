@@ -1,6 +1,6 @@
 # 同梱物の権利表示 / Third-party notices
 
-本体の非商用条件は第三者製品に適用しません。第三者部分には元の条件が適用されます。
+本体はMITライセンスです。第三者製品を本体のライセンスに変更するものではありません。第三者部分には元の条件が適用されます。
 
 - KataGo-Eigen: https://github.com/lightvector/KataGo — engines/katago/KataGo-LICENSE.txt
 - Model: kata1-b10c128-s1141046784-d204142634.txt.gz — https://katagotraining.org/networks/ 、https://katagotraining.org/network_license/

@@ -1,4 +1,4 @@
-/* Local board-image recognition. Noncommercial (LICENSE.txt), 2026 Eba. No external service. */
+/* Local board-image recognition. MIT, 2026 Eba. No external service. */
 (function(global){'use strict';
 function transform(corners,cols,rows){
  if(cols<2||rows<2||corners.length!==4)throw Error('範囲と四隅の交点を指定してください。');

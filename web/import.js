@@ -1,5 +1,5 @@
 /* Independent record readers. Format field layouts checked against public
-   Sabaki documentation/test records; no EidoGo dependency. Noncommercial; see LICENSE.txt. */
+   Sabaki documentation/test records; no EidoGo dependency. MIT. */
 (function(g){'use strict';const S=typeof module!=='undefined'?require('./sgf.js'):g.GoSgf;
 function handicap(n,h){if(h<2)return [];if(h>9||n<7)throw Error('この置碁の設定には対応していません');const a=n<=11?2:3,b=n-1-a,m=Math.floor(n/2),v=[[b,a],[a,b],[a,a],[b,b]];if(h===5||h===7||h===9)v.push([m,m]);if(h>=6)v.push([a,m],[b,m]);if(h>=8)v.push([m,a],[m,b]);return v.slice(0,h).map(([x,y])=>String.fromCharCode(97+x,97+y));}
 function normalizeServerKomi(game){

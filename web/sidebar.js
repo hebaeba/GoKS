@@ -37,7 +37,7 @@
  function sync(){syncRule();const hasInfo=$('metadata').children.length>0,hasComment=[...$('comment').children].some(e=>!e.classList.contains('root-info')&&e.textContent.trim());notes.hidden=!(hasInfo||hasComment);notes.textContent=hasInfo&&hasComment?'コメント・対局情報':hasInfo?'対局情報':'コメント';if(dialog.open)fillNotes();q('.side-branches').hidden=$('branches').hidden;
   for(const id of ['black-captures','white-captures']){const el=$(id),num=el.textContent.replace(/アゲハマ\s*/,'');el.textContent=num;el.title=(id==='black-captures'?'黒':'白')+'のアゲハマ '+num;}
  }
- const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.textContent='右側を隠す';toggle.title='右側を隠して碁盤を広く表示します';sidebar.firstElementChild.append(toggle);
+ const toggle=document.createElement('button');toggle.id='inspector-toggle';toggle.hidden=true;toggle.textContent='右側を隠す';toggle.title='右側を隠して碁盤を広く表示します';sidebar.firstElementChild.append(toggle);
  const inspector=q('.inspector'),close=document.createElement('button');close.id='normal-panel-close';close.textContent='閉じる';close.title='右側を隠します';inspector.prepend(close);
  let normalCollapsed=null;
  function setCollapsed(value){if(!body.classList.contains('simple-mode'))try{localStorage.setItem('gokifu-right-hidden',value?'1':'0');}catch{}body.classList.toggle('inspector-collapsed',value);toggle.textContent=value?'右側を表示':'右側を隠す';toggle.setAttribute('aria-expanded',String(!value));toggle.title=value?'右側を表示します':'右側を隠して碁盤を広く表示します';window.dispatchEvent(new Event('workspace-layout'));}
@@ -45,9 +45,9 @@
  const activate=KifuWorkspace.activate;KifuWorkspace.activate=id=>{setCollapsed(false);activate(id);};
  // Header save "other" uses its original closure, so open the pane explicitly too.
  $('quick-more').addEventListener('click',()=>setCollapsed(false));
- const narrow=matchMedia('(max-width:1100px)');let collapsed=narrow.matches;try{const saved=localStorage.getItem('gokifu-right-hidden');if(saved!==null)collapsed=saved==='1';}catch{}setCollapsed(collapsed);
+ setCollapsed(false);close.hidden=true;
  // Resizing into simple mode must not overwrite the normal panel preference.
- // Narrow screens use the existing overlay CSS without changing the saved state.
+ // Normal view always retains the inspector; Simple View owns its separate layout.
  window.addEventListener('kifu-position-change',sync);sync();
  window.KifuSidebar={notesContent(){fillNotes();return dialog.querySelector('.notes-content');},openNotes,enterSimple(){normalCollapsed=body.classList.contains('inspector-collapsed');},leaveSimple(){if(normalCollapsed!==null)setCollapsed(normalCollapsed);normalCollapsed=null;}};
 })();

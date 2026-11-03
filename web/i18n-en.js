@@ -1,4 +1,14 @@
 window.KifuEnglish={
+"起動時":"Startup",
+"選択中のエンジンを上へ移動":"Move selected engine up",
+"選択中のエンジンを下へ移動":"Move selected engine down",
+"アプリ起動時に使用するエンジン":"Use this engine on application startup",
+"次回起動時に使用するエンジンを保存しました。":"Startup engine saved.",
+"保存できませんでした。":"Could not save.",
+"起動時のエンジンが削除されました。エンジンリストで起動時のエンジンを選び直してください。":"The startup engine was deleted. Select another startup engine in the list.",
+"起動時のエンジンが見つかりません。エンジンリストで起動時のエンジンを選び直してください。":"The startup engine was not found. Select another startup engine in the list.",
+"起動時のエンジンのファイルが不足しています。エンジン・モデル・設定CFGの場所を確認してください。":"Startup engine files are missing. Check the executable, model and CFG paths.",
+
   "表示・音": "Appearance & Sound",
   "表示・音 / Appearance & Sound": "Appearance & Sound",
   "文字・碁盤・グラフ・石音を設定します": "Customize text, board, graph and stone sounds",

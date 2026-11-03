@@ -77,3 +77,5 @@ body #image-board-dialog .image-work>section:last-child canvas{margin-left:0;mar
 
 html body :is(#ui-policy #ui-policy #ui-policy,*):where(:not(canvas):not(svg):not(svg *)){font-family:var(--ui-font)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,#side-eval-graph text){font-size:var(--ui-small)!important}
+
+html body :is(#ui-policy #ui-policy #ui-policy,.stone-preset){height:auto!important;min-height:var(--ui-button)!important;display:inline-flex;flex-direction:column;align-items:center;gap:3px}.stone-preset canvas{width:48px;height:48px}.stone-preset[aria-pressed=true]{outline:2px solid #317d65}

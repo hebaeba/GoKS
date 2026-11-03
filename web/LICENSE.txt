@@ -1,25 +1,21 @@
-Go棋譜Studio 非商用利用条件 / Noncommercial License
+MIT License
+
 Copyright (c) 2026 Eba
-適用開始版 / First applicable version: 0.8.0-preview.1
 
-この条件は、本条件を適用すると明示されたGo棋譜Studioの著作者が権利を持つ部分に適用します。
-非商用目的に限り、使用、複製、改変、および改変版を含む再配布を無償で認めます。
-商用利用は認めません。商業上の利益または金銭的対価を得ることを主目的とした利用・配布を商用利用とします。
-再配布時は著作権表示と本条件を保持し、改変した場合はその旨を明記してください。
-本条件の対象部分を再配布する際に、非商用制限を解除する許諾を与えてはいけません。
-第三者のソフトウェア、モデル、ライブラリー、素材にはそれぞれのライセンスが適用され、本条件はその権利を制限しません。
-過去にMIT等の別の条件で提供されたコピーの既存の許諾を、本条件によって取り消すものではありません。
-利用者が作成・入力した棋譜や画像の権利が、本ソフトウェアの著作者に移転することはありません。
-本ソフトウェアは現状のままで提供され、正確性や特定目的への適合性を保証しません。
-法令上認められる範囲で、著作者は利用によって生じた損害について責任を負いません。
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-This license applies only to the portions owned by the GoKifuStudio author and expressly offered under these terms.
-Permission is granted, free of charge, to use, copy, modify, and redistribute those portions, including modified versions, for noncommercial purposes only.
-Commercial use is not permitted. Commercial use means use or distribution primarily intended for commercial advantage or monetary compensation.
-Redistributions must retain the copyright notice and these terms. Modified versions must be identified as modified.
-You must not grant recipients permission to remove the noncommercial restriction from covered portions.
-Third-party software, models, libraries and assets retain their respective licenses; these terms do not restrict those independent rights.
-These terms do not revoke permissions previously granted for copies distributed under MIT or other licenses.
-The author does not acquire ownership of users' game records or images through their use of this software.
-The software is provided AS IS, without warranties of accuracy or fitness for a particular purpose.
-To the extent permitted by applicable law, the author is not liable for damages arising from its use.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
