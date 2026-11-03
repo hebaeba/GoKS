@@ -1,11 +1,11 @@
 /* 固定UI仕様。変更にはユーザーの明示指示が必要。fields.cssの直前に読む。 */
-:root{--ui-text:14px;--ui-prominent:16px;--ui-small:12px;--ui-line:18px;--ui-pad:3px;--ui-button:26px;--ui-menu:30px}
+:root{--ui-text:14px;--ui-prominent:16px;--ui-small:12px;--ui-line:18px;--ui-pad:3px;--ui-button:26px;--ui-menu:30px;--ui-font:system-ui,sans-serif}
 html body :is(#ui-policy #ui-policy #ui-policy,*):where(:not(#analysis-overlay):not(#analysis-overlay *)){font-size:var(--ui-text)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,.game-title,.header-actions button,.workspace-tabs button,#engine-active-name){font-size:var(--ui-prominent)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,small,footer,footer *, .hint){font-size:var(--ui-small)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,button,summary){line-height:var(--ui-line)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,button){box-sizing:border-box!important;padding:var(--ui-pad)!important;height:var(--ui-button)!important;min-height:var(--ui-button)!important}
-html body :is(#ui-policy #ui-policy #ui-policy,.header-actions button,.workspace-tabs button){height:var(--ui-menu)!important;min-height:var(--ui-menu)!important;line-height:22px!important}
+html body :is(#ui-policy #ui-policy #ui-policy,.header-actions button,.workspace-tabs button){height:var(--ui-menu)!important;min-height:var(--ui-menu)!important;line-height:calc(var(--ui-prominent) + 6px)!important}
 html body :is(#ui-policy #ui-policy #ui-policy,.tool-table button){height:auto!important}
 html body #turn.turn-after-recent{margin-left:24px!important}
 html body #delete-move{font-weight:700!important}
@@ -13,7 +13,7 @@ html body #black-captures,html body #white-captures{background:#edf3ed;border-ra
 html body #board-fit{width:14px!important;height:14px!important;min-height:14px!important;padding:0!important}
 @media(pointer:coarse){html body :is(#ui-policy #ui-policy #ui-policy,button){height:auto!important;min-height:40px!important}}
 
-html body #engine-active #engine-quick,html body #engine-active #engine-state{font-size:14px!important;height:26px!important;min-height:26px!important;max-height:26px!important;line-height:18px!important;padding:3px!important}
+html body #engine-active #engine-quick,html body #engine-active #engine-state{font-size:var(--ui-text)!important;height:var(--ui-button)!important;min-height:var(--ui-button)!important;max-height:var(--ui-button)!important;line-height:var(--ui-line)!important;padding:3px!important}
 
 /* Keep the capture alignment while coloring only its text box. */
 html body #black-captures{justify-self:end;width:max-content;max-width:100%}
@@ -74,3 +74,6 @@ body #image-board-dialog .image-work>section:last-child canvas{margin-left:0;mar
 .match-handicap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
 .match-handicap label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .match-handicap [hidden],.match-resign-rule [hidden]{display:none!important}
+
+html body :is(#ui-policy #ui-policy #ui-policy,*):where(:not(canvas):not(svg):not(svg *)){font-family:var(--ui-font)!important}
+html body :is(#ui-policy #ui-policy #ui-policy,#side-eval-graph text){font-size:var(--ui-small)!important}

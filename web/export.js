@@ -1,4 +1,4 @@
-/* Independent Go Editor: newly implemented raster exports and GIF89a writer. MIT. */
+/* Independent Go Editor: newly implemented raster exports and GIF89a writer. Noncommercial; see LICENSE.txt. */
 (function(root){'use strict';
  function fileOptions(name){
   const match=/\.(sgf|json|png|jpe?g|gif|csv)$/i.exec(name);

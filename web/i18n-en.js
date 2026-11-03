@@ -1,4 +1,7 @@
 window.KifuEnglish={
+  "表示・音": "Appearance & Sound",
+  "表示・音 / Appearance & Sound": "Appearance & Sound",
+  "文字・碁盤・グラフ・石音を設定します": "Customize text, board, graph and stone sounds",
   "Go棋譜Studio": "GoKifuStudio",
   "棋譜を並べる・考える・残す": "Play, study and save Go games",
   "棋譜を開く": "Open",

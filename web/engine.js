@@ -1,4 +1,4 @@
-/* Independent Go Basic — board rules. Newly implemented, 2026-10-05. MIT. */
+/* Independent Go Basic — board rules. Newly implemented, 2026-10-05. Noncommercial; see LICENSE.txt. */
 (function (root) {
   'use strict';
   const EMPTY = 0, BLACK = 1, WHITE = 2;

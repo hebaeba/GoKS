@@ -61,3 +61,20 @@
 - 更新90: 読込み棋譜は終局記録の有無や表示手数にかかわらず地合い計算を許可。対局開始・新規盤面・クリアでは読込み由来の許可を破棄。対局中の禁止と２連続パス終局後の許可、境界確定の手動確認を維持。
 
 - 更新91: 推定は解析用の実行中エンジンで現在局面を計算し、対局AIの評価を流用しない。対局中は全対局ワーカーの停止完了後に推定し、明示的な再開まで中断を維持する。シンプルの詳細窓はaux-panelの表示・操作転送のみで、子窓に別の棋譜やエンジンを起動しない。両モードで地合い計算の有効条件を共有。地合い計算の閉じるは右上。
+
+- 更新92: 保存タブは項目表示のみ。シンプル上部に推定値・対局中断を設け、ホバー切替後のクリックもメニューを維持。投了勝率初期値3.0%。両ランキングは黒白各10件を初期表示し残りは折りたたむ。エンジン名入力は登録操作直下、ファイル欄の上。選択説明は次クリックで消す。共通文字・ボタン寸法は維持。
+
+- 更新93: シンプル詳細はsimple-window-menu.jsから独立窓へ開く。本体inspectorを重ねるCSSを復活させない。子窓見出しドラッグはauxiliary dragを使用。window-assets.jsonの対象ファイルを編集したらSHA-256を更新し、check-window-assets.cjsで確認する。
+
+## Update94 localization
+UI translations live in web/i18n-en.js and web/i18n.js. Preserve SGF data, user titles/comments/player and engine names, filesystem paths, option values and engine protocol/log text. Use KifuI18n.rawText when UI text is reused as another label. Maintain live ja/en switching and independent-window synchronization. English must preserve ui-policy.css fonts/heights/padding; shorten labels or adjust layout instead of shrinking type. Run tests/update94-language.cjs and tests/update94-native-ui.cjs when changing localization. Regenerate window-assets.json hashes after tracked asset edits.
+
+Update95: candidate lists use KifuRanking.apply to show 10 rows initially; board candidate count is separate. Include dynamic status/confirm/popup translations. Preserve raw protocol logs and user metadata. Test tests/i18n95.test.cjs and tests/update95-native-ui.cjs.
+
+Update96: full-game pause preserves completed results and resumes the unfinished position with a fresh request id; new records, cancellation and engine replacement invalidate the paused job. Use the same control in native mirrored panels. English ranking uses # without shrinking shared fonts. Native save filters receive the UI language. Audit dynamic completion/error/GIF/backup templates and literal status/error text. Run tests/update96-native-ui.cjs and i18n96.test.cjs. Integrity checks list all mismatches at once.
+
+Update98: use bounded CSS connectors rather than a full-game-sized SVG in the variation strip. Errors must expand their ancestor disclosures. Normalize only verified Fox legacy komi on external import and preserve provenance/idempotence; do not alter ordinary SGF or scoring rules.
+
+Update99: localize complete dynamic templates before generic suffix rules. Keep Japanese canonical DOM sources for reversible language switching, including alt attributes. Preserve paths/user names in parameterized diagnostics. Candidate played badge is P in English. Keep Win % short in ranking tables. Run i18n99 tests and the update99 native-route UI round-trip audit after localization edits.
+
+Update100: user-selectable appearance replaces fixed-size-only policy. Standard remains body14/prominent16/help12/button26/menu30/padding3. Use ui-policy variables and fields.css, never per-feature font overrides. ja/en text preferences are separate; child windows share the same settings. Apply commits, Cancel/close restores. Appearance does not modify SGF, analyses, or engines. Graph axis labels are numeric and measured to prevent endpoint collisions; keep 25-move ticks. Assets are original generated sounds/textures. Run appearance100 tests, update100-ui and update100-native-ui; refresh window-assets hashes. Release docs are copied by the Windows build script.

@@ -1,4 +1,4 @@
-/* Independent Go Basic — SGF parser/writer. Newly implemented, 2026-10-05. MIT. */
+/* Independent Go Basic — SGF parser/writer. Newly implemented, 2026-10-05. Noncommercial; see LICENSE.txt. */
 (function(root) {
   'use strict';
   const LIMIT = 20000;

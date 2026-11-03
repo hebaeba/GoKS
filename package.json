@@ -1,6 +1,6 @@
 {
   "name": "kifu-editor-standalone",
-  "version": "0.7.0",
+  "version": "0.8.0-preview.1",
   "private": true,
   "scripts": {
     "tauri": "tauri",

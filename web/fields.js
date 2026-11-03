@@ -13,7 +13,7 @@
  }
  let frame;function schedule(){cancelAnimationFrame(frame);frame=requestAnimationFrame(sync);}
  document.addEventListener('change',schedule);document.addEventListener('input',schedule);window.addEventListener('kifu-position-change',schedule);
- window.addEventListener('resize',schedule);
+ window.addEventListener('resize',schedule);window.addEventListener('kifu-appearance-change',schedule);
  window.addEventListener('DOMContentLoaded',schedule);
  new MutationObserver(schedule).observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['selected','hidden','open']});
  document.fonts?.ready.then(schedule);

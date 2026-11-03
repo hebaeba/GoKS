@@ -1,4 +1,4 @@
-/* Board photo / diagram import: local pixels only. MIT, 2026 Eba. */
+/* Board photo / diagram import: local pixels only. Noncommercial (LICENSE.txt), 2026 Eba. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),C=GoImageBoard,letters='ABCDEFGHJKLMNOPQRST';
 const dialog=document.createElement('dialog');dialog.id='image-board-dialog';dialog.setAttribute('aria-labelledby','image-board-title');
