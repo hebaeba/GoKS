@@ -7,7 +7,7 @@
  const title=document.createElement('span');title.id='simple-title';bar.append(title);
  const toggle=document.createElement('button');toggle.id='simple-toggle';toggle.textContent='シンプル表示';toggle.title='碁盤を大きく表示するシンプルモードへ切り替えます';toggle.setAttribute('aria-pressed','false');q('.header-actions').append(toggle);
  const back=document.createElement('button');back.id='simple-return';back.textContent='通常表示';back.title='通常モードに戻ります';bar.append(back);
- let simple=false,moves=[],menuTracking=false;const menus=[];
+ let simple=false,requestedMode=false,modeRevision=0,moves=[],menuTracking=false;const menus=[];
  function hideMenus(){menuTracking=false;for(const d of menus){d.open=false;delete d.dataset.hoverOpened;}context.hidden=true;}
  function move(el,parent){if(!el)return;const marker=document.createComment('simple-home');el.before(marker);moves.push([el,marker]);parent.append(el);}
  async function panel(id){hideMenus();if(simple){closePanel();try{if(!window.KifuPanelWindow)throw Error('独立窓の機能を読み込めませんでした。更新93のweb・src-tauriを一緒に反映して再ビルドしてください。');await window.KifuPanelWindow.open(id);}catch(error){await KifuDialogs.confirm(error.message||String(error),{accept:'閉じる'});}return;}KifuWorkspace.activate(id);}
@@ -19,7 +19,7 @@
  const proxies=[];
  function action(parent,label,fn,target){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{hideMenus();fn();};parent.append(b);if(target)proxies.push([b,target]);b.dataset.safeDisplay='1';return b;}
  function command(parent,label,id){return action(parent,label,()=>$(id)?.click(),()=>$(id));}
- const file=menu('ファイル'),view=menu('表示'),edit=menu('編集'),analysis=menu('解析'),game=menu('対局'),other=menu('その他');
+ const file=menu('ファイル'),view=menu('表示'),edit=menu('編集'),analysis=menu('解析'),game=menu('対局'),other=menu('その他');edit.classList.add('simple-edit-menu');
  command(file,'棋譜を開く (O)','open');action(file,'クリップボードから読み込む (Ctrl+V)',()=>$('paste-board').click());command(file,'画像から局面を取り込む','workspace-image-open');command(file,'棋譜全体を保存','save');command(file,'盤面を印刷','print');action(file,'その他の保存・GIF',()=>panel('storage'));action(file,'棋譜欄・文字コード',()=>panel('record'));
  command(view,'手数の表示／非表示 (M)','numbers');action(view,'座標の表示／非表示 (C)',toggleCoordinates);command(view,'直近手数の表示／非表示','recent');action(view,'コメント・対局情報',()=>openComment());action(view,'手順・変化手順',()=>panel('sequence'));
  const topSlot=document.createElement('div');topSlot.className='simple-top-slot';view.append(topSlot);
@@ -61,14 +61,28 @@
   if(!force&&lastNativeWidth===width)return;
   lastNativeWidth=width;clearTimeout(nativeTimer);const revision=++nativeRevision;
   const run=()=>{nativeQueue=nativeQueue.catch(()=>{}).then(()=>revision===nativeRevision?invoke('desktop_simple_window',{simple:value,width}):undefined).catch(error=>{console.error('Window resize:',error);});};
-  if(force)run();else nativeTimer=setTimeout(run,100);
+  if(force){run();return nativeQueue;}else nativeTimer=setTimeout(run,100);
  }
- function setMode(value){if(simple===value)return;hideMenus();closePanel();if(value)window.KifuSidebar?.enterSimple();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
+ function applyMode(value){if(simple===value)return;hideMenus();closePanel();if(value)window.KifuSidebar?.enterSimple();simple=value;body.classList.toggle('simple-mode',value);bar.hidden=info.hidden=slide.hidden=!value;toggle.setAttribute('aria-pressed',String(value));
   if(value){$('edit').click();move(q('.topline'),topSlot);move(q('.side-protection'),topSlot);move(q('.controls'),controlSlot);for(const selector of ['#komi','#black-name','#black-captures','.stones','#white-captures','#white-name','#move'])move(q(selector),info);move($('slider'),slide);}
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
-  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();resizeNative(value,true);window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));fit();window.scrollTo(0,0);q('.workspace').scrollLeft=0;q('.board-panel').scrollLeft=0;
+  try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));window.KifuLayout?.fit();fit();window.scrollTo(0,0);q('.workspace').scrollLeft=0;q('.board-panel').scrollLeft=0;
  }
- function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');resizeNative(true);}
+ async function waitViewport(result,revision){
+  const started=performance.now();let stable=0,last='';
+  while(revision===modeRevision&&performance.now()-started<1800){
+   await new Promise(requestAnimationFrame);
+   const key=innerWidth+','+innerHeight,expected=!result?.width||(Math.abs(innerWidth-result.width)<=2&&Math.abs(innerHeight-result.height)<=2);
+   stable=expected&&key===last?stable+1:0;last=key;if(stable>=2)return;
+  }
+ }
+ async function setMode(value){
+  requestedMode=value;const revision=++modeRevision;
+  if(value){applyMode(true);resizeNative(true,true);return;}
+  if(window.__TAURI_INTERNALS__?.invoke){const result=await resizeNative(false,true);await waitViewport(result,revision);}
+  if(revision===modeRevision&&!requestedMode)applyMode(false);
+ }
+ function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');if(requestedMode)resizeNative(true);}
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);
  window.addEventListener('resize',fit);window.addEventListener('kifu-position-change',()=>{sync();fit();});window.addEventListener('workspace-layout',()=>{if(simple)fit();});
  new ResizeObserver(fit).observe(bar);document.fonts?.ready.then(fit);let restore=false;try{restore=localStorage.getItem('gokifu-simple')==='1';}catch{}if(restore)setMode(true);

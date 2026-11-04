@@ -182,3 +182,16 @@ html body.simple-mode .workspace{display:block!important;width:100%;min-width:0;
 html body.simple-mode .board-panel{display:block!important;width:100%;min-width:0;height:100%;overflow:hidden}
 html body.simple-mode .board-block{display:flex!important;flex-direction:column;align-items:center;width:100%;min-width:0;max-width:none;margin:0;padding:0}
 html body.simple-mode .canvas-wrap{min-width:0!important}
+
+/* Update103: do not center against an obsolete native viewport while resizing. */
+html body.simple-mode main{margin:0!important;max-width:100%!important;align-items:flex-start}
+html body.simple-mode #simple-menu{width:100%;max-width:calc(var(--simple-board-edge,100vw) + 12px)}
+html body.simple-mode .board-block{align-items:flex-start}
+html body.simple-mode .board-panel .board-block .canvas-wrap{margin:0!important;max-width:calc(100vw - 12px)!important}
+html body.simple-mode #simple-info,html body.simple-mode #simple-slider{margin-left:0;margin-right:0}
+#simple-menu .simple-edit-menu{width:max-content;min-width:0;max-width:calc(100vw - 16px)}
+html body.simple-mode #simple-menu .simple-edit-menu .controls{width:max-content;max-width:100%}
+html body.simple-mode #simple-menu .simple-edit-menu .side-row .autoplay{margin-left:12px}
+html body.simple-mode #simple-menu .simple-edit-menu .side-navigation .navigation{width:max-content;flex:0 0 auto;margin-left:0;margin-right:0}
+html body.simple-mode #simple-menu .simple-edit-menu .side-navigation>.side-row{display:grid;grid-template-columns:max-content max-content;justify-content:start}
+html body.simple-mode #simple-menu .simple-edit-menu .side-navigation .navigation{grid-column:1/-1}
