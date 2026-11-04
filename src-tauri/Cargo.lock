@@ -1973,7 +1973,7 @@ dependencies = [
 
 [[package]]
 name = "kifu-editor"
-version = "0.8.0-preview.4"
+version = "0.8.0-preview.5"
 dependencies = [
  "kifu-katago-backend",
  "kifu-lan-server",
