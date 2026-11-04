@@ -1,6 +1,6 @@
 # GoKifuStudio
 
-Version **0.8.0-preview.7**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
+Version **0.8.0-preview.7**, pre-release validation build (documentation update107). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
 
 Extract the entire Windows ZIP and run `GoKifuStudio.exe`. Keep `engines/` beside the executable. End users do not need Node.js or Rust. The bundled engine is KataGo-Eigen. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
@@ -23,23 +23,20 @@ This is a pre-release validation build. Final third-party notice verification an
 
 Repository: https://github.com/hebaeba/GoKifuStudio
 
-## Update101 controls
+## Engines and games
 
-Appearance & Sound and Keyboard Shortcuts are in the left panel. Apply saves without closing. Select an installed Windows font or enter its family name and press Enter. Shaded, flat and image stones each offer three original presets per color, plus custom image import.
+The radio button at the right of each engine row selects the next startup engine. The shared up/down buttons move the selected row. Missing startup registrations or files produce a warning. The default is bundled KataGo-Eigen. Bundled paths under `./engines/katago/` are resolved relative to the EXE; external engine paths are retained.
 
-The radio button at each engine row's right selects the next startup engine. The shared up/down pair moves the selected row. Missing startup registrations or files produce a warning. The initial startup choice is bundled KataGo-Eigen.
+New Game contains setup and pre-game controls in one foldable section. Once play starts, the controls and a bordered summary of Black, White, handicap stone count and komi remain visible. Pause and takeback reuse engines that support cancellable search; older engines may need to restart during an active search. Human–AI score graphs use Black’s perspective. AI–AI win rates and scores use each AI’s own perspective. Switching views preserves the game. Keyboard Shortcuts is in the left panel.
 
-## Update 102
-Bundled paths are portable and resolved relative to the Windows executable. Takeback and pause reuse running KataGo processes with cancellable-search support; older versions may restart during an active search. Normal/simple layout transitions are corrected. Outer background is separate from panel background; the warm board theme applies subtle grain without changing its board color.
+## More appearance options
 
-## Update 103
-Simple View's Edit popup uses content width. Returning to normal waits for the native client size to reach the WebView; layout fitting is synchronous on resize and mode changes. See UPDATE103.md for the changed-file list.
+Select an installed Windows font or enter its family name and press Enter; manual entry is available if enumeration fails. Shaded, flat and image stones each offer three presets per color, plus custom images. The warm wood theme applies subtle grain while retaining the board color. Outer background controls the main window’s margins; panel background controls its panels.
 
-## Update 104
-Normal View returns on the native resize event without waiting for a delayed command reply. New Game folds setup and pre-game controls together; during play, controls and the active players, handicap mode and komi remain visible. Human-AI score graphs use Black's perspective; AI-AI series are unchanged. See UPDATE104.md.
+Importing a board image automatically selects Image texture. Importing a WAV selects custom audio. Imported filenames are retained; clearing a WAV restores the default sound.
 
-## Update 105
-Importing a WAV automatically selects the custom sound and retains its filename. Clearing it restores the default sound. The bordered match summary includes the handicap stone count. See UPDATE105.md.
+## Updating and reporting bugs
 
-## Update 106
-Importing a board image automatically selects Image texture. Appearance file pickers use a Choose file button and retained filename instead of a native empty file input. See UPDATE106.md.
+Preserve the ZIP folder structure when updating. Report the version, Windows environment, engine and reproduction steps. Remove personal names, IP addresses, local paths and tokens from logs, and do not publish games without permission.
+
+Build with `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. Upload a consistent source set; `web/window-assets.json` checks release integrity. Change histories and changed-file lists are kept in `UPDATE*.md`; this README describes current features rather than accumulating update-specific instructions. See `UPDATE107.md` for this documentation update.
