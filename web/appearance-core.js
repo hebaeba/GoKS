@@ -9,6 +9,7 @@
  for(const [k,min,max]of [['boardText',.8,1.2],['lineWidth',1,4],['volume',0,100]])if(Number.isFinite(v[k]))d[k]=Math.max(min,Math.min(max,v[k]));
  for(const k of ['moves','navigation','autoplay'])if(typeof v[k]==='boolean')d[k]=v[k];
  for(const k of ['boardImage','blackImage','whiteImage'])if(typeof v[k]==='string'&&v[k].length<800000&&/^data:image\/(png|jpeg|webp);base64,/.test(v[k]))d[k]=v[k];
+ for(const k of ['boardImage','blackImage','whiteImage'])if(d[k]&&typeof v[k+'Name']==='string')d[k+'Name']=v[k+'Name'].slice(0,255);
  for(const side of ['black','white'])if(!v[side+'Preset']&&v[side+'Image'])d[side+'Preset']='custom';
  if(typeof v.soundData==='string'&&v.soundData.length<1500000&&/^data:audio\/(wav|x-wav|wave);base64,/.test(v.soundData))d.soundData=v.soundData;if(d.soundData&&typeof v.soundName==='string')d.soundName=v.soundName.slice(0,255);return d;}
  // Labels use measured boxes and reserve both endpoints. Keep 25-move ruler ticks separately.

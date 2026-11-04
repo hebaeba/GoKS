@@ -70,7 +70,16 @@ function render(){
  const check=(parent,title,key)=>{const el=document.createElement('input');el.type='checkbox';el.checked=draft[key];el.onchange=()=>{draft[key]=el.checked;preview();};label(parent,title,el);};
  const color=(parent,title,key)=>{const el=document.createElement('input');el.type='color';el.value=draft[key];el.oninput=()=>{draft[key]=el.value;preview();};label(parent,title,el);};
  const hint=s=>{const p=document.createElement('p');p.className='appearance-hint';p.textContent=s;section.append(p);};
- const file=(parent,title,key,audioFile=false)=>{const el=document.createElement('input');el.type='file';el.accept=audioFile?'.wav,audio/wav':'image/png,image/jpeg,image/webp';label(parent,title,el);el.onchange=async()=>{try{const f=el.files[0];if(!f)return;draft[key]=audioFile?await readWav(f):await readImage(f);if(audioFile){draft.sound='custom';draft.soundName=f.name;}if(key==='blackImage')draft.blackPreset='custom';if(key==='whiteImage')draft.whitePreset='custom';preview();render();}catch(e){error(e);}};if(audioFile&&draft[key]){const name=document.createElement('span');name.dataset.noI18n='';name.className='appearance-audio-name';name.textContent=draft.soundName||'WAV';parent.append(name);}if(draft[key])parent.append(button(text('解除','Clear'),()=>{draft[key]='';if(audioFile){draft.sound='soft';draft.soundName='';}preview();render();}));};
+ const file=(parent,title,key,audioFile=false)=>{
+  const el=document.createElement('input');el.type='file';el.hidden=true;el.style.display='none';el.accept=audioFile?'.wav,audio/wav':'image/png,image/jpeg,image/webp';el.setAttribute('aria-label',title);el.dataset.fileKey=key;
+  const caption=document.createElement('span');caption.textContent=title;parent.append(caption,el,button(text('ファイルを選択','Choose file'),()=>{el.value='';el.click();}));
+  const nameKey=audioFile?'soundName':key+'Name',name=document.createElement('span');name.className='appearance-file-name'+(audioFile?' appearance-audio-name':'');
+  if(draft[key]){name.dataset.noI18n='';name.textContent=draft[nameKey]||text('読み込み済み','Loaded');}else name.textContent=text('未読込','Not loaded');parent.append(name);
+  el.onchange=async()=>{try{const f=el.files[0];if(!f)return;const data=audioFile?await readWav(f):await readImage(f);draft[key]=data;draft[nameKey]=f.name;
+   if(audioFile)draft.sound='custom';if(key==='boardImage')draft.texture='image';if(key==='blackImage')draft.blackPreset='custom';if(key==='whiteImage')draft.whitePreset='custom';preview();render();
+  }catch(e){error(e);}};
+  if(draft[key])parent.append(button(text('解除','Clear'),()=>{draft[key]='';draft[nameKey]='';if(audioFile)draft.sound='soft';if(key==='boardImage')draft.texture='plain';preview();render();}));
+ };
  if(tab==='text'){
   const lang=language();hint(text('日本語と英語の文字設定は別々に記憶します。','Text preferences are saved separately for Japanese and English.'));
   const r=row();select(r,text('文字サイズ','Text size'),draft[lang].size,[['small',text('小 12px','Small 12px')],['normal',text('標準 14px','Normal 14px')],['large',text('大 16px','Large 16px')],['xlarge',text('特大 18px','Extra large 18px')]],v=>draft[lang].size=v);
