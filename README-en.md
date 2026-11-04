@@ -1,6 +1,6 @@
 # GoKifuStudio
 
-Version **0.8.0-preview.6**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
+Version **0.8.0-preview.7**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
 
 Extract the entire Windows ZIP and run `GoKifuStudio.exe`. Keep `engines/` beside the executable. End users do not need Node.js or Rust. The bundled engine is KataGo-Eigen. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
@@ -40,3 +40,6 @@ Normal View returns on the native resize event without waiting for a delayed com
 
 ## Update 105
 Importing a WAV automatically selects the custom sound and retains its filename. Clearing it restores the default sound. The bordered match summary includes the handicap stone count. See UPDATE105.md.
+
+## Update 106
+Importing a board image automatically selects Image texture. Appearance file pickers use a Choose file button and retained filename instead of a native empty file input. See UPDATE106.md.
