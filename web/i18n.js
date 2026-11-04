@@ -69,6 +69,7 @@ function english(s){if(Object.hasOwn(dictionary,s))return dictionary[s];if(!/[�
  if(s.startsWith('実行ファイル：'))return s.replace(/^実行ファイル：/,'Engine: ').replace(/\nモデル：/,'\nModel: ').replace(/\n設定：/,'\nConfig: ');
  if(m=s.match(/^(\d+)路、(\d+)手。(黒|白)番。(閲覧|編集)モード。矢印で交点を選びEnterで着手。$/))return m[1]+'×'+m[1]+', move '+m[2]+'. '+(m[3]==='黒'?'Black':'White')+' to play. '+(m[4]==='編集'?'Edit':'View')+' mode. Select a point with arrow keys and press Enter to play.';
  if(m=s.match(/^(\d+)路$/))return m[1]+'×'+m[1];
+ if(m=s.match(/^置碁(\d+)子$/))return 'Handicap '+m[1]+' stones';
  if(m=s.match(/^(\d+)子$/))return m[1]+' stones';
  if(m=s.match(/^([\d０-９.]+)秒$/))return m[1]+' s';
  if(m=s.match(/^([\d０-９]+)手$/))return m[1]+' moves';

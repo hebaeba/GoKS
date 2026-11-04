@@ -20,7 +20,7 @@ function runtimeLayout(){
  sessionInfo.hidden=!active;
  if(!active){sessionInfo.replaceChildren();return;}
  const props=GoSgf.parse(expected.sgf).root.props;
- const values=[['黒',players.B.name],['白',players.W.name],[Number(props.HA?.[0]||0)>=2?'置碁':'互先',null],['コミ',props.KM?.[0]||'0']];
+ const values=[['黒',players.B.name],['白',players.W.name],[Number(props.HA?.[0]||0)>=2?'置碁'+Number(props.HA[0])+'子':'互先',null],['コミ',props.KM?.[0]||'0']];
  const signature=JSON.stringify(values);
  if(sessionInfo.dataset.signature===signature&&sessionInfo.childElementCount)return;
  sessionInfo.dataset.signature=signature;sessionInfo.replaceChildren();

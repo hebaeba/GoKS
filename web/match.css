@@ -98,6 +98,6 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
 /* Update104: setup and pre-game actions share one disclosure. */
 #pane-match #match-settings>summary{background:#245f57;color:white;border:1px solid #245f57;border-radius:4px;padding:3px;cursor:pointer;width:fit-content;max-width:100%}
 #match-runtime{margin:0;padding:0;min-width:0}
-#match-session-info{display:flex;flex-wrap:wrap;gap:3px 12px;padding:3px 0 6px;overflow-wrap:anywhere}
+#match-session-info{display:flex;flex-wrap:wrap;gap:3px 12px;padding:3px;border:1px solid #a8bdb4;border-radius:4px;margin:0 0 6px;overflow-wrap:anywhere}
 #match-session-info[hidden]{display:none}
 #match-session-info>span{min-width:0;max-width:100%}
