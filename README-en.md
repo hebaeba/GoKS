@@ -1,6 +1,6 @@
 # GoKifuStudio
 
-Version **0.8.0-preview.5**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
+Version **0.8.0-preview.6**, pre-release validation build (update101). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
 
 Extract the entire Windows ZIP and run `GoKifuStudio.exe`. Keep `engines/` beside the executable. End users do not need Node.js or Rust. The bundled engine is KataGo-Eigen. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
@@ -37,3 +37,6 @@ Simple View's Edit popup uses content width. Returning to normal waits for the n
 
 ## Update 104
 Normal View returns on the native resize event without waiting for a delayed command reply. New Game folds setup and pre-game controls together; during play, controls and the active players, handicap mode and komi remain visible. Human-AI score graphs use Black's perspective; AI-AI series are unchanged. See UPDATE104.md.
+
+## Update 105
+Importing a WAV automatically selects the custom sound and retains its filename. Clearing it restores the default sound. The bordered match summary includes the handicap stone count. See UPDATE105.md.
