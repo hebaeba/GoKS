@@ -135,6 +135,7 @@ window.KifuEnglish={
   "候補手の色と実戦手の表示": "Candidate Colors and Played Moves",
   "全局解析の対象と時間設定": "Full Game Scope and Time",
   "解析結果の保存について": "Saving Analysis",
+  "新規対局（対局者・条件）":"New Game (Players & Settings)",
   "対局者・条件": "Players / Conditions",
   "● 黒番": "● Black",
   "○ 白番": "○ White",

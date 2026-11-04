@@ -68,19 +68,28 @@
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
   try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));window.KifuLayout?.fit();fit();window.scrollTo(0,0);q('.workspace').scrollLeft=0;q('.board-panel').scrollLeft=0;
  }
- async function waitViewport(result,revision){
-  const started=performance.now();let stable=0,last='';
-  while(revision===modeRevision&&performance.now()-started<1800){
-   await new Promise(requestAnimationFrame);
-   const key=innerWidth+','+innerHeight,expected=!result?.width||(Math.abs(innerWidth-result.width)<=2&&Math.abs(innerHeight-result.height)<=2);
-   stable=expected&&key===last?stable+1:0;last=key;if(stable>=2)return;
-  }
+ let normalTransition=null;
+ function finishNormal(revision){
+  if(revision!==modeRevision||requestedMode)return;
+  if(normalTransition){clearTimeout(normalTransition.timer);normalTransition=null;}
+  applyMode(false);
  }
+ // Resize is delivered before paint, but the native command reply may arrive later.
+ window.addEventListener('resize',()=>{
+  const pending=normalTransition;
+  if(pending&&(innerWidth!==pending.width||innerHeight!==pending.height))finishNormal(pending.revision);
+ });
  async function setMode(value){
   requestedMode=value;const revision=++modeRevision;
+  if(normalTransition){clearTimeout(normalTransition.timer);normalTransition=null;}
   if(value){applyMode(true);resizeNative(true,true);return;}
-  if(window.__TAURI_INTERNALS__?.invoke){const result=await resizeNative(false,true);await waitViewport(result,revision);}
-  if(revision===modeRevision&&!requestedMode)applyMode(false);
+  if(!window.__TAURI_INTERNALS__?.invoke){finishNormal(revision);return;}
+  const pending={revision,width:innerWidth,height:innerHeight};normalTransition=pending;
+  pending.timer=setTimeout(()=>finishNormal(revision),2000);
+  const result=await resizeNative(false,true);
+  if(revision!==modeRevision||!normalTransition)return;
+  if(!result?.width||innerWidth!==pending.width||innerHeight!==pending.height||
+     (Math.abs(innerWidth-result.width)<=2&&Math.abs(innerHeight-result.height)<=2))finishNormal(revision);
  }
  function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');if(requestedMode)resizeNative(true);}
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);

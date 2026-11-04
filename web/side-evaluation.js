@@ -24,7 +24,7 @@
   const matched=keys(snapshot).flatMap((key,index)=>matchRecords.has(key)?[{...matchRecords.get(key),index}]:[]);
   const same=data?.snapshot&&KifuAnalysis.identity(data.snapshot)===KifuAnalysis.identity(snapshot);
   const source=window.KifuMatch?.locked?matched:same&&data.results.length?data.results:matched;
-  const dual=matchKind==='ai'&&source===matched;panel.querySelector('#graph-win-label').textContent=dual?'勝率（黒・白）':'勝率（黒）';panel.querySelector('#graph-win-label').title=dual?'黒線：黒番AIの黒勝率／白線：白番AIの白勝率':'';panel.querySelector('#graph-score-label').textContent=dual?'目数差（各側）':source===matched&&matched.some(p=>p.color==='W')?'目数差（白）':'目数差（黒）';panel.querySelector('#graph-score-label').title=dual?'実線：黒番AIの黒視点／破線：白番AIの白視点':'';svg.setAttribute('aria-label',dual?'各AIから見た自分の勝率と目数差':'黒視点の勝率と目数差');
+  const dual=matchKind==='ai'&&source===matched;panel.querySelector('#graph-win-label').textContent=dual?'勝率（黒・白）':'勝率（黒）';panel.querySelector('#graph-win-label').title=dual?'黒線：黒番AIの黒勝率／白線：白番AIの白勝率':'';panel.querySelector('#graph-score-label').textContent=dual?'目数差（各側）':'目数差（黒）';panel.querySelector('#graph-score-label').title=dual?'実線：黒番AIの黒視点／破線：白番AIの白視点':'';svg.setAttribute('aria-label',dual?'各AIから見た自分の勝率と目数差':'黒視点の勝率と目数差');
   const records=source.filter(p=>Number.isFinite(p.result?.rootInfo?.winrate)&&Number.isFinite(p.result?.rootInfo?.scoreLead)).sort((a,b)=>a.index-b.index);
   const go=async index=>{if(window.KifuMatch?.locked)return;try{await IndependentGo.analysisAt(index,snapshot.sgf);}catch{}};
   const current=records.find(p=>p.index===snapshot.index),bar=panel.querySelector('#side-win-bar');
@@ -51,7 +51,7 @@
    {metric:'winrate',color:'#fff',side:'W',y:v=>yw(1-v)},
    {metric:'scoreLead',color:magenta,side:'B',y:ys},
    {metric:'scoreLead',color:magenta,side:'W',y:v=>ys(-v),dash:'5 4'}
-  ]:[{metric:'winrate',color:green,y:yw},{metric:'scoreLead',color:magenta,y:(v,p)=>ys(source===matched&&p.color==='W'?-v:v)}];
+  ]:[{metric:'winrate',color:green,y:yw},{metric:'scoreLead',color:magenta,y:ys}];
   for(const {metric,color,side,y,dash} of series){
    const points=side?records.filter(p=>p.color===side):records;
    const adjacent=(a,b)=>a&&b&&b.index-a.index===(side||source===matched&&matchKind==='human'?2:1)&&b.move-a.move===(side||source===matched&&matchKind==='human'?2:1);

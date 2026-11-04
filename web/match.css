@@ -94,3 +94,10 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
 .match-ranking-columns th,.match-ranking-columns td{font-size:12px;padding:3px 1px;text-align:right;border-bottom:1px solid #d7dfd9;white-space:nowrap}
 .match-ranking-columns th:first-child,.match-ranking-columns td:first-child{width:24%;text-align:center}
 .match-ranking-sort{display:flex;justify-content:flex-end;margin:4px 0}
+
+/* Update104: setup and pre-game actions share one disclosure. */
+#pane-match #match-settings>summary{background:#245f57;color:white;border:1px solid #245f57;border-radius:4px;padding:3px;cursor:pointer;width:fit-content;max-width:100%}
+#match-runtime{margin:0;padding:0;min-width:0}
+#match-session-info{display:flex;flex-wrap:wrap;gap:3px 12px;padding:3px 0 6px;overflow-wrap:anywhere}
+#match-session-info[hidden]{display:none}
+#match-session-info>span{min-width:0;max-width:100%}
