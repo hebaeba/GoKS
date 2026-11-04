@@ -48,7 +48,12 @@ async fn desktop_save(name:String,bytes:Vec<u8>,language:Option<String>)->Result
  }).await.map_err(|e|e.to_string())?
 }
 #[tauri::command]
-fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64)->Result<(),String>{window_state::set_mode(&window,simple,width)}
+fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64)->Result<Value,String>{
+ window_state::set_mode(&window,simple,width)?;
+ let size=window.inner_size().map_err(|e|e.to_string())?;
+ let scale=window.scale_factor().map_err(|e|e.to_string())?;
+ Ok(json!({"width":size.width as f64/scale,"height":size.height as f64/scale}))
+}
 #[tauri::command]
 fn desktop_ready(window:tauri::WebviewWindow,simple:bool,content_height:Option<f64>)->Result<(),String>{window_state::ready(&window,simple,content_height)}
 #[tauri::command]
