@@ -30,6 +30,6 @@ jobs:
       - name: Collect Windows executable
         uses: actions/upload-artifact@v6
         with:
-          name: GoKifuStudio-Windows
+          name: GoKS-v.1.0
           path: dist/*
           if-no-files-found: error
