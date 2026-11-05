@@ -1,4 +1,12 @@
 window.KifuEnglish={
+"対局時計":"Game Clock",
+"持ち時間＋秒読み":"Main + byo-yomi",
+"持ち時間（分）":"Main (min)",
+"秒読み回数":"Periods",
+"秒／回":"Sec / period",
+"持ち時間と秒読みを正しく入力してください。":"Enter valid main time and byo-yomi settings.",
+"時計窓を開けません。ポップアップを許可してください。":"Could not open the clock. Allow pop-up windows.",
+"AIの時間は１手ごと。人間は持ち時間＋秒読み、１手の制限、無制限を選べます。投了はKataGoが判断します。現在の盤面・手番と、ここで指定したコミから開始します。":"AI limits apply per move. Humans may use main time plus byo-yomi, a per-move limit or unlimited time. KataGo decides resignation. Play starts from the current position with the specified komi.",
 "対局を再開しています。":"Resuming game…",
 "中断・待ったでは思考を停止し、起動済みのエンジンを再利用します。古いKataGoで中断命令に未対応の場合は再起動します。":"Pausing and taking back stop the search and reuse the running engine. Older KataGo versions without cancellation support restart when necessary.",
 "起動時":"Startup",

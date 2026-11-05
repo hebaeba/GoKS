@@ -101,3 +101,5 @@ body .engine-dock #engine-active #engine-quick,body .engine-dock #engine-active 
 #match-session-info{display:flex;flex-wrap:wrap;gap:3px 12px;padding:3px;border:1px solid #a8bdb4;border-radius:4px;margin:0 0 6px;overflow-wrap:anywhere}
 #match-session-info[hidden]{display:none}
 #match-session-info>span{min-width:0;max-width:100%}
+
+.match-byoyomi{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}.match-byoyomi label{display:flex;align-items:center;gap:3px}.match-byoyomi input{width:5ch}

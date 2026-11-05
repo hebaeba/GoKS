@@ -4,6 +4,7 @@ const invoke=()=>window.__TAURI_INTERNALS__?.invoke;
 const params=new URLSearchParams(location.search),kind=params.get('kind'),id=params.get('id');
 const errorText=e=>e?.message||String(e||'補助窓の操作に失敗しました');
 function native(action,kind,payload={}){if(!invoke())return Promise.reject(Error('この機能はWindowsアプリで利用できます。'));return invoke()('auxiliary',{action,kind,payload});}
+if(kind==='clock'){const script=document.createElement('script');script.src='match-clock-window.js?v=108';document.head.append(script);return;}
 if(kind==='appearance')return;
 if(kind==='panel'){const script=document.createElement('script');script.src='panel-view.js?v=101';document.head.append(script);return;}
 if(kind==='estimate'){
