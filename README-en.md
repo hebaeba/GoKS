@@ -39,10 +39,21 @@ Importing a board image automatically selects Image texture. Importing a WAV sel
 
 Preserve the ZIP folder structure when updating. Report the version, Windows environment, engine and reproduction steps. Remove personal names, IP addresses, local paths and tokens from logs, and do not publish games without permission.
 
-Build with `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. Upload a consistent source set; `web/window-assets.json` checks release integrity. Change histories and changed-file lists are kept in `UPDATE*.md`; this README describes current features rather than accumulating update-specific instructions. See `UPDATE108.md` for this update.
+Build with `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. Upload a consistent source set; `web/window-assets.json` checks release integrity. Change histories and changed-file lists are kept in `UPDATE*.md`; this README describes current features rather than accumulating update-specific instructions. See `UPDATE109.md` for this update.
 
 ## Human game clock
 
-Choose Main + byo-yomi for each human player. Defaults are 60 minutes / 5 periods / 30 seconds per period. Zero main time starts directly in byo-yomi; zero periods gives absolute time. A move made in time resets the current period; exhausted periods are not restored. Exhausting the last period loses on time. AI players retain their existing time/visit search limits.
+Select a System for each human player. AI players retain their existing time/visit search limits. Unlimited and per-move limits remain available.
 
-A movable, resizable clock window opens on game start; use Game Clock to reopen it. Closing it does not stop time. Pause, estimate calculation and move validation stop the clock. Takeback does not refund consumed time. Byo-yomi beeps once per second, louder at one second remaining and throughout the final period. Uncheck Byo-yomi sound to mute.
+| System | Fields and defaults | Behavior |
+|---|---|---|
+| Byo-yomi | Main 30 min / Byo-yomi 30 s / 5 periods | After main time, moving in time resets the current period. Exhausted periods never return. Exhausting the final period loses on time. |
+| Absolute | Main 30 min | Exhausting main time loses on time. |
+| Fischer | Main 10 min / Increment 5 s | Add 5 seconds after each legal move or pass, never after flagfall. |
+| Canadian | Main 0 min / Block 10 min / 15 moves | Start with 15 moves in 10 minutes. Completing the quota resets the block to 10 minutes and 15 moves; unused time is not carried over. Optional main time precedes the repeating blocks. |
+
+Only relevant fields are shown, normally in one row. In narrow panels, labels sit above the inputs to keep numeric fields aligned. Very narrow panels or larger text may still wrap. Zero main time starts directly in byo-yomi or Canadian overtime; zero byo-yomi periods gives absolute time.
+
+A movable, resizable clock window opens on game start; use Game Clock to reopen it. Closing it does not stop time. Pause, estimates and move validation stop the clock. Takeback does not refund thinking time and removes increments or block renewals earned by undone moves; this can result in flagfall.
+
+Byo-yomi beeps every second, louder at one second remaining and during the final period. Other systems beep in the final ten seconds. Uncheck Clock sound to mute.
