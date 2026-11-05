@@ -93,3 +93,5 @@ Update108: executable GoKS.exe, release GoKS-v.1.0, internal version 1.0.0; pres
 Update109: human clock System selects Byo-yomi, Absolute, Fischer or Canadian. Byo-yomi defaults/order: 30 minutes / 30 seconds / 5 periods. Fischer adds only after a legal move or pass. Canadian resets block time at quota, never accumulates unused time. Takeback removes grants from undone moves but never refunds thinking time. Preserve AI limits.
 
 Update110: human System order is Absolute, Byo-yomi, Fischer, Canadian, Unlimited; default remains Byo-yomi. Remove human per-move presets. Pair byo-yomi seconds/periods with a slash and accessible period label; keep extra spacing after main time and wrap whole groups without shrinking shared typography.
+
+Update112: Windows clock is an owned top-level window of main (not embedded or globally topmost). Move/timer updates must never close, recreate or focus it. Clock-only geometry persists in clock-window.json; use logical units relative to monitor work area, clamp on restore, and never save minimized/maximized/hidden rectangles. Main normal/simple geometry is unchanged.

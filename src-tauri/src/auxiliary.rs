@@ -21,19 +21,31 @@ pub async fn auxiliary(app:AppHandle,window:WebviewWindow,action:String,kind:Str
     let _=w.unminimize();let _=w.show();w.set_focus().map_err(|e|e.to_string())?;
     return Ok(json!({"existing":true}));
   }
-  let w=WebviewWindowBuilder::new(&app,target,WebviewUrl::App(url.into()))
+  let builder=WebviewWindowBuilder::new(&app,target,WebviewUrl::App(url.into()))
     .title(if kind=="clock"{"対局時計 / Game Clock"}else if kind=="appearance"{"表示・音 / Appearance & Sound"}else if kind=="image"{"画像から局面を取り込む"}else if kind=="estimate"{"推定値"}else if kind=="panel"{"詳細メニュー"}else{"地合い計算"})
     .inner_size(width,height).min_inner_size(400.0,320.0).resizable(true)
     .maximizable(true).minimizable(true).decorations(true).always_on_top(kind=="score")
-    .build().map_err(|e|e.to_string())?;
+    .visible(kind!="clock").focused(kind!="clock");
+  // Owned top-level window: above this app on Windows, without stealing
+  // focus on every move or covering unrelated applications.
+  let builder=if kind=="clock"{builder.parent(&window).map_err(|e|e.to_string())?}else{builder};
+  let w=builder.build().map_err(|e|e.to_string())?;
+  if kind=="clock"{
+    if let Err(error)=crate::clock_window::initialize(&w){eprintln!("Clock placement: {error}");}
+    w.show().map_err(|e|e.to_string())?;
+  }
   let owner=app.clone();let k=kind.clone();let session=id.to_string();
-  w.on_window_event(move|event|{if matches!(event,tauri::WindowEvent::Destroyed){if let Some(main)=owner.get_webview_window("main"){let _=deliver(&main,json!({"kind":k,"id":session,"type":"closed"}));}}});
+  w.on_window_event(move|event|{
+   if k=="clock" && matches!(event,tauri::WindowEvent::Moved(_)|tauri::WindowEvent::Resized(_)|tauri::WindowEvent::ScaleFactorChanged{..}|tauri::WindowEvent::CloseRequested{..}|tauri::WindowEvent::Focused(false)){
+     if let Some(clock)=owner.get_webview_window("aux-clock"){crate::clock_window::save(&clock);}
+   }
+   if matches!(event,tauri::WindowEvent::Destroyed){if let Some(main)=owner.get_webview_window("main"){let _=deliver(&main,json!({"kind":k,"id":session,"type":"closed"}));}}});
   w.set_focus().map_err(|e|e.to_string())?;Ok(json!({"opened":true}))
  },
  "title"=>{if window.label()!=target{return Err("補助窓から操作してください".into());}let title=payload["title"].as_str().unwrap_or("");if title.len()>256{return Err("補助窓のタイトルが長すぎます".into());}window.set_title(title).map_err(|e|e.to_string())?;Ok(json!({}))},
  "drag"=>{if window.label()!=target{return Err("補助窓から操作してください".into());}window.start_dragging().map_err(|e|e.to_string())?;Ok(json!({}))},
  "owner-focus"=>{if let Some(w)=app.get_webview_window("main"){let _=w.unminimize();w.set_focus().map_err(|e|e.to_string())?;}Ok(json!({}))},
- "close"=>{if let Some(w)=app.get_webview_window(target){w.destroy().map_err(|e|e.to_string())?;}Ok(json!({}))},
+ "close"=>{if let Some(w)=app.get_webview_window(target){if kind=="clock"{crate::clock_window::save(&w);}w.destroy().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "focus"=>{if let Some(w)=app.get_webview_window(target){let _=w.unminimize();w.set_focus().map_err(|e|e.to_string())?;}Ok(json!({}))},
  "send"=>{
   let destination=if window.label()=="main"{target}else{"main"};

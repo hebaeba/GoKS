@@ -58,3 +58,5 @@ Only relevant fields are shown, normally in one row. Main time and byo-yomi have
 A movable, resizable clock window opens on game start; use Game Clock to reopen it. Closing it does not stop time. Pause, estimates and move validation stop the clock. Takeback does not refund thinking time and removes increments or block renewals earned by undone moves; this can result in flagfall.
 
 Byo-yomi beeps every second, louder at one second remaining and during the final period. Other systems beep in the final ten seconds. Uncheck Clock sound to mute.
+
+On Windows, the clock stays above the main app when playing moves. Its position, size and monitor are remembered for the next opening, adjusted to the available work area if the display setup changes. Minimizing the main app also hides the clock; restoring it shows the clock again.

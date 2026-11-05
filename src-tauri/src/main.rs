@@ -4,6 +4,7 @@ use tauri::Manager;
 mod window_state;
 mod save_name;
 mod auxiliary;
+mod clock_window;
 mod fonts;
 use serde_json::{Value,json};
 use kifu_katago_backend::Engine;
@@ -57,7 +58,7 @@ fn desktop_simple_window(window:tauri::WebviewWindow,simple:bool,width:f64)->Res
 #[tauri::command]
 fn desktop_ready(window:tauri::WebviewWindow,simple:bool,content_height:Option<f64>)->Result<(),String>{window_state::ready(&window,simple,content_height)}
 #[tauri::command]
-fn desktop_close(app:tauri::AppHandle){if let Some(w)=app.get_webview_window("main"){window_state::save(&w);}app.exit(0);}
+fn desktop_close(app:tauri::AppHandle){if let Some(w)=app.get_webview_window("aux-clock"){clock_window::save(&w);}if let Some(w)=app.get_webview_window("main"){window_state::save(&w);}app.exit(0);}
 #[tauri::command]
 async fn desktop_print(window:tauri::WebviewWindow)->Result<(),String>{window.print().map_err(|e|e.to_string())}
 fn main(){
@@ -107,6 +108,7 @@ fn main(){
  }).setup(|app|{
  let state_dir=app.path().app_config_dir()?;std::fs::create_dir_all(&state_dir)?;
  app.manage(window_state::State::load(state_dir.join("window-layout.json")));
+ app.manage(clock_window::State::load(state_dir.join("clock-window.json")));
  if let Some(window)=app.get_webview_window("main"){
   if let Err(error)=window_state::initialize(&window){eprintln!("Window restoration: {error}");}
   // Recovery for a failed frontend: never leave an invisible process indefinitely.
