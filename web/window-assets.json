@@ -1,9 +1,9 @@
 {
-  "update": 110,
+  "update": 112,
   "files": {
     "scripts/check-window-assets.cjs": "a7448eb8c05857e9c1026e6dee56b054a4390bbda129eb0e8693efc7c688eb31",
-    "src-tauri/src/auxiliary.rs": "67a2efc5cbb97ae24dedf0f853886635645fda4ac7f92cfa85d5faa705b8d229",
-    "src-tauri/src/main.rs": "53a273b6298b80bd8541c059044e25db358bb607997a423d3a80055def2b7b9e",
+    "src-tauri/src/auxiliary.rs": "c4e2aa9ae69c6846785898eaa0a726851f510377005cd5929c352f7a1d49a1b4",
+    "src-tauri/src/main.rs": "4d1333c837de22cbb3cb6b0276660010beb85ad59d81d960c16e755ab6dc7cc0",
     "src-tauri/src/save_name.rs": "d6f29fea0739072ccd944b4596f604f846c8671e07b764a49b00556bdc5f6fbb",
     "src-tauri/src/window_state.rs": "0d7e80d4a59f1a80ac86d3c3f107c14e808a84d0d2b6d580d4396c92038d8389",
     "tests/i18n96.test.cjs": "cbb6beab6990e08ea4b63f3f31c25a72e4e43ca6f25919af0405ea3cbc72f878",
@@ -111,6 +111,8 @@
     "tests/clock109.test.cjs": "1432d61744ee6b403f04e074c6e63055480ed466daff26ce4e0c51418e6b002a",
     "tests/update109-clock.cjs": "04f103465c8b4d8ef3da937adb37d003813a8c6e6dc6183616fd77b5d328bc04",
     "tests/update109-native-clock.cjs": "36894a11b20f72c176bf1f2eddaa5e79b17dd8684a39ad8122c179448edbae9e",
-    "tests/update110-clock.cjs": "1852dccc393cce0100af7c700588738aec3b5ea11270c1b491ccac7ffd6b873d"
+    "tests/update110-clock.cjs": "1852dccc393cce0100af7c700588738aec3b5ea11270c1b491ccac7ffd6b873d",
+    "src-tauri/src/clock_window.rs": "77545af1af18244f5ea4061853d1a423a9cd872b9c480efe5bbeccb7dff6ea5a",
+    "tests/update112-native-clock.cjs": "a5b3f801a5e960e3f6ee7e1dd0501bd649511d4a5521e3309d30e2c1115d0bea"
   }
 }
