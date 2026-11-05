@@ -6,7 +6,8 @@
     "aux-image",
     "aux-score",
     "aux-estimate",
-    "aux-panel"
+    "aux-panel",
+    "aux-clock"
   ],
   "permissions": [
     "core:default"

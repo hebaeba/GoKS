@@ -7,7 +7,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Update all independent-window files together b
 cargo build --release --manifest-path src-tauri/Cargo.toml --features custom-protocol
 if ($LASTEXITCODE -ne 0) { throw 'Windows build failed. No release was created.' }
 New-Item -ItemType Directory -Force dist | Out-Null
-Copy-Item src-tauri/target/release/kifu-editor.exe dist/GoKifuStudio.exe -Force
+if (Test-Path dist/GoKifuStudio.exe) { Remove-Item dist/GoKifuStudio.exe -Force }
+Copy-Item src-tauri/target/release/kifu-editor.exe dist/GoKS.exe -Force
 if (Test-Path dist/engines) { Remove-Item dist/engines -Recurse -Force }
 Copy-Item engines dist/engines -Recurse -Force
 node scripts/check-bundled-engine.cjs
@@ -20,5 +21,5 @@ Copy-Item web/licenses.html, web/licenses-en.html dist -Force
 Copy-Item web/licenses dist/licenses -Recurse -Force
 node scripts/check-release-docs.cjs dist
 if ($LASTEXITCODE -ne 0) { throw 'Release documentation is incomplete.' }
-Get-FileHash dist/GoKifuStudio.exe -Algorithm SHA256 | Format-List | Out-File dist/SHA256.txt -Encoding utf8
-Write-Host 'Created dist/GoKifuStudio.exe. Test on Windows before distribution.'
+Get-FileHash dist/GoKS.exe -Algorithm SHA256 | Format-List | Out-File dist/SHA256.txt -Encoding utf8
+Write-Host 'Created dist/GoKS.exe. Test on Windows before distribution.'

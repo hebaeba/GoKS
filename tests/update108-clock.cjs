@@ -1,0 +1,28 @@
+const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict');
+const root=path.resolve(__dirname,'../web');const server=http.createServer((req,res)=>{const f=path.join(root,req.url.split('?')[0]==='/'?'index.html':req.url.split('?')[0]);if(!fs.existsSync(f)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.wav')?'audio/wav':f.endsWith('.svg')?'image/svg+xml':'text/html; charset=utf-8');res.end(fs.readFileSync(f));});
+
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-gpu','--disable-software-rasterizer','--use-gl=disabled','--single-process','--no-zygote']});
+ const page=await browser.newPage({viewport:{width:1600,height:940}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForSelector('#simple-toggle');await page.evaluate(()=>document.fonts.ready);
+
+ await page.evaluate(()=>{const real=Date.now;window.clockOffset=0;Date.now=()=>real()+clockOffset;});
+ await page.locator('#tab-match').click();await page.locator('#match-white').selectOption('human');
+ await page.locator('#match-black-main').fill('0');await page.locator('#match-black-periods').fill('2');await page.locator('#match-black-period-time').fill('30');
+ await page.locator('#match-white-main').fill('1');
+ const popupPromise=page.waitForEvent('popup');await page.locator('#match-start').click();const clockPage=await popupPromise;clockPage.on('pageerror',e=>errors.push(e.message));await clockPage.waitForSelector('#digits-B');await page.waitForFunction(()=>KifuMatch.phase==='playing');
+ await clockPage.waitForFunction(()=>document.getElementById('detail-B').textContent.includes('2 × 30'));
+ await page.evaluate(()=>clockOffset+=31000);await page.waitForTimeout(160);assert.match(await clockPage.locator('#detail-B').textContent(),/1 × 30/);
+ await clockPage.setViewportSize({width:680,height:360});await clockPage.screenshot({path:'/tmp/gks108-clock.png'});await clockPage.locator('#clock-sound').uncheck();await page.waitForTimeout(150);assert.equal(await clockPage.locator('#clock-sound').isChecked(),false);
+ await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='paused');const paused=await clockPage.locator('#digits-B').textContent();await page.evaluate(()=>clockOffset+=90000);await page.waitForTimeout(200);assert.equal(await clockPage.locator('#digits-B').textContent(),paused);
+ await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='playing');await page.evaluate(()=>KifuMatch.humanMove(0));await page.waitForTimeout(150);assert.equal(await clockPage.locator('#digits-B').textContent(),'00:30');assert.match(await clockPage.locator('#detail-B').textContent(),/1 × 30/);
+ await page.evaluate(()=>clockOffset+=10000);await page.waitForTimeout(150);await page.locator('#match-takeback').click();await page.waitForFunction(()=>KifuMatch.phase==='playing'&&IndependentGo.getMove()===0);assert.match(await clockPage.locator('#detail-B').textContent(),/1 × 30/);assert.notEqual(await clockPage.locator('#digits-W').textContent(),'01:00');
+ // Illegal occupied move must not reset a running period.
+ await page.evaluate(()=>KifuMatch.humanMove(1));await page.evaluate(()=>KifuMatch.humanMove(2));await page.evaluate(()=>clockOffset+=5000);await page.waitForTimeout(150);await page.evaluate(()=>KifuMatch.humanMove(1));await page.waitForTimeout(150);assert.notEqual(await clockPage.locator('#digits-B').textContent(),'00:30');assert.equal(await page.evaluate(()=>IndependentGo.getMove()),2);
+ await page.evaluate(()=>KifuI18n.set('en'));await clockPage.waitForFunction(()=>document.getElementById('clock-title').textContent==='Game Clock');assert.match(await clockPage.locator('#detail-B').textContent(),/Byo-yomi remaining/);assert(await clockPage.locator('#digits-B').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=32));await clockPage.screenshot({path:'/tmp/gks108-clock-en.png'});
+ for(const viewport of [{width:1280,height:940},{width:1280,height:740},{width:1600,height:940}]){await page.setViewportSize(viewport);await page.waitForTimeout(60);}
+ await page.evaluate(()=>KifuSimple.setMode(true));await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='paused');await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='playing');
+ await clockPage.close();await page.evaluate(()=>clockOffset+=31000);await page.waitForFunction(()=>KifuMatch.phase==='finished');assert.match(await page.evaluate(()=>IndependentGo.peekAnalysisSnapshot().sgf),/RE\[W\+T\]/);
+ await page.evaluate(()=>KifuSimple.setMode(false));const reopened=page.waitForEvent('popup');await page.locator('#match-clock-open').click();const secondClock=await reopened;await secondClock.waitForSelector('#clock-phase');await secondClock.waitForFunction(()=>document.getElementById('clock-phase').textContent==='Finished');assert.equal(await secondClock.locator('#digits-B').textContent(),'00:00');await secondClock.close();
+ assert.deepEqual(errors,[]);console.log('PASS: independent clock; byo-yomi period loss/reset; illegal moves; pause/resume; no refund on takeback; ja/en; simple mode; closed-window timeout recorded in SGF');
+ }finally{await browser?.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
