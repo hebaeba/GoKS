@@ -91,3 +91,5 @@ Update104: commit normal mode on the native resize event before paint rather tha
 Update108: executable GoKS.exe, release GoKS-v.1.0, internal version 1.0.0; preserve app identifier and saved settings. Human clocks support main time/Japanese byo-yomi; AI limits unchanged. Main window owns timing and timeout; clock child only displays/control requests. Pause and validation stop timing; takeback never refunds clock time.
 
 Update109: human clock System selects Byo-yomi, Absolute, Fischer or Canadian. Byo-yomi defaults/order: 30 minutes / 30 seconds / 5 periods. Fischer adds only after a legal move or pass. Canadian resets block time at quota, never accumulates unused time. Takeback removes grants from undone moves but never refunds thinking time. Preserve AI limits.
+
+Update110: human System order is Absolute, Byo-yomi, Fischer, Canadian, Unlimited; default remains Byo-yomi. Remove human per-move presets. Pair byo-yomi seconds/periods with a slash and accessible period label; keep extra spacing after main time and wrap whole groups without shrinking shared typography.

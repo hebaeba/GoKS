@@ -1,0 +1,42 @@
+const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict');
+const root=path.resolve(__dirname,'../web');const server=http.createServer((req,res)=>{const f=path.join(root,req.url.split('?')[0]==='/'?'index.html':req.url.split('?')[0]);if(!fs.existsSync(f)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.wav')?'audio/wav':f.endsWith('.svg')?'image/svg+xml':'text/html; charset=utf-8');res.end(fs.readFileSync(f));});
+
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-gpu','--disable-software-rasterizer','--use-gl=disabled','--single-process','--no-zygote']});
+ const page=await browser.newPage({viewport:{width:1600,height:940}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForSelector('#simple-toggle');await page.evaluate(()=>document.fonts.ready);
+
+
+ await page.evaluate(()=>{const real=Date.now;window.clockOffset=0;Date.now=()=>real()+clockOffset;});
+ await page.locator('#tab-match').click();
+ assert.deepEqual(await page.locator('#match-white-preset option').evaluateAll(es=>es.map(e=>e.value)),['0','0.5','1','2','5','10','custom']);
+ await page.locator('#match-white').selectOption('human');
+
+ for(const side of ['black','white']){
+  assert.deepEqual(await page.locator('#match-'+side+'-preset option').evaluateAll(es=>es.map(e=>e.value)),['absolute','clock','fischer','canadian','0']);
+  assert.equal(await page.locator('#match-'+side+'-preset').inputValue(),'clock');
+  assert.equal(await page.locator('#match-'+side+'-byoyomi .match-byoyomi-pair').textContent(),'秒読み（秒／回）／');
+ }
+ for(const side of ['black','white']){assert.equal(await page.locator('#match-'+side+'-main').inputValue(),'30');assert.equal(await page.locator('#match-'+side+'-period-time').inputValue(),'30');assert.equal(await page.locator('#match-'+side+'-periods').inputValue(),'5');const ids=await page.locator('#match-'+side+'-byoyomi input:visible').evaluateAll(es=>es.map(e=>e.id));assert.deepEqual(ids,['main','period-time','periods'].map(x=>'match-'+side+'-'+x));}
+ for(const size of [{width:1280,height:940},{width:1280,height:740},{width:1600,height:940}])for(const lang of ['ja','en']){await page.setViewportSize(size);await page.evaluate(lang=>KifuI18n.set(lang),lang);await page.waitForTimeout(80);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ const layout=await page.locator('#match-black-byoyomi').evaluate(row=>{
+  const main=row.firstElementChild.getBoundingClientRect(),pair=row.querySelector('.match-byoyomi-pair').getBoundingClientRect();
+  const inputs=[...row.querySelectorAll('.match-byoyomi-pair input')].map(e=>e.getBoundingClientRect());
+  return {sameLine:Math.abs(inputs[0].top-inputs[1].top)<1,gap:pair.left-main.right,wrap:pair.top>main.bottom-1,over:pair.right>row.getBoundingClientRect().right+1};
+ });
+ assert(layout.sameLine);assert(!layout.over);assert(layout.wrap||layout.gap>=23);
+ }
+ await page.setViewportSize({width:1600,height:940});await page.evaluate(()=>KifuI18n.set('ja'));await page.waitForTimeout(100);await page.locator('#pane-match').screenshot({path:'/tmp/gks110-settings.png'});await page.locator('#match-black-preset').selectOption('fischer');assert.equal(await page.locator('#match-black-main').inputValue(),'10');assert.equal(await page.locator('#match-black-increment').inputValue(),'5');assert(!(await page.locator('#match-black-periods').isVisible()));
+ await page.locator('#match-white-preset').selectOption('canadian');assert.equal(await page.locator('#match-white-main').inputValue(),'0');assert.equal(await page.locator('#match-white-block').inputValue(),'10');assert.equal(await page.locator('#match-white-quota').inputValue(),'15');await page.locator('#match-white-quota').fill('2');
+ for(const side of ['black','white']){const ys=await page.locator('#match-'+side+'-byoyomi label:visible').evaluateAll(es=>es.map(e=>Math.round(e.getBoundingClientRect().top)));assert.equal(new Set(ys).size,1);}
+ const pp=page.waitForEvent('popup');await page.locator('#match-start').click();const clockPage=await pp;clockPage.on('pageerror',e=>errors.push(e.message));await clockPage.waitForSelector('#digits-B');await page.waitForFunction(()=>KifuMatch.phase==='playing');
+ await page.evaluate(()=>clockOffset+=10000);await page.waitForTimeout(130);await page.evaluate(()=>KifuMatch.humanMove(0));await page.waitForTimeout(130);assert.match(await clockPage.locator('#digits-B').textContent(),/09:5[45]/);assert.match(await clockPage.locator('#detail-B').textContent(),/フィッシャー.*5/);
+ await page.evaluate(()=>clockOffset+=10000);await page.evaluate(()=>KifuMatch.humanMove(1));await page.waitForTimeout(130);assert.match(await clockPage.locator('#detail-W').textContent(),/1手／10分/);
+ await page.evaluate(()=>clockOffset+=3000);await page.evaluate(()=>KifuMatch.humanMove(2));await page.evaluate(()=>clockOffset+=10000);await page.evaluate(()=>KifuMatch.humanMove(3));await page.waitForTimeout(130);assert.equal(await clockPage.locator('#digits-W').textContent(),'10:00');assert.match(await clockPage.locator('#detail-W').textContent(),/2手／10分/);
+ await page.locator('#match-takeback').click();await page.waitForFunction(()=>KifuMatch.phase==='playing'&&IndependentGo.getMove()===3);await page.waitForTimeout(130);assert.match(await clockPage.locator('#detail-W').textContent(),/1手／10分/);assert.notEqual(await clockPage.locator('#digits-W').textContent(),'10:00');
+ await page.evaluate(()=>KifuMatch.humanMove(2));await page.waitForTimeout(130);assert.equal(await page.evaluate(()=>IndependentGo.getMove()),3);assert.match(await clockPage.locator('#detail-W').textContent(),/1手／10分/);
+ await page.evaluate(()=>KifuMatch.humanMove(3));await page.waitForTimeout(130);assert.equal(await clockPage.locator('#digits-W').textContent(),'10:00');
+ await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='paused');const paused=await clockPage.locator('#digits-B').textContent();await page.evaluate(()=>clockOffset+=30000);await page.waitForTimeout(130);assert.equal(await clockPage.locator('#digits-B').textContent(),paused);
+ await page.evaluate(()=>{KifuI18n.set('en');KifuSimple.setMode(true);});await clockPage.waitForFunction(()=>document.getElementById('clock-title').textContent==='Game Clock');assert.match(await clockPage.locator('#detail-B').textContent(),/Fischer/);assert.match(await clockPage.locator('#detail-W').textContent(),/Canadian/);await clockPage.locator('#clock-toggle').click();await page.waitForFunction(()=>KifuMatch.phase==='playing');await clockPage.close();await page.evaluate(()=>clockOffset+=700000);await page.waitForFunction(()=>KifuMatch.phase==='finished');assert.match(await page.evaluate(()=>IndependentGo.peekAnalysisSnapshot().sgf),/RE\[W\+T\]/);
+ assert.deepEqual(errors,[]);console.log('PASS: 30/30/5 order; mode-specific one-row fields; Fischer increments; Canadian quota/renewal; takeback/illegal moves; pause; simple/ja/en; timeout');
+ }finally{await browser?.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
