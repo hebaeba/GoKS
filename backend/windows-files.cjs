@@ -8,7 +8,7 @@ function validateFile(kind,file,windows=process.platform==='win32'){
 }
 let choosing=false;
 async function pick(kind){
- if(!['exe','model','config'].includes(kind))throw Error('ファイルの種類が不正です。');
+ if(!['exe','model','config','folder','cpu','network'].includes(kind))throw Error('ファイルの種類が不正です。');
  if(process.platform!=='win32')throw Error('選択ボタンはWindows用です。この環境ではパスを直接入力してください。');
  if(choosing)throw Error('ファイル選択の窓を先に閉じてください。');choosing=true;
  try{return await new Promise((resolve,reject)=>{
@@ -16,9 +16,10 @@ async function pick(kind){
   // The script is fixed, and kind is from the whitelist above. No user path is inserted into PowerShell code.
   const command='& {\n'+script+'\n} -Kind '+kind;
   const child=spawn('powershell.exe',['-NoLogo','-NoProfile','-STA','-EncodedCommand',Buffer.from(command,'utf16le').toString('base64')],{windowsHide:true,shell:false});let out='',err='';
+  child.stdout.setEncoding('utf8');child.stderr.setEncoding('utf8');
   child.stdout.on('data',d=>out+=d.toString('utf8'));child.stderr.on('data',d=>err+=d.toString('utf8'));
   child.on('error',e=>reject(Error('選択窓を開けません：'+e.message+'。パスを直接入力することもできます。')));
-  child.on('close',code=>{try{if(code!==0)throw Error('選択窓を開けません：'+err.slice(-3000));const file=out.replace(/^\uFEFF/,'').trim();if(file)validateFile(kind,file);resolve({path:file||null});}catch(e){reject(e);}});
+  child.on('close',code=>{try{if(code!==0)throw Error('選択窓を開けません：'+err.slice(-3000));const file=out.replace(/^\uFEFF/,'').trim();if(kind==="folder"&&file){resolve(JSON.parse(file));return;}if(file)validateFile(kind,file);resolve({path:file||null});}catch(e){reject(e);}});
  });}finally{choosing=false;}
 }
 // Read the ordinary Windows PE import table (delay-loaded/runtime libraries are not covered).

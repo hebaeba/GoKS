@@ -12,16 +12,7 @@ use kifu_lan_server::Share;
 struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf}
 #[tauri::command]
 async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
- if action=="defaults" {
-  let base=std::env::current_exe().map_err(|e|e.to_string())?.parent().ok_or("実行場所を取得できません")?.join("engines/katago");
-  let mut profiles:Vec<Value>=serde_json::from_str(include_str!("../../engines/manifest.json")).map_err(|e|e.to_string())?;
-  for p in &mut profiles{
-   let mut missing=Vec::<String>::new();
-   for key in ["exe","model","config"]{let relative=p[key].as_str().ok_or("内蔵エンジン定義が不正です")?.to_string();let file=base.join(&relative);if !file.is_file(){missing.push(relative.clone());}p[key]=json!(format!("./engines/katago/{}",relative.replace('\\',"/")));}
-   p["kind"]=json!("katago");p["workdir"]=json!("./engines/katago");p["missing"]=json!(missing);
-  }
-  let mut defaults=profiles.first().cloned().ok_or("内蔵エンジンがありません")?;defaults["profiles"]=json!(profiles);return Ok(defaults);
- }
+ if action=="defaults" {return Ok(json!({"profiles":[]}));}
  if action=="start" {
   let exe=std::env::current_exe().map_err(|e|e.to_string())?;
   let base=exe.parent().ok_or("実行場所を取得できません")?;
