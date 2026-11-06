@@ -10,7 +10,7 @@ test('engine is the default sidebar pane on launch',()=>{
 test('auto-resume validates missing model and does not block setup buttons',()=>{
  const js=read('web/analysis.js');
  assert.match(js,/async function autoConnect\(\)/);
- assert.match(js,/rawCall\('check_paths',paths\(\)\)/);
+ assert.match(js,/rawCall\('check_paths',config\)/);
  assert.match(js,/if\(!files\.ready\)\{showSetupMessage/);
  assert.match(js,/missing:'エンジン設定の修復が必要です'/);
  assert.match(js,/engine-install'\)\.disabled=installing/);

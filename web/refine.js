@@ -41,7 +41,7 @@ const moves=document.createElement('div');moves.className='move-edit-group';move
 q('.analysis-primary').append(q('.region-analysis-toggle'));
 })();
 
-;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;function openGuide(title,url){d.querySelector('strong').textContent=title;frame.src=url;d.showModal();}document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();openGuide(a.textContent,a.href);};});const about=document.getElementById('about-open');if(about){const help=about.closest('.help');help.remove();const footer=document.querySelector('footer'),links=document.createElement('span');links.className='footer-links';footer.append(links);links.append(about,...footer.querySelectorAll('a'));about.className='about-open';about.onclick=()=>openGuide('このGo棋譜Studioについて','README.html?v=117');}frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();
+;(()=>{const d=document.createElement('dialog');d.id='guide-dialog';d.innerHTML='<div class="guide-top"><strong id="guide-title"></strong><button id="guide-close">碁盤に戻る</button></div><iframe id="guide-frame" title="説明書"></iframe>';document.body.append(d);const frame=d.querySelector('iframe');const close=()=>d.close();d.querySelector('button').onclick=close;function openGuide(title,url){d.querySelector('strong').textContent=title;frame.src=url;d.showModal();}document.querySelectorAll('footer a').forEach(a=>{a.removeAttribute('target');a.onclick=e=>{e.preventDefault();openGuide(a.textContent,a.href);};});const about=document.getElementById('about-open');if(about){const help=about.closest('.help');help.remove();const footer=document.querySelector('footer'),links=document.createElement('span');links.className='footer-links';footer.append(links);links.append(about,...footer.querySelectorAll('a'));about.className='about-open';about.onclick=()=>openGuide('このGo棋譜Studioについて','README.html?v=119');}frame.onload=()=>{try{frame.contentDocument.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&new URL(a.href).pathname.endsWith('/index.html')){e.preventDefault();close();}});}catch{}};})();
 
 ;(()=>{
  const tools=document.querySelector('.board-view-tools');
@@ -81,11 +81,15 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const separator=document.createElement('hr');separator.className='engine-divider';
  const note=settings.querySelector(':scope > .analysis-note'),kind=settings.querySelector(':scope > .engine-kind-row'),kindNote=$('engine-kind-note');
  const hint=running.nextElementSibling;
- d.querySelector('summary').after(note,kind,kindNote,hint);
+ d.querySelector('summary').after(...[note,kind,kindNote,hint].filter(Boolean));
  for(const key of ['exe','model','config']){const input=$('engine-'+key),row=input.closest('.engine-path-row'),label=document.querySelector('label[for="'+input.id+'"]');d.append(label,row);}
  d.append($('engine-advanced'),document.querySelector('.engine-registration'));
  d.querySelector('.engine-profiles').after($('engine-name').parentElement);
- d.append(document.querySelector('.engine-actions'),$('engine-platform'));
+ const legacyActions=document.querySelector('.engine-actions');
+ // Internal start/stop controls remain for compatibility, but the visible
+ // engine name picker and the top Start/Stop button replace them.
+ legacyActions.hidden=true;
+ d.append(legacyActions,$('engine-platform'));
  settings.replaceChildren(tools,separator,d,running);
  const sync=()=>KifuAnalysisControl.setFieldsCollapsed(!d.open);
  d.addEventListener('toggle',sync);sync();

@@ -78,6 +78,18 @@ const metric=document.createElement('label');metric.className='worst-metric';met
 const enginePicker=document.createElement('div');enginePicker.id='engine-picker';enginePicker.hidden=true;enginePicker.setAttribute('role','group');enginePicker.setAttribute('aria-label','エンジンを選択');engineName.after(enginePicker);
 const name=$('engine-active-name');name.tabIndex=0;name.setAttribute('role','button');name.setAttribute('aria-expanded','false');name.title='登録済みのエンジンから選択します';
 function closePicker(){enginePicker.hidden=true;name.setAttribute('aria-expanded','false');}
-function togglePicker(){if(!enginePicker.hidden){closePicker();return;}enginePicker.replaceChildren();for(const option of $('engine-profile').options){if(!option.value)continue;const b=document.createElement('button');b.textContent=option.textContent;b.disabled=$('engine-connect').disabled;b.onclick=()=>{closePicker();$('engine-profile').value=option.value;$('engine-profile').onchange();$('engine-connect').click();};enginePicker.append(b);}enginePicker.hidden=false;name.setAttribute('aria-expanded','true');}
+function togglePicker(){
+ if(!enginePicker.hidden){closePicker();return;}
+ enginePicker.replaceChildren();
+ const options=[...$('engine-profile').options].filter(o=>o.value);
+ if(!options.length){const empty=document.createElement('p');empty.textContent='エンジンが登録されていません。下の自動セットアップから追加できます。';enginePicker.append(empty);}
+ for(const option of options){
+  const b=document.createElement('button');b.type='button';b.textContent=option.textContent;
+  b.title='クリックすると「'+option.textContent+'」を起動します';
+  b.onclick=()=>{closePicker();window.KifuAnalysisControl.startProfile(option.value);};
+  enginePicker.append(b);
+ }
+ enginePicker.hidden=false;name.setAttribute('aria-expanded','true');
+}
 name.onclick=togglePicker;name.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePicker();}};document.addEventListener('pointerdown',e=>{if(!enginePicker.contains(e.target)&&!name.contains(e.target))closePicker();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePicker();});
 })();

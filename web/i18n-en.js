@@ -1335,3 +1335,21 @@ Object.assign(window.KifuEnglish,{
  "エンジンの起動・解析処理中です。「エンジン終了」の後にセットアップを実行してください。":"Please stop the running engine before reinstalling.",
  "自動セットアップはWindows版GoKSで利用できます。":"Automatic setup requires the Windows desktop version of GoKS."
 });
+
+// Update119 engine quick-picker messages
+Object.assign(window.KifuEnglish, {
+ "エンジンが登録されていません。下の自動セットアップから追加できます。":"No engines are registered. Add one with automatic setup below.",
+ "上部のエンジン名をクリックして選択すると、自動的に起動します。":"Click the engine name above to choose and start an engine.",
+ "登録内容はこの端末に保存します。上部のエンジン名から選ぶと起動します。":"Profiles are saved on this device. Choose an engine above to start it.",
+ "選択したエンジンは登録されていません。":"The selected engine is no longer registered.",
+ "この環境ではエンジンを起動できません。":"Engines cannot start in this environment.",
+ "エンジンの処理中です。完了後にもう一度選択してください。":"An engine operation is in progress. Select again when it finishes.",
+ "エンジンの切り替え準備中です。もう一度選択してください。":"Preparing to switch engines. Please select again.",
+ "登録されたエンジンを使用できません。設定を確認してください。":"This registered engine is unavailable. Check its settings.",
+ "は既に起動しています。":" is already running.",
+ "エンジンを切り替えられませんでした：":"Could not switch engines: ",
+ "を選択しました。上部のエンジン名から起動できます。":" selected. Use the engine name above to start it.",
+ "上部のエンジン名から選んで起動してください。":"Choose an engine using its name above to start it.",
+ "上部のエンジン名から選んで起動するか、右の「起動」を押してください。":"Choose an engine above, or press Start on the right.",
+ "を起動します":" to start it"
+});

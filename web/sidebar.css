@@ -212,3 +212,6 @@ html body #engine-install-progress{display:block;width:100%;height:12px;accent-c
 html body #engine-install-progress[hidden]{display:none}
 html body #engine-settings>#engine-list-disclosure,html body #engine-settings>.engine-running-details{margin:8px 0}
 html body #engine-settings button:disabled{opacity:.43;cursor:not-allowed}
+
+/* Update119: top engine selector and quick control replace duplicate detail buttons. */
+#engine-list-disclosure .engine-actions[hidden]{display:none!important}
