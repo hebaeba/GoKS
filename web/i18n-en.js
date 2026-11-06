@@ -1,4 +1,5 @@
 window.KifuEnglish={
+"AIを使うにはKataGoを登録してください。":"Register KataGo to use AI features.","エンジン設定を開く":"Open engine settings","KataGoのフォルダーを選ぶ":"Choose KataGo folder","推奨CPU版を入手":"Get CPU engine","推奨モデルを入手":"Get model","候補を確認し、不足分を指定して「リストに追加」を押してください。":"Check the candidates, select any missing files, then click Add to List.",
 "方式":"System",
 "秒読み":"Byo-yomi",
 "切れ負け":"Absolute",
@@ -444,7 +445,7 @@ window.KifuEnglish={
   "SGF・NGF・UGF・UGI・GIB・MGTの棋譜を選びます": "Open an SGF, NGF, UGF, UGI, GIB or MGT record.",
   "Windows上のKataGoとモデルを指定します。GPU版にも切り替えられます。": "Choose a Windows KataGo engine and model. GPU engines are supported.",
   "エンジンのフォルダーにDLLを置いたまま、実行ファイルとモデルのパスを指定してください。": "Keep the engine's DLLs in its folder and select the executable and model.",
-  "起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。同梱エンジンは「KataGo-Eigen」です。": "You can edit settings while an engine runs. Click Apply / Restart to apply changes. The bundled engine is KataGo-Eigen.",
+  "起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。": "You can edit settings while an engine runs. Click Apply / Restart to apply changes.",
   "○ 白番の対局者": "White player",
   "○ 白番の指定秒数": "White custom seconds",
   "○ 白番の時間": "White time limit",
@@ -677,7 +678,7 @@ window.KifuEnglish={
   "対局棋譜の保存は現在までに実際に進めた手順だけをSGFとして保存します。既存の全変化も必要な場合は通常の保存メニューを使ってください。": "Save Game saves only the moves actually played so far. Use the regular save menu to include all existing variations.",
   "黒番・白番に人間または登録済みKataGoを選びます。両方を人間にすると、同じPCで交互に着手できます。登録は自動で反映されます。対局者名と対局名は棋譜に保存します。": "Choose a human or registered KataGo for each side. Two humans can play on the same PC. Profile changes appear automatically. Player names and the game name are saved in SGF.",
   "２連続パスで終局します。死に石・セキは地合い計算で指定してください。投了・時間切れの結果はSGFに記録します。": "Two consecutive passes end the game. Mark dead stones and seki in Score. Resignation and timeout results are saved in SGF.",
-  "Windows上のKataGoとモデルを指定します。GPU版にも切り替えられます。エンジンのフォルダーにDLLを置いたまま、実行ファイルとモデルのパスを指定してください。起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。同梱エンジンは「KataGo-Eigen」です。": "Choose a Windows KataGo engine and model. GPU engines are supported.Keep the engine's DLLs in its folder and select the executable and model.You can edit settings while an engine runs. Click Apply / Restart to apply changes. The bundled engine is KataGo-Eigen.",
+  "Windows上のKataGoとモデルを指定します。GPU版にも切り替えられます。エンジンのフォルダーにDLLを置いたまま、実行ファイルとモデルのパスを指定してください。起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。": "Choose a Windows KataGo engine and model. GPU engines are supported.Keep the engine's DLLs in its folder and select the executable and model.You can edit settings while an engine runs. Click Apply / Restart to apply changes.",
   "数字：を順番に配置": "Numbers: Place in sequence",
   "文章入力：10px・青文字で横書き": "Text：Blue text, 10 px",
   "英大文字：を順番に配置": "A–Z：Place in sequence",
