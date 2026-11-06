@@ -2,7 +2,7 @@
 
 **GoKS-v.1.0** (internal version 1.0.0). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
 
-Extract the entire Windows ZIP and run `GoKS.exe`. Keep `engines/` beside the executable. End users do not need Node.js or Rust. The bundled engine is KataGo-Eigen. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
+Extract the entire Windows ZIP and run `GoKS.exe`. No engine is included. Record editing and human games work without an engine. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
 Use **Appearance & Sound** in the left panel or **View → Appearance & Sound** in Simple View. Settings open in an independent, resizable window. Preview changes, Apply to save without closing, or Revert/Close to restore saved preferences. Japanese and English store their text settings separately.
 
@@ -15,7 +15,7 @@ Use **Appearance & Sound** in the left panel or **View → Appearance & Sound** 
 
 Images: PNG/JPEG/WebP up to 8 MB, resized to at most 512px. WAV: up to 1 MB. Large text may wrap or require scrolling. The graph's move axis uses numeric labels with collision avoidance and 25-move ruler ticks.
 
-The Windows package contains the EXE, engines, READMEs, Manual.html, LICENSE.txt, license pages and notices, and SHA256.txt. App assets are embedded in the EXE.
+The Windows package contains the EXE, READMEs, Manual.html, LICENSE.txt, license pages and notices, and SHA256.txt. App assets are embedded in the EXE.
 
 Author-owned portions use the MIT license, allowing commercial use, modification and redistribution with the copyright and permission notice retained. Third-party components retain their own licenses. See LICENSE.txt and THIRD_PARTY_NOTICES.md.
 
@@ -25,7 +25,9 @@ Repository: https://github.com/hebaeba/GoKS
 
 ## Engines and games
 
-The radio button at the right of each engine row selects the next startup engine. The shared up/down buttons move the selected row. Missing startup registrations or files produce a warning. The default is bundled KataGo-Eigen. Bundled paths under `./engines/katago/` are resolved relative to the EXE; external engine paths are retained.
+The radio button at the right of each engine row selects the next startup engine. The shared up/down buttons move the selected row. Missing startup registrations or files produce a warning. Open Engines → Engine List. Use an existing KataGo folder, or choose Get CPU engine, extract the entire ZIP including DLLs, and use Get model. Put the compressed model in the same folder or its models subfolder. Choose KataGo folder, select among multiple matches, browse for missing files, and click Add to List. A GTP config is optional. Select the radio button beside a profile only if it should start with GoKS.
+
+[CPU engine](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) · [Model](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
 
 New Game contains setup and pre-game controls in one foldable section. Once play starts, the controls and a bordered summary of Black, White, handicap stone count and komi remain visible. Pause and takeback reuse engines that support cancellable search; older engines may need to restart during an active search. Human–AI score graphs use Black’s perspective. AI–AI win rates and scores use each AI’s own perspective. Switching views preserves the game. Keyboard Shortcuts is in the left panel.
 

@@ -10,7 +10,7 @@ impl Engine {
         let p=Path::new(text);if !p.is_file(){return Err(format!("{}が見つかりません：{}",label,text));}fs::canonicalize(p).map_err(|e|e.to_string())
     }
     fn pick(payload:&Value)->Result<Value,String>{
-        let kind=payload["kind"].as_str().unwrap_or("");if !["exe","model","config"].contains(&kind){return Err("ファイルの種類が不正です".into());}
+        let kind=payload["kind"].as_str().unwrap_or("");if !["exe","model","config","folder","cpu","network"].contains(&kind){return Err("ファイルの種類が不正です".into());}
         #[cfg(windows)]{
             use std::os::windows::process::CommandExt;
             let script=format!("& {{\n{}\n}} -Kind {}",include_str!("../../backend/select-file.ps1"),kind);
@@ -18,6 +18,7 @@ impl Engine {
             if !out.status.success(){return Err(format!("選択窓を開けません：{}",String::from_utf8_lossy(&out.stderr)));}
             let text=String::from_utf8_lossy(&out.stdout).trim().trim_start_matches('\u{feff}').to_string();
             if text.is_empty(){return Ok(json!({"path":null}));}
+            if kind=="folder"{return serde_json::from_str(&text).map_err(|e|e.to_string());}
             Self::validate_extension(kind,Path::new(&text))?;if !Path::new(&text).is_file(){return Err("ファイルが見つかりません".into());}return Ok(json!({"path":text}));
         }
         #[cfg(not(windows))]Err("選択ボタンはWindows用です。パスを直接入力してください。".into())

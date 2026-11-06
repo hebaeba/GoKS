@@ -1,4 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {bundledEngines}=require('../backend/bundled-engines.cjs');
-test('Eigen is the only bundled engine, with the requested network and config',()=>{const d=bundledEngines();assert.deepEqual(d.profiles.map(p=>p.name),['KataGo-Eigen']);assert.equal(d.name,'KataGo-Eigen');assert(d.profiles.every(p=>p.missing.length===0));assert.deepEqual(d.profiles.map(p=>path.basename(p.exe)),['katago-eigen.exe']);assert.deepEqual(d.profiles.map(p=>path.basename(p.model)),['kata1-b10c128-s1141046784-d204142634.txt.gz']);for(const p of d.profiles){assert.equal(fs.readFileSync(p.exe).subarray(0,2).toString(),'MZ');assert.equal(fs.readFileSync(p.model).readUInt16BE(0),0x1f8b);assert(fs.existsSync(p.workdir));}assert(!fs.existsSync(path.resolve(__dirname,'../engines/eigen')));});
-test('missing bundle files are explicit rather than silently launching another AI',()=>{const d=bundledEngines(path.resolve(__dirname,'does-not-exist'));assert(d.profiles.every(p=>p.missing.length===3));});
+test('release source and initial engine list are engine-free',()=>{
+assert.deepEqual(require('../backend/bundled-engines.cjs').bundledEngines(),{profiles:[]});
+assert.ok(!fs.existsSync(path.resolve(__dirname,'../engines/katago')));
+});

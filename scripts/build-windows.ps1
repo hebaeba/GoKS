@@ -6,15 +6,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Update all independent-window files together b
 # Cargo embeds web assets. End users do not need Node.js or Rust.
 cargo build --release --manifest-path src-tauri/Cargo.toml --features custom-protocol
 if ($LASTEXITCODE -ne 0) { throw 'Windows build failed. No release was created.' }
-New-Item -ItemType Directory -Force dist | Out-Null
-if (Test-Path dist/GoKifuStudio.exe) { Remove-Item dist/GoKifuStudio.exe -Force }
-Copy-Item src-tauri/target/release/kifu-editor.exe dist/GoKS.exe -Force
-if (Test-Path dist/engines) { Remove-Item dist/engines -Recurse -Force }
-Copy-Item engines dist/engines -Recurse -Force
-node scripts/check-bundled-engine.cjs
-if ($LASTEXITCODE -ne 0) { throw 'Bundled KataGo startup or analysis check failed.' }
-if (Test-Path dist/engines/katago/gtp_logs) { Remove-Item dist/engines/katago/gtp_logs -Recurse -Force }
-if (Test-Path dist/engines/katago/KataGoData) { Remove-Item dist/engines/katago/KataGoData -Recurse -Force }
+# Recreate the generated release directory: never carry old engines into the ZIP.
+if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+New-Item -ItemType Directory dist | Out-Null
+Copy-Item src-tauri/target/release/kifu-editor.exe dist/GoKS.exe
 Copy-Item README.md, README-en.md, Manual.html, THIRD_PARTY_NOTICES.md dist -Force
 Copy-Item web/LICENSE.txt dist/LICENSE.txt -Force
 Copy-Item web/licenses.html, web/licenses-en.html dist -Force
