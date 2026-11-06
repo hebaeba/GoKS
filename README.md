@@ -8,6 +8,13 @@ Windows PC向けの棋譜編集・KataGo解析・対局アプリです。日本�
 
 Windows用ZIPをすべて展開し、`GoKS.exe` を起動します。エンジンは同梱していません。棋譜編集と人間同士の対局は登録不要です。
 
+「エンジン」→「エンジンリスト」→「推奨CPU版を自動セットアップ」を選びます。確認後、GoKS.exeの隣にkatagoフォルダーを作り、KataGo Eigen v1.18.1をDLLとともに展開し、モデルをkatago/modelsに置きます。完了後「リストに追加」を押してください。既存フォルダーには上書きしません。保存できない場合はGoKSを自分が書き込める場所へ移すか、手動登録を選んでください。
+
+推奨版は固定で、自動更新しません。エンジンを更新するにはKataGo公式リリースから新しいWindows版ZIPを入手し、既存のkatagoとは別のフォルダー（例：katago-new）にDLLごと展開します。使うモデルをその中のmodelsに置き、「KataGoのフォルダーを選ぶ」で別名登録してください。モデルだけ更新する場合は公式モデル一覧からNetwork Fileを入手し、.gzのまま元のモデルとは別名でmodelsに置きます。「新規」で同じエンジンと新しいモデルを登録します。解析を試してから起動時の指定を新しい登録へ切り替えます。元に戻すには旧登録を選び直します。
+
+[KataGo releases](https://github.com/lightvector/KataGo/releases) · [KataGo networks](https://katagotraining.org/networks/)
+
+
 「エンジン」→「エンジンリスト」を開きます。KataGoをお持ちならそのフォルダーを使えます。初めての場合は「推奨CPU版を入手」でZIPをDLLごと展開し、「推奨モデルを入手」で取得した.gzを解凍せず、そのフォルダーまたはmodels内に置きます。「KataGoのフォルダーを選ぶ」で候補を確認し、複数なら使うものを選択、不足分は「参照」で補って「リストに追加」を押します。GTP設定は空欄でも構いません。次回から自動起動する場合だけ登録名右の丸を選びます。
 
 [推奨CPU版](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) ／ [推奨モデル](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)

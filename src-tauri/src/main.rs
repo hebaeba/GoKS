@@ -12,6 +12,19 @@ use kifu_lan_server::Share;
 struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf}
 #[tauri::command]
 async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
+ if action=="install_recommended" {
+  #[cfg(windows)] {
+   return tauri::async_runtime::spawn_blocking(|| -> Result<Value,String> {
+    use std::os::windows::process::CommandExt;
+    let exe=std::env::current_exe().map_err(|e|e.to_string())?;
+    let base=exe.parent().ok_or("GoKS.exe")?;
+    let ps=PathBuf::from(std::env::var_os("SystemRoot").ok_or("SystemRoot")?).join("System32/WindowsPowerShell/v1.0/powershell.exe");
+    let out=std::process::Command::new(ps).args(["-NoLogo","-NoProfile","-NonInteractive","-Command",include_str!("../../backend/install-recommended.ps1")]).current_dir(base).creation_flags(0x08000000).output().map_err(|e|e.to_string())?;
+    serde_json::from_slice(&out.stdout).map_err(|e|e.to_string())
+   }).await.map_err(|e|e.to_string())?;
+  }
+  #[cfg(not(windows))] return Err("Windows only".into());
+ }
  if action=="defaults" {return Ok(json!({"profiles":[]}));}
  if action=="start" {
   let exe=std::env::current_exe().map_err(|e|e.to_string())?;
