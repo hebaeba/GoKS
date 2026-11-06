@@ -7,7 +7,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <section id="engine-notice" data-state="idle" role="status" aria-live="polite"><strong id="engine-nearby-name" hidden></strong><strong id="engine-notice-title">エンジン未接続</strong><p id="engine-notice-message">設定を選んで「起動・接続」を押してください。</p><small id="engine-elapsed" aria-live="off"></small></section>
 <section id="engine-settings"><p class="analysis-note">Windows上のKataGoとモデルを指定します。GPU版にも切り替えられます。</p>
 <label class="engine-kind-row">エンジンの種類<select id="engine-kind"><option value="katago">KataGo（解析対応）</option></select></label><p id="engine-kind-note" class="engine-kind-note"></p><div class="engine-profiles"><label>エンジンリスト<select id="engine-profile"><option value="">新しく登録する</option></select></label>
-<div id="engine-folder-tools"><button id="engine-folder">KataGoのフォルダーを選ぶ</button> <button id="engine-cpu">推奨CPU版を入手</button> <button id="engine-network">推奨モデルを入手</button><div id="engine-suggestions"></div></div><div id="engine-order" aria-label="エンジンの並び順"></div><div class="engine-list-footer"><span id="engine-profile-count"></span><span class="engine-move-buttons"><button type="button" id="engine-order-up" title="選択中のエンジンを上へ移動">↑</button><button type="button" id="engine-order-down" title="選択中のエンジンを下へ移動">↓</button></span><span class="engine-startup-heading">起動時</span><button type="button" id="engine-order-expand" aria-expanded="false">すべて表示</button></div><label>エンジンの名前<input id="engine-name" maxlength="100" placeholder="例：CPU・軽量モデル／TensorRT・検討用"></label>
+<div id="engine-folder-tools"><button id="engine-install">推奨CPU版を自動セットアップ</button> <button id="engine-folder">KataGoのフォルダーを選ぶ</button> <button id="engine-cpu">推奨CPU版を入手</button> <button id="engine-network">推奨モデルを入手</button><p id="engine-install-status" role="status" hidden></p><div id="engine-suggestions"></div></div><div id="engine-order" aria-label="エンジンの並び順"></div><div class="engine-list-footer"><span id="engine-profile-count"></span><span class="engine-move-buttons"><button type="button" id="engine-order-up" title="選択中のエンジンを上へ移動">↑</button><button type="button" id="engine-order-down" title="選択中のエンジンを下へ移動">↓</button></span><span class="engine-startup-heading">起動時</span><button type="button" id="engine-order-expand" aria-expanded="false">すべて表示</button></div><label>エンジンの名前<input id="engine-name" maxlength="100" placeholder="例：CPU・軽量モデル／TensorRT・検討用"></label>
 <div class="analysis-buttons"><button id="engine-profile-new" title="入力欄を空にして、別の設定を登録します">新規</button><button id="engine-profile-edit" disabled title="選択したエンジンの名前・実行ファイル・モデル・cfgを編集します">編集</button><button id="engine-profile-save" title="名前・ファイル・追加引数をこのブラウザーに保存します">リストに追加</button><button id="engine-profile-delete" disabled title="選択した登録だけを削除します。ファイルは削除しません">削除</button></div>
 <p id="engine-profile-message" class="analysis-note" role="status">登録内容はこの端末のブラウザーに保存します。選択後、上部の起動／再起動ボタンで反映します。</p></div>
 <label>実行ファイル（フルパス）<input id="engine-exe" placeholder="実行ファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-exe" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
@@ -118,6 +118,19 @@ async function offerSetup(){
  }
 }
 for(const kind of ['cpu','network'])$('engine-'+kind).onclick=async()=>{try{await call('pick',{kind});}catch(e){engineError(e.message);}};
+let installing=false;
+$('engine-install').hidden=!native()||!!window.KifuRemote;
+$('engine-install').onclick=async()=>{
+ if(installing||pendingCalls||!native())return;
+ if(!await KifuDialogs.confirm('推奨CPU版とモデルを公式サイトから取得し、GoKS.exeの隣のkatagoフォルダーに展開・配置します。続けますか？',{accept:'セットアップ'}))return;
+ installing=true;pendingCalls++;controls();const msg=$('engine-install-status');msg.hidden=false;msg.textContent='ダウンロードと展開を行っています…';
+ try{
+  const r=await rawCall('install_recommended');
+  if(!r?.exe){msg.textContent=({exists:'katagoフォルダーは既にあります。「KataGoのフォルダーを選ぶ」で登録してください。',write:'保存できません。GoKSをユーザーが書き込めるフォルダーに置いてください。',download:'ダウンロードできませんでした。接続を確認するか、手動で入手してください。',verify:'配布ファイルの照合に失敗しました。インストールは行いませんでした。',extract:'CPU版を展開できませんでした。手動セットアップをご利用ください。'})[r?.error]||'セットアップできませんでした。';return;}
+  $('engine-profile-new').onclick();for(const k of ['exe','model','config','workdir'])writePath(k,r[k]||'');
+  $('engine-name').value='KataGo Eigen 1.18.1';msg.textContent='配置しました。設定を確認し、「リストに追加」を押してください。';
+ }catch{msg.textContent='セットアップできませんでした。';}finally{installing=false;pendingCalls--;controls();}
+};
 function clearSuggestions(){$('engine-suggestions').replaceChildren();}
 $('engine-profile').addEventListener('change',clearSuggestions);
 $('engine-folder').onclick=async()=>{
@@ -180,6 +193,7 @@ function controls(){
  $('analyze-live').title=busy?'実行中の解析を停止します。エンジンの接続は維持します':'時間制限なしで現在の局面を解析し、局面の移動に追従します';
  $('analyze-all').disabled=!analysisAllowed()||$('analysis-region').checked||!available||busy||pendingCalls>0||!!handshake||!!estimateJob||!!pausedBatch;$('analyze-all').textContent=pausedBatch?'全局解析中断中':active&&!live?'全局解析中…':'全局解析を開始';
  $('analysis-pv-length').disabled=busy;$('engine-disconnect').disabled=!running||pendingCalls>0;$('engine-connect').disabled=!available||pendingCalls>0;$('engine-connect').textContent=running?'適用して再起動':'選択したエンジンを起動';$('engine-connect').title=running?'現在のエンジンを終了し、入力中の設定で起動し直します':'入力中の設定でエンジンを起動します';
+ $('engine-install').disabled=pendingCalls>0;
  for(const key of ['folder','cpu','network'])$('engine-'+key).disabled=!available||pendingCalls>0||!!window.KifuRemote;
  for(const key of ['kind','extraArgs','workdir'])$('engine-'+key).disabled=pendingCalls>0;
  for(const key of ['exe','model','config']){$('engine-'+key).disabled=pendingCalls>0;$('engine-pick-'+key).disabled=!available||pendingCalls>0;}
