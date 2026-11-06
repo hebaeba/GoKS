@@ -12,10 +12,25 @@
  for(const k of ['boardImage','blackImage','whiteImage'])if(d[k]&&typeof v[k+'Name']==='string')d[k+'Name']=v[k+'Name'].slice(0,255);
  for(const side of ['black','white'])if(!v[side+'Preset']&&v[side+'Image'])d[side+'Preset']='custom';
  if(typeof v.soundData==='string'&&v.soundData.length<1500000&&/^data:audio\/(wav|x-wav|wave);base64,/.test(v.soundData))d.soundData=v.soundData;if(d.soundData&&typeof v.soundName==='string')d.soundName=v.soundName.slice(0,255);return d;}
+ // Reset only controls belonging to the selected tab. Other tabs, including
+ // imported media, retain their current values. Text is language-specific.
+ const resetFields={
+  board:['theme','board','background','panel','text','texture','boardImage','boardImageName','stone','blackPreset','whitePreset','blackImage','whiteImage','blackImageName','whiteImageName'],
+  graph:['graph','graphText','win','score','lineWidth','lineStyle'],
+  audio:['sound','volume','moves','navigation','autoplay','soundData','soundName']
+ };
+ function resetSection(value,section,language='ja'){
+  const result=clean(value),standard=defaults();
+  if(section==='text'){const lang=language==='en'?'en':'ja';result[lang]={...standard[lang]};result.boardText=standard.boardText;}
+  else for(const key of resetFields[section]||[]){
+   if(Object.prototype.hasOwnProperty.call(standard,key))result[key]=standard[key];else delete result[key];
+  }
+  return result;
+ }
  // Labels use measured boxes and reserve both endpoints. Keep 25-move ruler ticks separately.
  function labels(max,left,right,measure){max=Math.max(1,max);const result=[{move:0,x:left,anchor:'start'}];const endWidth=measure(String(max));let edge=left+measure('0');
  const step=max<=10?5:max<=50?25:50*Math.max(1,Math.ceil(max/300));
  for(let m=step;m<max;m+=step){const x=left+(right-left)*m/max,half=measure(String(m))/2;if(x-half>=edge+10&&x+half<=right-endWidth-10){result.push({move:m,x,anchor:'middle'});edge=x+half;}}
  if(right-endWidth>=edge+10)result.push({move:max,x:right,anchor:'end'});return result;}
- const api={sizes,themes,defaults,clean,labels};if(typeof module!=='undefined')module.exports=api;else root.KifuAppearanceCore=api;
+ const api={sizes,themes,defaults,clean,resetSection,labels};if(typeof module!=='undefined')module.exports=api;else root.KifuAppearanceCore=api;
 })(typeof window==='undefined'?globalThis:window);

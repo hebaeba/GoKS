@@ -95,3 +95,5 @@ Update109: human clock System selects Byo-yomi, Absolute, Fischer or Canadian. B
 Update110: human System order is Absolute, Byo-yomi, Fischer, Canadian, Unlimited; default remains Byo-yomi. Remove human per-move presets. Pair byo-yomi seconds/periods with a slash and accessible period label; keep extra spacing after main time and wrap whole groups without shrinking shared typography.
 
 Update112: Windows clock is an owned top-level window of main (not embedded or globally topmost). Move/timer updates must never close, recreate or focus it. Clock-only geometry persists in clock-window.json; use logical units relative to monitor work area, clamp on restore, and never save minimized/maximized/hidden rectangles. Main normal/simple geometry is unchanged.
+
+Update113: appearance Reset defaults affects only the active tab. Text resets current-language typography and board labels; board reset must preserve graph colors and sound. Keep imported media in other tabs, preview/apply/revert behavior, and native-child synchronization.

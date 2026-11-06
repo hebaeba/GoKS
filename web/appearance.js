@@ -114,8 +114,8 @@ function render(){
   check(row(),text('着手','Played moves'),'moves');check(row(),text('手順移動','Navigation'),'navigation');check(row(),text('自動再生','Autoplay'),'autoplay');hint(text('読み筋のマウスオーバーでは鳴りません。WAVは1MB以下です。','Hovering over a variation is silent. WAV files must be no larger than 1 MB.'));
  }
  const status=document.createElement('p');status.id='appearance-error';status.setAttribute('role','status');host.append(status);
- const actions=document.createElement('div');actions.className='appearance-actions';host.append(actions);actions.append(button(text('標準に戻す','Reset defaults'),()=>{draft=C.defaults();preview();render();}),button(text('元に戻す','Revert'),()=>{revert();render();}),button(text('適用','Apply'),save));
-
+ const actions=document.createElement('div');actions.className='appearance-actions';host.append(actions);actions.append(button(text('標準に戻す','Reset defaults'),()=>{draft=C.resetSection(draft,tab,language());preview();render();}),button(text('元に戻す','Revert'),()=>{revert();render();}),button(text('適用','Apply'),save));
+ actions.firstElementChild.title=text('現在の項目だけを標準に戻します。保存するには「適用」を押してください。','Reset only this tab to defaults. Choose Apply to save.');
 }
 async function save(){try{
  if(native){const result=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pendingCommit=null;reject(Error(text('本体からの応答がありません。','No response from the main window.')));},10000);pendingCommit=v=>{clearTimeout(timer);resolve(v);};send('appearance-commit',{settings:C.clean(draft)}).catch(e=>{clearTimeout(timer);pendingCommit=null;reject(e);});});if(result.error)throw Error('storage');draft=C.clean(result.settings);localStorage.setItem(KEY,JSON.stringify(draft));apply(draft);}

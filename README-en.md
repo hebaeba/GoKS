@@ -60,3 +60,5 @@ A movable, resizable clock window opens on game start; use Game Clock to reopen 
 Byo-yomi beeps every second, louder at one second remaining and during the final period. Other systems beep in the final ten seconds. Uncheck Clock sound to mute.
 
 On Windows, the clock stays above the main app when playing moves. Its position, size and monitor are remembered for the next opening, adjusted to the available work area if the display setup changes. Minimizing the main app also hides the clock; restoring it shows the clock again.
+
+Reset defaults in Appearance & Sound resets only the selected tab and preserves other tabs. In Text, it resets the current language and board labels. Choose Apply to save the reset.
