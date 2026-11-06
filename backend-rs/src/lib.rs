@@ -9,7 +9,7 @@ impl Engine {
         let text=payload[key].as_str().filter(|s|!s.trim().is_empty()).ok_or_else(||format!("{}を指定してください",label))?;
         let p=Path::new(text);if !p.is_file(){return Err(format!("{}が見つかりません：{}",label,text));}fs::canonicalize(p).map_err(|e|e.to_string())
     }
-    fn pick(payload:&Value)->Result<Value,String>{
+    pub fn pick(payload:&Value)->Result<Value,String>{
         let kind=payload["kind"].as_str().unwrap_or("");if !["exe","model","config","folder","cpu","network"].contains(&kind){return Err("ファイルの種類が不正です".into());}
         #[cfg(windows)]{
             use std::os::windows::process::CommandExt;

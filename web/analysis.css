@@ -63,3 +63,8 @@
 #engine-active[data-state="unconfigured"],#engine-active[data-state="idle"]{background:#687672}
 
 #analyze-live:disabled,#analyze-all:disabled,#engine-quick:disabled,#engine-connect:disabled,#engine-disconnect:disabled{opacity:.42;cursor:not-allowed}
+
+/* Update117: treat missing model files as repairable, not as an engine crash. */
+#engine-notice[data-state="missing"]{background:#f1f4f4;border:1px solid #b9c5c3;color:#46524f;min-height:0;padding:8px 10px}
+#engine-state[data-state="missing"]{background:#e7ebea;color:#43514d}
+#engine-active[data-state="missing"]{background:#687672}

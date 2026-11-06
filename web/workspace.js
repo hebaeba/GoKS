@@ -67,7 +67,7 @@
  const recoveryHeading=document.createElement('h3');recoveryHeading.textContent='一時保存';$('recovery').before(recoveryHeading);
 
 
- panel.prepend(modeBar);$('tab-tools').hidden=true;$('tab-sequence').textContent='手順・ツール';$('tab-record').textContent='棋譜欄';window.KifuWorkspace={activate};activate('analysis');
+ panel.prepend(modeBar);$('tab-tools').hidden=true;$('tab-sequence').textContent='手順・ツール';$('tab-record').textContent='棋譜欄';window.KifuWorkspace={activate};activate('settings');
 })();
 
 window.addEventListener('DOMContentLoaded',()=>{

@@ -58,6 +58,56 @@ async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Deskt
   }
   #[cfg(not(windows))] return Err("Windows only".into());
  }
+ // Checks must not start KataGo or take its engine mutex. A missing model is
+ // a repairable configuration state, not a reason to block setup/file pickers.
+ if action=="check_paths" {
+  let exe=std::env::current_exe().map_err(|e|e.to_string())?;
+  let base=exe.parent().ok_or("実行場所を取得できません")?;
+  let mut missing=Vec::new();
+  for key in ["exe","model","config"] {
+   if let Some(value)=payload[key].as_str().filter(|v|!v.trim().is_empty()) {
+    let p=PathBuf::from(value);
+    let full=if p.is_absolute(){p}else{base.join(p)};
+    if !full.is_file(){missing.push(key);}
+   }else if key!="config" {missing.push(key);}
+  }
+  if let Some(value)=payload["workdir"].as_str().filter(|v|!v.trim().is_empty()) {
+   let p=PathBuf::from(value);
+   let full=if p.is_absolute(){p}else{base.join(p)};
+   if !full.is_dir(){missing.push("workdir");}
+  }
+  return Ok(json!({"ready":missing.is_empty(),"missing":missing}));
+ }
+ // A file dialog must remain available while an old engine is starting.
+ if action=="pick" {
+  return tauri::async_runtime::spawn_blocking(move||Engine::pick(&payload))
+   .await.map_err(|e|e.to_string())?;
+ }
+ // Checks must not start KataGo or take its engine mutex. A missing model is
+ // a repairable configuration state, not a reason to block setup/file pickers.
+ if action=="check_paths" {
+  let exe=std::env::current_exe().map_err(|e|e.to_string())?;
+  let base=exe.parent().ok_or("実行場所を取得できません")?;
+  let mut missing=Vec::new();
+  for key in ["exe","model","config"] {
+   if let Some(value)=payload[key].as_str().filter(|v|!v.trim().is_empty()) {
+    let p=PathBuf::from(value);
+    let full=if p.is_absolute(){p}else{base.join(p)};
+    if !full.is_file(){missing.push(key);}
+   }else if key!="config" {missing.push(key);}
+  }
+  if let Some(value)=payload["workdir"].as_str().filter(|v|!v.trim().is_empty()) {
+   let p=PathBuf::from(value);
+   let full=if p.is_absolute(){p}else{base.join(p)};
+   if !full.is_dir(){missing.push("workdir");}
+  }
+  return Ok(json!({"ready":missing.is_empty(),"missing":missing}));
+ }
+ // A file dialog must remain available while an old engine is starting.
+ if action=="pick" {
+  return tauri::async_runtime::spawn_blocking(move||Engine::pick(&payload))
+   .await.map_err(|e|e.to_string())?;
+ }
  if action=="defaults" {return Ok(json!({"profiles":[]}));}
  if action=="start" {
   let exe=std::env::current_exe().map_err(|e|e.to_string())?;

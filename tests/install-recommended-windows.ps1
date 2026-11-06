@@ -23,8 +23,13 @@ try {
  function Invoke-WebRequest {param([switch]$UseBasicParsing,$TimeoutSec,$Uri,$OutFile) if($Uri.EndsWith('.zip')){Copy-Item $archive $OutFile}else{Copy-Item $modelPath $OutFile}}
  $r=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
  if(!$r.exe -or !(Test-Path $r.exe) -or !(Test-Path $r.model)){throw "Failed setup: $($r.error)"}
+ # Deliberately break the old installation and leave a custom file.
+ [IO.File]::WriteAllText((Join-Path $temp 'katago/custom-model.txt'),'custom user data')
+ Remove-Item -LiteralPath (Join-Path $temp 'katago/models/kata1-b10c128-s1141046784-d204142634.txt.gz') -Force
  $existing=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
- if($existing.error -ne 'exists'){throw 'Existing directory overwritten'}
+ if(!$existing.exe -or !(Test-Path $existing.model) -or !$existing.backup){throw 'Existing installation was not repaired'}
+ if(!(Test-Path (Join-Path $temp ($existing.backup.TrimStart('./')+'/custom-model.txt')))){throw 'Custom files not backed up'}
+ if(Test-Path (Join-Path $temp 'katago/custom-model.txt')){throw 'Old installation was not swapped out'}
  Remove-Item katago -Recurse -Force
  $digest='0'*64
  $bad=((& $run)|Select-Object -Last 1)|ConvertFrom-Json

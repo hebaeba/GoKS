@@ -10,7 +10,8 @@ $code='write'
 try {
  $base=(Get-Location).ProviderPath
  $dest=Join-Path $base 'katago'
- if(Test-Path -LiteralPath $dest){$code='exists';throw 'exists'}
+ # Existing katago directories may have a missing model. Always permit repair.
+ # Installation is built and verified in staging before any existing files move.
  $stage=Join-Path $base ('.goks-install-'+[guid]::NewGuid().ToString('N'))
  [void][IO.Directory]::CreateDirectory($stage)
  $asset='katago-v1.18.1-eigen-windows-x64.zip'
@@ -53,7 +54,22 @@ try {
  $info=@{exe=('./katago/'+$exe[0].Name);model=('./katago/models/'+$model);workdir='./katago';config=''}
  Report 'エンジンを登録中' 95
  $code='write'
- [IO.Directory]::Move($root,$dest)
+ if (Test-Path -LiteralPath $dest) {
+  $backup=Join-Path $base ('.goks-katago-backup-'+[guid]::NewGuid().ToString('N'))
+  [IO.Directory]::Move($dest,$backup)
+  try { [IO.Directory]::Move($root,$dest) }
+  catch {
+   # Restore the original installation when committing the new one fails.
+   if (!(Test-Path -LiteralPath $dest) -and (Test-Path -LiteralPath $backup)) {
+    [IO.Directory]::Move($backup,$dest)
+   }
+   throw
+  }
+  # A backup is kept to protect custom models/configurations in the old folder.
+  $info.backup='./'+[IO.Path]::GetFileName($backup)
+ } else {
+  [IO.Directory]::Move($root,$dest)
+ }
  Report 'エンジンを登録中' 100
  $result=$info
 } catch {$result=@{error=$code}}

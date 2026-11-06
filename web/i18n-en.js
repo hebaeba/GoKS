@@ -1320,3 +1320,18 @@ Object.assign(window.KifuEnglish, {
   "接続済みです": "Already connected",
   "スマホからはこの操作を実行できません": "This operation is unavailable from a phone"
 });
+
+// Update117: repairable missing model state and reinstallation guidance.
+Object.assign(window.KifuEnglish,{
+ "エンジン設定の修復が必要です":"Engine setup needs repair",
+ "KataGoの実行ファイル":"KataGo executable",
+ "モデルファイル":"Model file",
+ "GTP設定ファイル":"GTP configuration file",
+ "作業フォルダー":"Working folder",
+ "が見つかりません。自動セットアップで修復するか、フォルダーから指定し直してください。":" was not found. Repair with automatic setup or choose a folder again.",
+ "フォルダーの選択を中止しました。":"Folder selection canceled.",
+ "KataGoのフォルダーを選択してください。":"Choose the KataGo folder.",
+ "候補を確認し、不足分を指定して「リストに追加」または「登録を更新」を押してください。":"Review the files and click Add to List or Update Registration.",
+ "エンジンの起動・解析処理中です。「エンジン終了」の後にセットアップを実行してください。":"Please stop the running engine before reinstalling.",
+ "自動セットアップはWindows版GoKSで利用できます。":"Automatic setup requires the Windows desktop version of GoKS."
+});
