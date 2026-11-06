@@ -1353,3 +1353,24 @@ Object.assign(window.KifuEnglish, {
  "上部のエンジン名から選んで起動するか、右の「起動」を押してください。":"Choose an engine above, or press Start on the right.",
  "を起動します":" to start it"
 });
+
+// Update120: explicit radio startup and visible engine-operation messages.
+Object.assign(window.KifuEnglish,{
+ "GoKS起動時に自動的に起動するエンジン":"Engine to start automatically when GoKS launches",
+ "起動時に指定した":"Checking startup engine: ",
+ "を確認しています。":" is being checked.",
+ "の起動を準備しています。":" is being prepared for startup.",
+ "を起動しています。":" is starting.",
+ "に接続しました。":" connected.",
+ "推奨CPU版のセットアップを確認しています。":"Checking recommended CPU setup.",
+ "エンジンの処理中です。":"An engine operation is in progress.",
+ "エンジンが動作中です。上部右の「終了」で停止してから、セットアップしてください。":"An engine is running. Use Stop in the top-right corner before installing.",
+ "セットアップを中止しました。":"Setup canceled.",
+ "次回のGoKS起動時には":"Next time GoKS starts, it will launch ",
+ "を自動起動します。":" automatically.",
+ "GoKS起動時に":"When GoKS starts, ",
+ "を自動起動するよう設定しました。":" is set to start automatically.",
+ "選択中のエンジンを確認しています。":"Checking the selected engine.",
+ "を起動できませんでした。エンジン設定を確認してください。":" could not start. Check its configuration.",
+ "エンジンを起動できませんでした：":"Could not start engine: "
+});

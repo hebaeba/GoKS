@@ -106,3 +106,7 @@ body .analysis-summary strong{display:inline;font-size:19px}
 .score-panel-bar{display:flex;align-items:center;gap:8px;padding:8px;background:#245f57;color:white;cursor:move;touch-action:none;font-size:12px}.score-panel-bar button{margin-left:auto;padding:2px 10px;background:white;color:#243c35}.score-panel-bar+iframe{border:0;width:100%;flex:1;min-height:0;background:white}
 
 .workspace-mode[hidden],.modes[hidden],.mode-indicator[hidden]{display:none!important}.board-lock{margin-left:auto;white-space:nowrap;font-size:13px}.board-lock input{width:auto}.scoring-mode #analysis-overlay{display:none!important;pointer-events:none!important}.scoring-mode .engine-dock{pointer-events:none;opacity:.65}#engine-active-name[role=button]{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:5px}#engine-picker{display:flex;flex-direction:column;gap:5px;background:white;padding:8px;border:1px solid #9ab8ad;border-radius:6px}#engine-picker[hidden]{display:none}#engine-picker button{text-align:left}.worst-metric{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+
+/* Update120: show every engine action result directly under the engine picker. */
+.engine-dock #engine-action-feedback{margin:4px 0 8px;padding:5px 8px;font-size:12px;line-height:1.5;overflow-wrap:anywhere;background:#eef3f0;color:#244c42;border-left:3px solid #5a8075;border-radius:3px}
+.engine-dock #engine-action-feedback[hidden]{display:none!important}

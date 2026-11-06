@@ -21,7 +21,7 @@ test('setup controls precede individual downloads, list and running details',()=
  assert.ok(!js.includes('running.open=true'), 'running list must start collapsed');
 });
 
-test('not registered is neutral, analysis actions disabled, last engine resumes',()=>{
+test('not registered is neutral, analysis actions disabled, last-used engine retained for manual selection',()=>{
  const js=read('web/analysis.js');
  assert.match(js,/unconfigured:'エンジン未設定'/);
  assert.match(js,/idle:'エンジン停止中'/);
