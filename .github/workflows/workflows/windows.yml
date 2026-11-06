@@ -1,0 +1,37 @@
+name: Go棋譜Studio Windows build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Frontend and backend checks
+        shell: pwsh
+        run: |
+          $unitTests = @(Get-ChildItem tests -Filter *.test.cjs | ForEach-Object { $_.FullName })
+          node --test @unitTests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./tests/engine-folder-windows.ps1
+          ./tests/install-recommended-windows.ps1
+          cargo test --manifest-path backend-rs/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --manifest-path lan-server/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --manifest-path src-tauri/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build Windows application
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - name: Collect Windows executable
+        uses: actions/upload-artifact@v6
+        with:
+          name: GoKS-v.1.0
+          path: dist/*
+          if-no-files-found: error
