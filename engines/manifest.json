@@ -1,9 +1,0 @@
-[
-  {
-    "id": "bundled-eigen",
-    "name": "KataGo-Eigen",
-    "exe": "katago-eigen.exe",
-    "model": "models/kata1-b10c128-s1141046784-d204142634.txt.gz",
-    "config": "configs/eigen-default_gtp.cfg"
-  }
-]
