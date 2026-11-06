@@ -28,7 +28,11 @@ try {
  Remove-Item -LiteralPath (Join-Path $temp 'katago/models/kata1-b10c128-s1141046784-d204142634.txt.gz') -Force
  $existing=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
  if(!$existing.exe -or !(Test-Path $existing.model) -or !$existing.backup){throw 'Existing installation was not repaired'}
- if(!(Test-Path (Join-Path $temp ($existing.backup.TrimStart('./')+'/custom-model.txt')))){throw 'Custom files not backed up'}
+ # Preserve the leading dot in '.goks-katago-backup-*'.
+ # TrimStart('./') is wrong: it also removes the dot from the backup folder name.
+ if ($existing.backup -notmatch '^\./\.goks-katago-backup-[0-9a-f]{32}$') {throw 'Unexpected backup location'}
+ $backupFolder=Join-Path $temp ($existing.backup.Substring(2))
+ if (!(Test-Path -LiteralPath (Join-Path $backupFolder 'custom-model.txt'))) {throw 'Custom files not backed up'}
  if(Test-Path (Join-Path $temp 'katago/custom-model.txt')){throw 'Old installation was not swapped out'}
  Remove-Item katago -Recurse -Force
  $digest='0'*64
