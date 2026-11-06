@@ -19,6 +19,7 @@ jobs:
           node --test @unitTests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           ./tests/engine-folder-windows.ps1
+          ./tests/install-recommended-windows.ps1
           cargo test --manifest-path backend-rs/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --manifest-path lan-server/Cargo.toml
