@@ -195,3 +195,20 @@ html body.simple-mode #simple-menu .simple-edit-menu .side-row .autoplay{margin-
 html body.simple-mode #simple-menu .simple-edit-menu .side-navigation .navigation{width:max-content;flex:0 0 auto;margin-left:0;margin-right:0}
 html body.simple-mode #simple-menu .simple-edit-menu .side-navigation>.side-row{display:grid;grid-template-columns:max-content max-content;justify-content:start}
 html body.simple-mode #simple-menu .simple-edit-menu .side-navigation .navigation{grid-column:1/-1}
+
+/* Update116: beginner-friendly setup order and collapsible advanced downloads. */
+html body #engine-settings #engine-folder-tools{display:block;width:100%;margin:0 0 7px;min-width:0}
+html body #engine-settings .engine-setup-row{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin-bottom:6px}
+html body #engine-settings .engine-setup-row>button{flex:1 1 175px;min-width:0}
+html body #engine-install{font-weight:700}
+html body #engine-downloads{width:100%;min-width:0;margin:6px 0}
+html body #engine-downloads>summary{cursor:pointer}
+html body #engine-downloads .engine-download-row{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
+html body #engine-downloads .engine-download-row button{flex:1 1 150px;min-width:0}
+html body #engine-settings .engine-divider{border:0;border-top:1px solid #a8bbb3;margin:10px 0 8px;width:100%}
+html body #engine-install-status{display:block;margin:7px 0 3px;overflow-wrap:anywhere}
+html body #engine-install-status[hidden]{display:none}
+html body #engine-install-progress{display:block;width:100%;height:12px;accent-color:#226656;margin:5px 0}
+html body #engine-install-progress[hidden]{display:none}
+html body #engine-settings>#engine-list-disclosure,html body #engine-settings>.engine-running-details{margin:8px 0}
+html body #engine-settings button:disabled{opacity:.43;cursor:not-allowed}

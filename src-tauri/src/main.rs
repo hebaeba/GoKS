@@ -9,19 +9,52 @@ mod fonts;
 use serde_json::{Value,json};
 use kifu_katago_backend::Engine;
 use kifu_lan_server::Share;
-struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf}
+#[derive(Default)]
+struct InstallProgress { running:bool,stage:String,percent:u8 }
+struct Desktop{black:Arc<Mutex<Engine>>,white:Arc<Mutex<Engine>>,engine:Arc<Mutex<Engine>>,share:Arc<Mutex<Option<Share>>>,default:PathBuf,install:Arc<Mutex<InstallProgress>>}
 #[tauri::command]
 async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Desktop>)->Result<Value,String>{
+ if action=="install_status" {
+  let s=state.install.lock().map_err(|_|"進捗を確認できません".to_string())?;
+  return Ok(json!({"running":s.running,"stage":s.stage,"percent":s.percent}));
+ }
  if action=="install_recommended" {
   #[cfg(windows)] {
-   return tauri::async_runtime::spawn_blocking(|| -> Result<Value,String> {
-    use std::os::windows::process::CommandExt;
+   let progress=state.install.clone();
+   {
+    let mut s=progress.lock().map_err(|_|"セットアップの状態を取得できません".to_string())?;
+    if s.running {return Err("既にセットアップ中です".into());}
+    *s=InstallProgress{running:true,stage:"KataGoをダウンロード中".into(),percent:0};
+   }
+   let shared=progress.clone();
+   let result=tauri::async_runtime::spawn_blocking(move || -> Result<Value,String> {
+    use std::{io::{BufRead,BufReader},process::Stdio,os::windows::process::CommandExt};
     let exe=std::env::current_exe().map_err(|e|e.to_string())?;
     let base=exe.parent().ok_or("GoKS.exe")?;
     let ps=PathBuf::from(std::env::var_os("SystemRoot").ok_or("SystemRoot")?).join("System32/WindowsPowerShell/v1.0/powershell.exe");
-    let out=std::process::Command::new(ps).args(["-NoLogo","-NoProfile","-NonInteractive","-Command",include_str!("../../backend/install-recommended.ps1")]).current_dir(base).creation_flags(0x08000000).output().map_err(|e|e.to_string())?;
-    serde_json::from_slice(&out.stdout).map_err(|e|e.to_string())
-   }).await.map_err(|e|e.to_string())?;
+    let mut child=std::process::Command::new(ps)
+     .args(["-NoLogo","-NoProfile","-NonInteractive","-Command",include_str!("../../backend/install-recommended.ps1")])
+     .current_dir(base).creation_flags(0x08000000).stdout(Stdio::piped()).stderr(Stdio::null())
+     .spawn().map_err(|e|e.to_string())?;
+    let output=child.stdout.take().ok_or("進捗を読み取れません")?;
+    let mut final_result=None;
+    for line in BufReader::new(output).lines(){
+     let line=line.map_err(|e|e.to_string())?;
+     if let Ok(message)=serde_json::from_str::<Value>(&line){
+      if message["progress"].as_bool()==Some(true) {
+       if let Ok(mut p)=shared.lock(){
+        p.stage=message["stage"].as_str().unwrap_or("セットアップ中").to_string();
+        p.percent=message["percent"].as_u64().unwrap_or(0).min(100) as u8;
+       }
+      }else{final_result=Some(message);}
+     }
+    }
+    let status=child.wait().map_err(|e|e.to_string())?;
+    if !status.success(){return Err("セットアップ処理が完了しませんでした".into());}
+    final_result.ok_or_else(||"セットアップの結果を読み取れません".to_string())
+   }).await.map_err(|e|e.to_string());
+   if let Ok(mut s)=progress.lock(){s.running=false;}
+   return result?;
   }
   #[cfg(not(windows))] return Err("Windows only".into());
  }
@@ -119,7 +152,7 @@ fn main(){
   let fallback=window.clone();std::thread::spawn(move||{std::thread::sleep(std::time::Duration::from_secs(5));if !fallback.is_visible().unwrap_or(true){let _=fallback.show();}});
  }
  let dir=app.path().app_config_dir()?;std::fs::create_dir_all(&dir)?;let cfg=dir.join("default_gtp.cfg");if !cfg.exists(){std::fs::write(&cfg,include_str!("../../config/default_gtp.cfg"))?;}
- app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg});Ok(())
+ app.manage(Desktop{black:Arc::new(Mutex::new(Engine::new(cfg.clone()))),white:Arc::new(Mutex::new(Engine::new(cfg.clone()))),engine:Arc::new(Mutex::new(Engine::new(cfg.clone()))),share:Arc::new(Mutex::new(None)),default:cfg,install:Arc::new(Mutex::new(InstallProgress::default()))});Ok(())
  }).invoke_handler(tauri::generate_handler![fonts::desktop_fonts,auxiliary::auxiliary,engine_call,mobile_share,desktop_save,desktop_print,desktop_close,desktop_simple_window,desktop_ready]).build(tauri::generate_context!()).expect("棋譜編集ツールを起動できませんでした");
  app.run(|handle,event|{if let tauri::RunEvent::Exit=event{if let Some(state)=handle.try_state::<Desktop>(){for engine in [&state.engine,&state.black,&state.white]{if let Ok(mut engine)=engine.lock(){engine.stop();}}if let Ok(mut share)=state.share.lock(){*share=None;}}}});
 }

@@ -21,11 +21,13 @@ try {
  $digest=(Get-FileHash $archive).Hash
  function Invoke-RestMethod {param($Uri,$Headers,$TimeoutSec) [pscustomobject]@{assets=@([pscustomobject]@{name='katago-v1.18.1-eigen-windows-x64.zip';digest=('sha256:'+$digest)})}}
  function Invoke-WebRequest {param([switch]$UseBasicParsing,$TimeoutSec,$Uri,$OutFile) if($Uri.EndsWith('.zip')){Copy-Item $archive $OutFile}else{Copy-Item $modelPath $OutFile}}
- $r=(& $run)|ConvertFrom-Json
+ $r=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
  if(!$r.exe -or !(Test-Path $r.exe) -or !(Test-Path $r.model)){throw "Failed setup: $($r.error)"}
- if(((& $run)|ConvertFrom-Json).error -ne 'exists'){throw 'Existing directory overwritten'}
+ $existing=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
+ if($existing.error -ne 'exists'){throw 'Existing directory overwritten'}
  Remove-Item katago -Recurse -Force
  $digest='0'*64
- if(((& $run)|ConvertFrom-Json).error -ne 'verify'){throw 'Bad hash not rejected'}
+ $bad=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
+ if($bad.error -ne 'verify'){throw 'Bad hash not rejected'}
  if((Test-Path katago) -or @(Get-ChildItem -Force -Filter '.goks-install-*').Count){throw 'Failed install left files'}
 } finally {Pop-Location;Remove-Item -LiteralPath $temp -Recurse -Force}

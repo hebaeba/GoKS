@@ -3,6 +3,8 @@
 $ErrorActionPreference='Stop'
 $ProgressPreference='SilentlyContinue'
 [Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)
+# Progress is stage-based (not a byte-counter). Each message is a single UTF-8 JSON line.
+function Report($label,$percent){ Write-Output (@{progress=$true;stage=$label;percent=$percent}|ConvertTo-Json -Compress) }
 $stage=$null
 $code='write'
 try {
@@ -14,6 +16,7 @@ try {
  $asset='katago-v1.18.1-eigen-windows-x64.zip'
  $model='kata1-b10c128-s1141046784-d204142634.txt.gz'
  $zip=Join-Path $stage $asset
+ Report 'KataGoをダウンロード中' 0
  $code='download'
  [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
  $release=Invoke-RestMethod -Uri 'https://api.github.com/repos/lightvector/KataGo/releases/tags/v1.18.1' -Headers @{'User-Agent'='GoKS-engine-setup'} -TimeoutSec 45
@@ -22,8 +25,10 @@ try {
  if($meta.Count -ne 1 -or $meta[0].digest -notmatch '^sha256:[a-fA-F0-9]{64}$'){throw 'digest'}
  $code='download'
  Invoke-WebRequest -UseBasicParsing -TimeoutSec 300 -Uri ('https://github.com/lightvector/KataGo/releases/download/v1.18.1/'+$asset) -OutFile $zip
+ Report 'KataGoをダウンロード中' 30
  $code='verify'
  if('sha256:'+(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash -ne $meta[0].digest){throw 'zip'}
+ Report 'KataGoを展開中' 35
  $code='extract'
  $unpack=Join-Path $stage 'unpacked'
  Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -34,8 +39,10 @@ try {
  $models=Join-Path $root 'models'
  [void][IO.Directory]::CreateDirectory($models)
  $file=Join-Path $models $model
+ Report 'モデルをダウンロード中' 50
  $code='download'
  Invoke-WebRequest -UseBasicParsing -TimeoutSec 300 -Uri ('https://media.katagotraining.org/uploaded/networks/models/kata1/'+$model) -OutFile $file
+ Report 'モデルを配置中' 80
  $code='verify'
  $stream=[IO.File]::OpenRead($file)
  try {
@@ -44,8 +51,10 @@ try {
  } finally {$stream.Dispose()}
  if($hash -ne '3086fce524b9e7a8a979f6eed740d095ef8f3891233b60c709e3d640f997bc13'){throw 'model'}
  $info=@{exe=('./katago/'+$exe[0].Name);model=('./katago/models/'+$model);workdir='./katago';config=''}
+ Report 'エンジンを登録中' 95
  $code='write'
  [IO.Directory]::Move($root,$dest)
+ Report 'エンジンを登録中' 100
  $result=$info
 } catch {$result=@{error=$code}}
 finally {if($stage -and (Test-Path -LiteralPath $stage)){Remove-Item -LiteralPath $stage -Force -Recurse -ErrorAction SilentlyContinue}}

@@ -21,7 +21,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <details id="analysis-help"><summary>解析の使い方</summary><ul><li>「解析を開始」またはスペースキーで連続解析を開始・停止します。解析は時間制限なしで続き、着手・手戻り・変化の切り替えに追従します。</li><li>文字入力中とダイアログ表示中は通常のキー操作を優先します。ボタンはEnterでも操作できます。</li><li>全局解析では、選択中の本譜または変化を初期局面から最後まで解析します。１局面の時間は「全局解析・時間設定」で指定します。</li><li>エンジン未接続でも、保存済み解析を読み込んで閲覧できます。</li></ul></details>
 <details id="analysis-batch"><summary>全局解析・時間設定</summary><p id="analysis-context" class="analysis-note"></p><p class="analysis-note">選択中の本譜または変化を順に解析して、全局グラフを作ります。時間設定は全局解析だけに適用します。</p><div class="analysis-batch-settings"><label>１局面の時間<select id="analysis-seconds"><option value="0.1" selected>0.1秒（簡易）</option><option value="0.5">0.5秒</option><option value="1">１秒</option><option value="3">３秒</option><option value="5">５秒</option><option value="custom">指定する</option></select></label><label id="analysis-custom-label" hidden><input id="analysis-custom" type="number" min="0.1" max="600" step="0.1" value="10" aria-label="全局解析の１局面の秒数">秒</label><button id="analyze-all" disabled title="選択中の手順を各局面の指定時間で解析します">全局解析を開始</button><button id="analysis-batch-pause" hidden>中断</button></div></details>
 <progress id="analysis-progress" value="0" max="1" hidden></progress><p id="analysis-status" role="status" hidden></p>
-<div id="engine-error" role="alert" hidden><strong>起動・接続エラー</strong><pre id="engine-error-text"></pre></div><p id="analysis-rule-warning" class="analysis-warning" hidden>棋譜のルールと解析条件が異なります。</p><p id="analysis-stale" class="analysis-warning" hidden></p>
+<div id="engine-error" role="alert" hidden><strong>エンジンを起動できませんでした</strong><pre id="engine-error-text"></pre></div><p id="analysis-rule-warning" class="analysis-warning" hidden>棋譜のルールと解析条件が異なります。</p><p id="analysis-stale" class="analysis-warning" hidden></p>
 <p id="analysis-run-info" class="analysis-note" role="status"></p>
 
 <div class="analysis-legend">青：最有力候補 ／ 金枠：実戦の次の手 ／ 赤印：直前の着手</div><p id="analysis-played" class="analysis-note"></p><h3>候補手 <small id="candidate-perspective-note"></small></h3><details id="candidate-settings"><summary>候補手の表示設定</summary><div class="candidate-setting-fields"><label>盤上の表示数<select id="candidate-count"><option value="0">非表示</option><option value="5">５手</option><option value="10">10手</option><option value="20">20手</option><option value="50">50手</option><option value="100">100手</option><option value="-1">無限大（全候補）</option></select></label><label>表示項目<select id="candidate-detail"><option value="2">２列：勝率・目数差</option><option value="3">３列：勝率・訪問数・目数差</option></select></label><label>数値の視点<select id="candidate-perspective"><option value="black">黒から見た値</option><option value="turn">手番側から見た値</option></select></label></div><p class="analysis-note">順位はKataGoの推奨順。青は１位。ほかの色は１位との差（手番側の目数評価）で、0.5目以内は緑、２目以内は黄、２目を超えるとオレンジです。訪問数が少ない評価は変動しやすく、色は確定した善悪を表しません。設定はこの端末のブラウザーに保存します。</p></details><p id="candidate-count-note" class="analysis-note"></p><div class="candidate-scroll"><table class="candidate-table"><thead><tr><th>順位</th><th>着点</th><th id="candidate-winrate-heading">黒勝率</th><th>目数差</th><th>訪問数</th><th>実戦</th></tr></thead><tbody id="analysis-candidates"></tbody></table></div><p id="analysis-pv" class="analysis-note">候補手にマウスを重ねると読み筋、クリック／タップで編集・着手します。</p>
@@ -63,7 +63,9 @@ function readPath(key){return pathFieldsCollapsed&&['exe','model','config'].incl
 function writePath(key,value){value=String(value||'');if(pathFieldsCollapsed&&['exe','model','config'].includes(key)){retainedPaths[key]=value;$('engine-'+key).value='';}else $('engine-'+key).value=value;}
 function setFieldsCollapsed(value){if(value===pathFieldsCollapsed)return;for(const key of ['exe','model','config']){if(value){retainedPaths[key]=$('engine-'+key).value;$('engine-'+key).value='';}else $('engine-'+key).value=retainedPaths[key]||'';}pathFieldsCollapsed=value;}
 try{const saved=JSON.parse(localStorage.getItem('kifu-engine-paths-v1')||'null');if(saved&&(!saved.kind||saved.kind==='katago')){$('engine-kind').value=saved.kind||'katago';for(const key of ['exe','model','config','workdir'])writePath(key,saved[key]);$('engine-extraArgs').value=(saved.extraArgs||[]).join('\n');}}catch{}
-const profileKey='kifu-engine-profiles-v1',startupKey='gokifu-startup-engine-v1';
+const profileKey='kifu-engine-profiles-v1',startupKey='gokifu-startup-engine-v1',lastEngineKey='gokifu-last-engine-v116';
+function lastEngineId(){try{return localStorage.getItem(lastEngineKey)||'';}catch{return '';}}
+function rememberEngine(id){if(!id)return;try{localStorage.setItem(lastEngineKey,id);}catch{}}
 function startupId(){try{return localStorage.getItem(startupKey)||'';}catch{return '';}}
 let profiles=[];
 try{const data=JSON.parse(localStorage.getItem(profileKey)||'[]');if(Array.isArray(data))profiles=data.filter(p=>p&&(!p.kind||p.kind==='katago')&&typeof p.id==='string'&&typeof p.name==='string'&&['exe','model','config'].every(k=>typeof p[k]==='string'));}catch{}
@@ -94,42 +96,60 @@ function renderOrder(selected){
  const current=profiles.findIndex(p=>p.id===selected);for(const [id,delta]of [['engine-order-up',-1],['engine-order-down',1]]){const b=$(id);b.disabled=current<0||!profiles[current+delta];b.onclick=()=>{if(current>=0&&profiles[current+delta])move(selected,profiles[current+delta].id);};}
  for(const [i,p] of profiles.entries()){const row=document.createElement('div');row.className='engine-order-row';row.draggable=true;row.dataset.id=p.id;row.dataset.selected=String(p.id===selected);
  const choose=document.createElement('button');choose.type='button';choose.textContent='☰ '+p.name;choose.title='上下にドラッグして並べ替え。クリックで選択';choose.onclick=()=>{$('engine-profile').value=p.id;$('engine-profile').onchange();};row.append(choose);
- const radio=document.createElement('input');radio.type='radio';radio.name='startup-engine';radio.value=p.id;radio.checked=startupId()===p.id;radio.title='アプリ起動時に使用するエンジン';radio.setAttribute('aria-label',radio.title);radio.onchange=()=>{if(radio.checked)try{localStorage.setItem(startupKey,p.id);profileMessage('次回起動時に使用するエンジンを保存しました。');}catch{profileMessage('保存できませんでした。');radio.checked=false;}};row.append(radio);
+ const radio=document.createElement('input');radio.type='radio';radio.name='startup-engine';radio.value=p.id;radio.checked=startupId()===p.id;radio.title='前回選択したエンジンがない場合に起動するエンジン';radio.setAttribute('aria-label',radio.title);radio.onchange=()=>{if(radio.checked)try{localStorage.setItem(startupKey,p.id);profileMessage('予備の起動エンジンを保存しました。');}catch{profileMessage('保存できませんでした。');radio.checked=false;}};row.append(radio);
  row.ondragstart=e=>{e.dataTransfer.setData('text/x-kifu-engine',p.id);e.dataTransfer.effectAllowed='move';};row.ondragover=e=>{if([...e.dataTransfer.types].includes('text/x-kifu-engine')){e.preventDefault();e.dataTransfer.dropEffect='move';}};row.ondrop=e=>{const id=e.dataTransfer.getData('text/x-kifu-engine');if(id){e.preventDefault();e.stopPropagation();move(id,p.id);}};list.append(row);}
 }
 $('engine-order-expand').onclick=()=>{const expanded=$('engine-order').classList.toggle('expanded');$('engine-order-expand').setAttribute('aria-expanded',String(expanded));$('engine-order-expand').textContent=expanded?'一覧を縮める':'すべて表示';};
 function writeProfiles(next){try{localStorage.setItem(profileKey,JSON.stringify(next));profiles=next;window.dispatchEvent(new Event('kifu-engine-profiles'));return true;}catch{profileMessage('保存できませんでした。ブラウザーの保存容量や設定を確認してください。');return false;}}
 function saveProfile(){const config=paths(),name=$('engine-name').value.trim();if(!name){profileMessage('エンジンの名前を入力してください。');$('engine-name').focus();return false;}if(!config.exe||(config.kind!=='gtp'&&!config.model)){profileMessage('実行ファイルとモデルを指定してください。cfgは省略できます。');return false;}
 const selected=$('engine-profile').value,duplicate=profiles.find(p=>p.name===name&&p.id!==selected);if(duplicate){profileMessage('同じ名前が登録されています。別の名前にするか、リストからその設定を選んで更新してください。');return false;}
-const entry={id:selected||uid(),name,...config,userEdited:true},next=selected?profiles.map(p=>p.id===selected?entry:p):[...profiles,entry];if(!writeProfiles(next))return false;renderProfiles(entry.id);profileMessage('「'+name+'」を保存しました。次回もリストから選べます。');controls();return true;}
+const entry={id:selected||uid(),name,...config,userEdited:true},next=selected?profiles.map(p=>p.id===selected?entry:p):[...profiles,entry];if(!writeProfiles(next))return false;rememberEngine(entry.id);renderProfiles(entry.id);profileMessage('「'+name+'」を保存しました。次回もリストから選べます。');controls();return true;}
 $('engine-profile-save').onclick=saveProfile;
 $('engine-profile-edit').onclick=()=>{if(pendingCalls>0||!$('engine-profile').value)return;$('engine-list-disclosure').open=true;$('engine-settings').classList.add('profile-editing');$('engine-profile-save').textContent='編集内容を保存';profileMessage('名前・実行ファイル・モデル・cfgを変更し、リスト直下の「編集内容を保存」を押してください。変更を取り消す場合はリストから同じ登録を選び直してください。');$('engine-name').focus();$('engine-name').scrollIntoView({block:'nearest'});};
-$('engine-profile').onchange=()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);$('engine-name').value=p?.name||'';$('engine-kind').value=p?.kind||'katago';for(const k of ['exe','model','config','workdir'])writePath(k,p?.[k]);$('engine-extraArgs').value=(p?.extraArgs||[]).join('\n');engineKindUI();clearConfigurationError();renderProfiles(p?.id||'');controls();profileMessage(p?'「'+p.name+'」を読み込みました。上部の起動／再起動ボタンで反映します。':'名前と設定を入力してください。');};
+$('engine-profile').onchange=()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(p)rememberEngine(p.id);$('engine-name').value=p?.name||'';$('engine-kind').value=p?.kind||'katago';for(const k of ['exe','model','config','workdir'])writePath(k,p?.[k]);$('engine-extraArgs').value=(p?.extraArgs||[]).join('\n');engineKindUI();clearConfigurationError();renderProfiles(p?.id||'');controls();profileMessage(p?'「'+p.name+'」を読み込みました。エンジンリスト内の起動／再起動ボタンで反映します。':'名前と設定を入力してください。');};
 $('engine-profile-new').onclick=()=>{$('engine-profile').value='';$('engine-profile').onchange();$('engine-exe').focus();};
-$('engine-profile-delete').onclick=async ()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(!p||!(await KifuDialogs.confirm('「'+p.name+'」をエンジンリストから削除しますか？',{accept:'登録を削除'})))return;if(writeProfiles(profiles.filter(v=>v.id!==p.id))){if(p.id.startsWith('bundled-'))try{localStorage.setItem('kifu-bundled-hidden-v80-'+p.id,'1');}catch{}renderProfiles();$('engine-name').value='';profileMessage('登録を削除しました。入力欄のパスと端末内のファイルは残しています。');if(startupId()===p.id)engineError('起動時のエンジンが削除されました。エンジンリストで起動時のエンジンを選び直してください。');controls();}};
+$('engine-profile-delete').onclick=async ()=>{const p=profiles.find(p=>p.id===$('engine-profile').value);if(!p||!(await KifuDialogs.confirm('「'+p.name+'」をエンジンリストから削除しますか？',{accept:'登録を削除'})))return;if(writeProfiles(profiles.filter(v=>v.id!==p.id))){if(p.id.startsWith('bundled-'))try{localStorage.setItem('kifu-bundled-hidden-v80-'+p.id,'1');}catch{}if(lastEngineId()===p.id)try{localStorage.removeItem(lastEngineKey);}catch{}if(startupId()===p.id)try{localStorage.removeItem(startupKey);}catch{}renderProfiles();$('engine-name').value='';profileMessage('登録を削除しました。入力欄のパスと端末内のファイルは残しています。');controls();}};
 renderProfiles();
-const restored=profiles.find(p=>['exe','model','config'].every(k=>p[k]===paths()[k]));if(restored){renderProfiles(restored.id);$('engine-name').value=restored.name;}
+const restored=profiles.find(p=>['exe','model','config'].every(k=>p[k]===paths()[k]));const remembered=profiles.find(p=>p.id===lastEngineId())||restored;if(remembered){$('engine-profile').value=remembered.id;$('engine-profile').onchange();}
 
 const setupText='AIを使うにはKataGoを登録してください。';
 async function offerSetup(){
  if(await KifuDialogs.confirm(setupText,{accept:'エンジン設定を開く'})){
-  $('engine-list-disclosure').open=true;
   await window.KifuSimple.openPanel('settings');
+  $('engine-install').focus();
  }
 }
 for(const kind of ['cpu','network'])$('engine-'+kind).onclick=async()=>{try{await call('pick',{kind});}catch(e){engineError(e.message);}};
 let installing=false;
 $('engine-install').hidden=!native()||!!window.KifuRemote;
+const installBar=()=>$('engine-install-progress');
+function installProgress(stage,percent){
+ const msg=$('engine-install-status'),bar=installBar();msg.hidden=false;bar.hidden=false;
+ const n=Math.max(0,Math.min(100,Number(percent)||0));bar.value=n;
+ msg.textContent=stage+'（'+Math.round(n)+'%）';
+}
+$('engine-install').title='CPU版は通常のWindowsパソコンで使用できるKataGoです。エンジン本体とモデルを自動で取得・登録します。';
+$('engine-folder').title='既に入手したKataGoのフォルダーを選びます。エンジンは囲碁の局面を解析するAIプログラムです。';
+$('engine-cpu').title='エンジンは囲碁を解析するAIプログラムです。CPU版は一般的なパソコンのCPUで動作します。';
+$('engine-network').title='モデルはKataGoが学習した知識を収めたファイルで、解析に必要です。';
 $('engine-install').onclick=async()=>{
  if(installing||pendingCalls||!native())return;
  if(!await KifuDialogs.confirm('推奨CPU版とモデルを公式サイトから取得し、GoKS.exeの隣のkatagoフォルダーに展開・配置します。続けますか？',{accept:'セットアップ'}))return;
- installing=true;pendingCalls++;controls();const msg=$('engine-install-status');msg.hidden=false;msg.textContent='ダウンロードと展開を行っています…';
+ installing=true;pendingCalls++;controls();installProgress('KataGoをダウンロード中',0);
+ let ticker=null,checking=false;
+ const check=async()=>{if(checking)return;checking=true;try{const status=await rawCall('install_status');if(status?.running&&typeof status.percent==='number')installProgress(status.stage||'セットアップ中',status.percent);}catch{}finally{checking=false;}};
  try{
+  ticker=setInterval(check,250);
   const r=await rawCall('install_recommended');
-  if(!r?.exe){msg.textContent=({exists:'katagoフォルダーは既にあります。「KataGoのフォルダーを選ぶ」で登録してください。',write:'保存できません。GoKSをユーザーが書き込めるフォルダーに置いてください。',download:'ダウンロードできませんでした。接続を確認するか、手動で入手してください。',verify:'配布ファイルの照合に失敗しました。インストールは行いませんでした。',extract:'CPU版を展開できませんでした。手動セットアップをご利用ください。'})[r?.error]||'セットアップできませんでした。';return;}
+  if(!r?.exe){installBar().hidden=true;$('engine-install-status').textContent=({exists:'katagoフォルダーは既にあります。「KataGoのフォルダーを選ぶ」で登録してください。',write:'保存できません。GoKSをユーザーが書き込めるフォルダーに置いてください。',download:'ダウンロードできませんでした。接続を確認するか、手動で入手してください。',verify:'配布ファイルの照合に失敗しました。インストールは行いませんでした。',extract:'CPU版を展開できませんでした。手動セットアップをご利用ください。'})[r?.error]||'セットアップできませんでした。';return;}
   $('engine-profile-new').onclick();for(const k of ['exe','model','config','workdir'])writePath(k,r[k]||'');
-  $('engine-name').value='KataGo Eigen 1.18.1';msg.textContent='配置しました。設定を確認し、「リストに追加」を押してください。';
- }catch{msg.textContent='セットアップできませんでした。';}finally{installing=false;pendingCalls--;controls();}
+  const base='KataGo Eigen 1.18.1';let name=base,ordinal=2;while(profiles.some(p=>p.name===name)){name=base+' ('+ordinal+++')';}
+  $('engine-name').value=name;
+  if(!saveProfile()){installBar().hidden=true;$('engine-install-status').textContent='配置は完了しましたが、登録を保存できませんでした。エンジンリストで登録してください。';return;}
+  installProgress('エンジンを登録中',100);
+  $('engine-install-status').textContent='KataGoのセットアップが完了しました。解析を開始できます。';
+ }catch(e){installBar().hidden=true;$('engine-install-status').textContent='セットアップできませんでした。'+(e?.message||'');}
+ finally{if(ticker!==null)clearInterval(ticker);installing=false;pendingCalls--;controls();}
 };
 function clearSuggestions(){$('engine-suggestions').replaceChildren();}
 $('engine-profile').addEventListener('change',clearSuggestions);
@@ -145,17 +165,22 @@ $('engine-folder').onclick=async()=>{
    const label=document.createElement('label'),sel=document.createElement('select');
    sel.id='engine-found-'+key;label.textContent={exe:'エンジン',model:'モデル',config:'設定CFG'}[key];
    sel.append(new Option('選択',''));for(const file of files)sel.append(new Option(file.slice(found.folder.length+1),file));
-   sel.onchange=()=>writePath(key,sel.value);label.append(sel);$('engine-suggestions').append(label);
+   sel.onchange=()=>{writePath(key,sel.value);controls();};label.append(sel);$('engine-suggestions').append(label);
   }
   profileMessage('候補を確認し、不足分を指定して「リストに追加」を押してください。');
  }catch(e){engineError(e.message);}finally{pendingCalls--;controls();}
 };
+function configuredEngine(){const c=paths();return !!(c.exe&&(c.kind==='gtp'||c.model));}
 function engineState(state,title,message){$('engine-active-name').dataset.i18nDefault=['starting','tuning','ready'].includes(state)||$('engine-name').value.trim()?'':'未選択';$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':$('engine-name').value.trim()||'未選択';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
 function syncEngineStatus(){
- const state=startupPhase==='error'?'error':ready?(active||live?'analyzing':'ready'):['starting','tuning'].includes(startupPhase)?startupPhase:'idle';
- const label={idle:'停止中',starting:'起動中',tuning:'チューニング中',ready:'待機中',analyzing:'解析中',error:'起動・接続エラー'}[state];
- $('engine-state').textContent=ready?'● 起動中'+(engineMeta?.supportsAnalysis===false?'・接続確認のみ':active||live?'・解析中':''):label;$('engine-state').dataset.state=state;
- $('engine-notice').hidden=!['starting','tuning','error'].includes(state);
+ const state=startupPhase==='error'?'error':ready?(active||live?'analyzing':'ready'):['starting','tuning'].includes(startupPhase)?startupPhase:configuredEngine()?'idle':'unconfigured';
+ const label={unconfigured:'エンジン未設定',idle:'エンジン停止中',starting:'エンジン接続中…',tuning:'エンジン接続中…',ready:'エンジン接続中',analyzing:'エンジン接続中・解析中',error:'エンジンを起動できませんでした'}[state];
+ $('engine-state').textContent=label;$('engine-state').dataset.state=state;
+ $('engine-active').dataset.state=state;
+ $('engine-notice').dataset.state=state;
+ $('engine-notice').hidden=!['unconfigured','starting','tuning','error'].includes(state);
+ if(state==='unconfigured'){$('engine-notice-title').hidden=false;$('engine-notice-title').textContent='エンジン未設定';$('engine-notice-message').textContent='囲碁AIを利用する場合は、「エンジン」メニューの「推奨CPU版を自動セットアップ」を選んでください。';}
+ else $('engine-notice-title').hidden=true;
 }
 function startingStatus(){if(!['starting','tuning'].includes(startupPhase))return;const text='経過 '+Math.floor((Date.now()-startupAt)/1000)+'秒';if($('engine-elapsed').textContent!==text)$('engine-elapsed').textContent=text;}
 function startupLog(text){if(!['starting','tuning'].includes(startupPhase))return;if(/(?:tuning|autotun|building.*(?:engine|plan)|(?:engine|plan).*building|compiling.*(?:kernel|model))/i.test(text)&&!/(?:skip|not |no |disabled|loaded|finished|completed)/i.test(text))engineState('tuning','ただいまチューニング中です','エンジンの最適化・初期化を行っています。しばらくお待ちください。初回は数分以上かかることがあります。');}
@@ -164,11 +189,11 @@ function log(text){startupLog(String(text));logs.push(String(text));logs=logs.sl
 function clearConfigurationError(){
  const hadError=!$('engine-error').hidden||startupPhase==='error';
  $('engine-error').hidden=true;$('engine-error-text').textContent='';
- if(hadError){dismissedRunEpoch=engineEpoch;note('');logs=[];$('engine-log').textContent='';document.querySelector('.engine-log').open=false;if(startupPhase==='error')engineState(ready?'ready':'idle',ready?'起動中':'エンジン停止','');else syncEngineStatus();}
+ if(hadError){dismissedRunEpoch=engineEpoch;note('');logs=[];$('engine-log').textContent='';document.querySelector('.engine-log').open=false;if(startupPhase==='error')engineState(ready?'ready':'idle',ready?'エンジン接続中':'エンジン停止中','');else syncEngineStatus();}
 }
-for(const key of ['exe','model','config','extraArgs','workdir'])$('engine-'+key).addEventListener('input',clearConfigurationError);
-function engineError(message){stopBatchProgress();requestedScope=null;if(!ready)engineState('error','起動・接続エラー','下のエラー内容と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-notice-message').textContent=message;$('engine-notice').hidden=false;}
-for(const kind of ['exe','model','config'])$('engine-pick-'+kind).onclick=async()=>{pendingCalls++;controls();try{const picked=await call('pick',{kind});if(picked.path){writePath(kind,picked.path);clearConfigurationError();}}catch(e){engineError(e.message);}finally{pendingCalls--;controls();}};
+for(const key of ['exe','model','config','extraArgs','workdir'])$('engine-'+key).addEventListener('input',()=>{clearConfigurationError();controls();});
+function engineError(message){stopBatchProgress();requestedScope=null;if(!ready)engineState('error','エンジンを起動できませんでした','下の詳細と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-notice-message').textContent=message;$('engine-notice').hidden=false;}
+for(const kind of ['exe','model','config'])$('engine-pick-'+kind).onclick=async()=>{pendingCalls++;controls();try{const picked=await call('pick',{kind});if(picked.path){writePath(kind,picked.path);clearConfigurationError();controls();}}catch(e){engineError(e.message);}finally{pendingCalls--;controls();}};
 async function rawCall(action,payload={}){if(window.KifuRemote)return window.KifuRemote.call(action,payload);if(native()){try{return await native()('engine_call',{action,payload});}catch(error){throw error instanceof Error?error:new Error(typeof error==='string'?error:JSON.stringify(error)||'エンジンとの通信に失敗しました。');}}if(!token)throw Error('Windowsの解析用ランチャーまたはTauri版から起動してください。');const response=await fetch('/api/engine',{method:'POST',headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action,payload})});const data=await response.json();if(!data.ok)throw Error(data.error||'接続エラー');return data.result;}
 const gtpBridge=new KifuGTP.Bridge(rawCall);
 let estimateJob=null,estimateSerial=0;
@@ -177,10 +202,10 @@ function uid(){return 'kifu-'+Date.now().toString(36)+'-'+Math.random().toString
 function snap(){try{return api.peekAnalysisSnapshot();}catch{return null;}}
 function scopePoints(s=snap()){return $('analysis-region').checked&&s?A.regionPoints(s):null;}
 function matches(){const s=snap();return session&&s&&A.identity(s)===A.identity(session.snapshot)&&$('analysis-rules').value===session.rules&&JSON.stringify(scopePoints(s))===JSON.stringify(session.region||null);}
-function analysisAllowed(){return running?engineMeta?.supportsAnalysis!==false:paths().kind==='katago';}
+function analysisAllowed(){return running?engineMeta?.supportsAnalysis!==false:!!window.KifuRemote||configuredEngine()&&paths().kind==='katago';}
 function controls(){
  syncEngineStatus();
- const quick=$('engine-quick');if(quick){quick.textContent=running?'終了':'起動';quick.disabled=!available||pendingCalls>0;quick.title=running?'解析を停止し、エンジンを終了します':'選択中のエンジンを起動します';}
+ const quick=$('engine-quick');if(quick){quick.textContent=running?'終了':'起動';quick.disabled=!available||pendingCalls>0||(!running&&!configuredEngine());quick.title=running?'解析を停止し、エンジンを終了します':'選択中のエンジンを起動します';}
  syncSummary();
  const busy=!!active||live;
  const batchRun=!!active&&session?.analysisRun?.scope==='all';
@@ -192,7 +217,7 @@ function controls(){
  $('analyze-live').textContent=busy?'解析を停止':'解析を開始';$('analyze-live').setAttribute('aria-pressed',String(busy));
  $('analyze-live').title=busy?'実行中の解析を停止します。エンジンの接続は維持します':'時間制限なしで現在の局面を解析し、局面の移動に追従します';
  $('analyze-all').disabled=!analysisAllowed()||$('analysis-region').checked||!available||busy||pendingCalls>0||!!handshake||!!estimateJob||!!pausedBatch;$('analyze-all').textContent=pausedBatch?'全局解析中断中':active&&!live?'全局解析中…':'全局解析を開始';
- $('analysis-pv-length').disabled=busy;$('engine-disconnect').disabled=!running||pendingCalls>0;$('engine-connect').disabled=!available||pendingCalls>0;$('engine-connect').textContent=running?'適用して再起動':'選択したエンジンを起動';$('engine-connect').title=running?'現在のエンジンを終了し、入力中の設定で起動し直します':'入力中の設定でエンジンを起動します';
+ $('analysis-pv-length').disabled=busy;$('engine-disconnect').disabled=!running||pendingCalls>0;$('engine-connect').disabled=!available||pendingCalls>0||(!running&&!configuredEngine());$('engine-connect').textContent=running?'適用して再起動':'選択したエンジンを起動';$('engine-connect').title=running?'現在のエンジンを終了し、入力中の設定で起動し直します':'入力中の設定でエンジンを起動します';
  $('engine-install').disabled=pendingCalls>0;
  for(const key of ['folder','cpu','network'])$('engine-'+key).disabled=!available||pendingCalls>0||!!window.KifuRemote;
  for(const key of ['kind','extraArgs','workdir'])$('engine-'+key).disabled=pendingCalls>0;
@@ -308,15 +333,15 @@ function renderGraph(){window.dispatchEvent(new CustomEvent('kifu-evaluation-dat
 
 async function go(index){if(!matches()){note('表示中の棋譜が異なります。保存した解析を読み直してください。');return;}try{await api.analysisAt(index,session.snapshot.sgf);}catch(e){note(e.message);}}
 $('analysis-rules').onchange=displayState;
-async function connect(){if(running||handshake)return;if(!window.KifuRemote&&!paths().exe&&!paths().model){requestedScope=null;await offerSetup();return;}engineEpoch++;note('');$('engine-error').hidden=true;logs=[];$('engine-log').textContent='';pendingCalls++;controls();try{const config=paths();if(!window.KifuRemote&&(!config.exe||(config.kind!=='gtp'&&!config.model)))throw Error('実行ファイルとモデルのフルパスを指定してください。');try{localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(config));}catch{}startupAt=Date.now();startupName=window.KifuRemote?'PCのエンジン':$('engine-name').value.trim()||config.exe.split(/[\\/]/).pop();engineState('starting','エンジンを起動しています','モデルを読み込み、準備しています。CUDA・TensorRT等の初回起動ではチューニングに数分以上かかる場合があります。しばらくお待ちください。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});const r=await call('start',config);runningConfig={...config,name:startupName};$('engine-active-name').title='実行ファイル：'+config.exe+'\nモデル：'+config.model+'\n設定：'+(config.config||'標準設定');if($('engine-running-files'))$('engine-running-files').textContent=$('engine-active-name').title;running=true;ready=false;timer??=setInterval(poll,50);engineMeta=r.meta;if(window.KifuRemote)startupName=r.meta?.engine||'PCのエンジン';handshake={id:uid(),time:Date.now()};await call('send',{id:handshake.id,action:'query_version'});note('');timer??=setInterval(poll,50);}catch(e){log(e.message);engineError(e.message);}finally{pendingCalls--;controls();}}
-async function disconnect(){pausedBatch=null;estimateSerial++;if(estimateJob){const job=estimateJob;estimateJob=null;clearTimeout(job.timeout);job.reject(Error('推定を停止しました。'));}stopBatchProgress();engineEpoch++;pendingCalls++;controls();requestedScope=null;endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;runningConfig=null;$('engine-active-name').removeAttribute('title');if($('engine-running-files'))$('engine-running-files').textContent='エンジンは停止しています。';pendingCalls--;note('');engineState('idle','エンジン停止','「起動・接続」で再び起動できます。');controls();}
+async function connect(){if(running||handshake)return;if(!window.KifuRemote&&!paths().exe&&!paths().model){requestedScope=null;await offerSetup();return;}engineEpoch++;note('');$('engine-error').hidden=true;logs=[];$('engine-log').textContent='';pendingCalls++;controls();try{const config=paths();if(!window.KifuRemote&&(!config.exe||(config.kind!=='gtp'&&!config.model)))throw Error('実行ファイルとモデルのフルパスを指定してください。');try{localStorage.setItem('kifu-engine-paths-v1',JSON.stringify(config));}catch{}startupAt=Date.now();startupName=window.KifuRemote?'PCのエンジン':$('engine-name').value.trim()||config.exe.split(/[\\/]/).pop();engineState('starting','エンジン接続中…','モデルを読み込み、準備しています。CUDA・TensorRT等の初回起動ではチューニングに数分以上かかる場合があります。しばらくお待ちください。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});const r=await call('start',config);runningConfig={...config,name:startupName};$('engine-active-name').title='実行ファイル：'+config.exe+'\nモデル：'+config.model+'\n設定：'+(config.config||'標準設定');if($('engine-running-files'))$('engine-running-files').textContent=$('engine-active-name').title;running=true;ready=false;timer??=setInterval(poll,50);engineMeta=r.meta;if(window.KifuRemote)startupName=r.meta?.engine||'PCのエンジン';handshake={id:uid(),time:Date.now()};await call('send',{id:handshake.id,action:'query_version'});note('');timer??=setInterval(poll,50);}catch(e){log(e.message);engineError(e.message);}finally{pendingCalls--;controls();}}
+async function disconnect(){pausedBatch=null;estimateSerial++;if(estimateJob){const job=estimateJob;estimateJob=null;clearTimeout(job.timeout);job.reject(Error('推定を停止しました。'));}stopBatchProgress();engineEpoch++;pendingCalls++;controls();requestedScope=null;endLive();clearPreview();stopping=null;active=null;handshake=null;try{await call('stop');}catch(e){log(e.message);}running=ready=false;runningConfig=null;$('engine-active-name').removeAttribute('title');if($('engine-running-files'))$('engine-running-files').textContent='エンジンは停止しています。';pendingCalls--;note('');engineState('idle','エンジン停止中','「選択したエンジンを起動」で再び起動できます。');controls();}
 async function poll(){startingStatus();if(polling)return;polling=true;const epoch=engineEpoch;try{const r=await call('poll');if(epoch!==engineEpoch)return;for(const l of r.logs||[])log(l);for(const event of r.events||[]){if(event.type==='log'){log(event.message);continue;}if(event.type==='exit'){log(event.message);ready=false;if(dismissedRunEpoch!==epoch)engineError(event.message);endLive();active=null;continue;}if(event.type!=='result')continue;const data=event.data;
 if(estimateJob&&data.id===estimateJob.id){const job=estimateJob;if(data.ownership){job.last=data;job.onResult?.(data);}if(data.error||data.isDuringSearch===false){estimateJob=null;clearTimeout(job.timeout);data.error?job.reject(Error(data.error)):job.last?job.resolve(job.last):job.reject(Error('領域の推定結果を取得できませんでした。'));}continue;}
-if(handshake&&data.id===handshake.id){if(data.error){log(data.error);if(dismissedRunEpoch!==epoch)engineError(data.error);handshake=null;continue;}if(data.version){engineMeta={...engineMeta,version:data.version,supportsAnalysis:data.supportsAnalysis!==false};ready=true;handshake=null;engineState('ready',engineMeta.supportsAnalysis?'起動完了・解析できます':'GTP接続完了（解析未対応）',startupName+' ／ '+data.version);if(!engineMeta.supportsAnalysis)note('GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});$('engine-error').hidden=true;note(engineMeta.supportsAnalysis?'':'GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if(requestedScope&&engineMeta.supportsAnalysis){const scope=requestedScope;requestedScope=null;setTimeout(async ()=>scope==='all'?(await analyze(true)):(await toggleLive()),0);}}continue;}
+if(handshake&&data.id===handshake.id){if(data.error){log(data.error);if(dismissedRunEpoch!==epoch)engineError(data.error);handshake=null;continue;}if(data.version){engineMeta={...engineMeta,version:data.version,supportsAnalysis:data.supportsAnalysis!==false};ready=true;handshake=null;rememberEngine($('engine-profile').value);engineState('ready',engineMeta.supportsAnalysis?'起動完了・解析できます':'GTP接続完了（解析未対応）',startupName+' ／ '+data.version);if(!engineMeta.supportsAnalysis)note('GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if($('engine-notice').getClientRects().length)$('engine-notice').scrollIntoView({block:'nearest',behavior:'auto'});$('engine-error').hidden=true;note(engineMeta.supportsAnalysis?'':'GTP接続を確認しました。このエンジンの解析・対局にはまだ対応していません。');if(requestedScope&&engineMeta.supportsAnalysis){const scope=requestedScope;requestedScope=null;setTimeout(async ()=>scope==='all'?(await analyze(true)):(await toggleLive()),0);}}continue;}
 if(stopping&&data.id===stopping.id){if(data.rootInfo){const item=stopping.plan[stopping.cursor];results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result:A.normalizedResult(data,session.snapshot.size),queryId:data.id,seconds:stopping.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}if(data.isDuringSearch===false)stopping=null;continue;}if(!active||data.id!==active.id)continue;if(data.isDuringSearch===false&&!data.rootInfo&&!data.error)data.error='解析結果を取得できませんでした。１局面の時間を長くしてください。';if(data.error){stopBatchProgress();note('解析エラー：'+data.error);log(JSON.stringify(data));endLive();active=null;continue;}if(data.warning){log('注意：'+data.warning);note('KataGoの注意：'+data.warning);}if(data.rootInfo){const item=active.plan[active.cursor],result=A.normalizedResult(data,session.snapshot.size);results.set(item.index,{index:item.index,move:item.move,turn:item.turn,reset:item.reset,result,queryId:data.id,seconds:active.seconds,time:new Date().toISOString()});unsaved=true;renderResult();renderGraph();}
 if(data.isDuringSearch===false&&data.rootInfo){active.cursor++;$('analysis-progress').value=active.cursor;if(active.cursor<active.plan.length){progressText();await sendNext();}else{if(session?.analysisRun?.scope==='all')batchProgress('complete',active.plan.length,active.plan.length);note((live?'連続解析：次の着手・手順移動を待っています。 ':'解析完了：')+active.plan.length+'局面 ／ '+((Date.now()-active.started)/1000).toFixed(1)+'秒。結果を保存できます。');active=null;renderGraph();if(live)scheduleLive(true);}}
 }
-if(active)progressText();running=r.running;if(!running){pausedBatch=null;stopBatchProgress();ready=false;endLive();active=null;handshake=null;if(startupPhase!=='error'){note('');engineState('idle','エンジン停止','「起動・接続」で起動してください。');}clearInterval(timer);timer=null;}if(handshake&&Date.now()-handshake.time>180000){note('モデル読込みが続いています。接続ログを確認してください。中止するには「エンジン終了」を押してください。');handshake.time=Date.now();}controls();}catch(e){log(e.message);ready=false;if(dismissedRunEpoch!==epoch)engineError('接続エラー：'+e.message);endLive();active=null;controls();}finally{polling=false;}}
+if(active)progressText();running=r.running;if(!running){pausedBatch=null;stopBatchProgress();ready=false;endLive();active=null;handshake=null;if(startupPhase!=='error'){note('');engineState('idle','エンジン停止中','「選択したエンジンを起動」で起動してください。');}clearInterval(timer);timer=null;}if(handshake&&Date.now()-handshake.time>180000){note('モデル読込みが続いています。接続ログを確認してください。中止するには「エンジン終了」を押してください。');handshake.time=Date.now();}controls();}catch(e){log(e.message);ready=false;if(dismissedRunEpoch!==epoch)engineError('接続エラー：'+e.message);endLive();active=null;controls();}finally{polling=false;}}
 async function sendNext(){if(!active)return;active.id=uid();await call('send',{id:active.id,...active.plan[active.cursor].request});}
 async function analyze(all,following=false){if(!ready||!analysisAllowed()||active||pendingCalls>0)return;pausedBatch=null;stopping=null;try{const snapshot=api.analysisSnapshot(),rules=$('analysis-rules').value,infinite=!all&&!window.KifuRemote,seconds=infinite?null:!all?60:Number($('analysis-seconds').value==='custom'?$('analysis-custom').value:$('analysis-seconds').value),pvLength=Number($('analysis-pv-length').value),region=scopePoints(snapshot),plan=A.plan(snapshot,rules,{seconds,infinite,pvLength,region},all);const same=session&&JSON.stringify(region)===JSON.stringify(session.region||null)&&A.identity(snapshot)===A.identity(session.snapshot)&&rules===session.rules&&JSON.stringify(engineMeta)===JSON.stringify(session.engine);if(!same){if(!following&&unsaved&&results.size&&!(await KifuDialogs.confirm('保存していない解析結果を、新しい解析で置き換えますか？',{accept:'解析を開始'})))return;results=following&&session&&JSON.stringify(region)===JSON.stringify(session.region||null)&&rules===session.rules&&JSON.stringify(engineMeta)===JSON.stringify(session.engine)?A.rebaseResults(session.snapshot,snapshot,results):new Map();session={snapshot,rules,region,engine:engineMeta,created:new Date().toISOString()};unsaved=results.size>0;}if(all)results=new Map();session.analysisRun={scope:following?"live":all?"all":"current",seconds,infinite,pvLength,started:new Date().toISOString()};session.timing={mode:infinite?"infinite":"seconds",seconds,pvLength};clearPreview();active={snapshot,plan,index:snapshot.index,cursor:0,id:null,seconds,infinite,started:Date.now()};selectedCandidate=0;$('analysis-progress').hidden=infinite;$('analysis-progress').max=plan.length;$('analysis-progress').value=0;note(region?'領域制限中：'+region.length+'交点とパス。評価値は全局の評価です。':plan[0].reset?'配置図として解析します。配置変更以前のコウ履歴・アゲハマは解析に含まれません。':'');controls();displayState();if(all){if($('batch-disclosure'))$('batch-disclosure').open=true;$('candidate-list').open=false;batchProgress('running',0,plan.length);$('analysis-batch').scrollIntoView({block:'start',behavior:'smooth'});}else{$('batch-progress').hidden=true;}await sendNext();}catch(e){stopBatchProgress();active=null;endLive();note(e.message);controls();}}
 async function cancel(){pausedBatch=null;stopBatchProgress('stopped');endLive();const pending=active;stopping=pending;active=null;if(pending?.id)try{await call('send',{id:uid(),action:'terminate',terminateId:pending.id});}catch(e){log(e.message);}note('');renderGraph();controls();}
@@ -374,17 +399,15 @@ async function requestAnalysis(scope){if(estimateJob)return;
 function autoConnect(){
  if(autoAttempted||!defaultsLoaded||!available||window.KifuRemote)return;
  autoAttempted=true;
- // Once per application launch. An explicit start/stop takes precedence.
  if(engineEpoch||running||handshake||pendingCalls)return;
- const id=startupId(),d=profiles.find(p=>p.id===id);
- if(!id)return;
- if(!d){engineError('起動時のエンジンが見つかりません。エンジンリストで起動時のエンジンを選び直してください。');return;}
- if(d.missing?.length){engineError('起動時のエンジンのファイルが不足しています。エンジン・モデル・設定CFGの場所を確認してください。');return;}
+ // The engine last selected/used takes priority, even without a startup radio.
+ // Older preferences remain as a fallback, and absent engines are not an error.
+ const d=profiles.find(p=>p.id===lastEngineId()&&!p.missing?.length)||profiles.find(p=>p.id===startupId()&&!p.missing?.length);
+ if(!d)return;
  $('engine-kind').value='katago';engineKindUI();
  for(const k of ['exe','model','config','workdir'])writePath(k,d[k]||'');
  $('engine-name').value=d.name;$('engine-extraArgs').value=(d.extraArgs||[]).join('\n');
- renderProfiles(d.id);
- connect();
+ renderProfiles(d.id);connect();
 }
 window.addEventListener('workspace-layout',autoConnect);
 setTimeout(()=>{defaultsLoaded=true;autoConnect();},0);

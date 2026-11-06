@@ -4,7 +4,7 @@
 
 Extract the entire Windows ZIP and run `GoKS.exe`. No engine is included. Record editing and human games work without an engine. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
 
-Open Engines → Engine List → Set up CPU engine. After confirmation, GoKS extracts KataGo Eigen v1.18.1 and its DLLs into katago beside GoKS.exe and places the compressed model in katago/models. Review the settings and click Add to List. Existing folders are never overwritten. If the folder is not writable, move GoKS to a writable location or register an external engine manually.
+Open the Engine tab (the leftmost right-panel tab) and select Set up CPU engine. GoKS shows stage-based progress while it downloads and extracts KataGo Eigen v1.18.1 and its DLLs into katago beside GoKS.exe and places the compressed model in katago/models. A profile is registered automatically when setup succeeds. Existing folders are never overwritten. If the folder is not writable, move GoKS to a writable location or register an external engine manually.
 
 The recommended versions are pinned and never update automatically. For a newer engine, extract the new official Windows ZIP including DLLs into a separate folder such as katago-new, place a model in its models subfolder, and register the folder under a new name. For a model-only update, obtain the Network File from the official model list, keep it compressed under a different filename in models, and create a new profile using the existing executable and new model. Test analysis before changing the startup radio button. Select the old profile to roll back.
 
@@ -32,7 +32,7 @@ Repository: https://github.com/hebaeba/GoKS
 
 ## Engines and games
 
-The radio button at the right of each engine row selects the next startup engine. The shared up/down buttons move the selected row. Missing startup registrations or files produce a warning. Open Engines → Engine List. Use an existing KataGo folder, or choose Get CPU engine, extract the entire ZIP including DLLs, and use Get model. Put the compressed model in the same folder or its models subfolder. Choose KataGo folder, select among multiple matches, browse for missing files, and click Add to List. A GTP config is optional. Select the radio button beside a profile only if it should start with GoKS.
+The most recently selected or used engine is remembered and automatically starts on the next launch. The radio button at the right of each engine row is a fallback startup engine. The shared up/down buttons move the selected row. An unconfigured engine is a normal initial state, not an error. Open Engine → Individual downloads for separate downloads or Engine List to manage profiles. Use an existing KataGo folder, or choose Get CPU engine, extract the entire ZIP including DLLs, and use Get model. Put the compressed model in the same folder or its models subfolder. Choose KataGo folder, select among multiple matches, browse for missing files, and click Add to List. A GTP config is optional. Select the startup radio only as a fallback if the last-selected profile is unavailable.
 
 [CPU engine](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) · [Model](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
 

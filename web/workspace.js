@@ -16,6 +16,8 @@
   const button=document.createElement('button');button.id='tab-'+id;button.textContent=text;button.type='button';button.setAttribute('role','tab');button.setAttribute('aria-controls','pane-'+id);button.onclick=()=>activate(id);tabs.append(button);
   const pane=document.createElement('section');pane.id='pane-'+id;pane.className='inspector-pane';pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);panel.append(pane);panes[id]=pane;
  }
+ // Engine setup is the first tab for a new user.
+ tabs.prepend($('tab-settings'));
  panes.sequence.append($('tree-block'));const empty=document.createElement('div');empty.className='sequence-empty';empty.innerHTML='<span aria-hidden="true">○ ─ ● ─ ○</span><h2>ここに手順が並びます</h2><p>棋譜を開くか、編集モードで石を置いてください。分岐した手順もここで選べます。</p>';
  panes.sequence.append(empty);const syncEmpty=()=>empty.hidden=!$('tree-block').hidden;new MutationObserver(syncEmpty).observe($('tree-block'),{attributes:true,attributeFilter:['hidden']});syncEmpty();
  const tools=$('tools');panes.tools.append(tools);tools.querySelector('summary').hidden=true;tools.open=true;tools.addEventListener('click',event=>{if(event.target.closest('[data-tool]')){tools.open=true;if(matchMedia('(max-width:899px)').matches)q('.canvas-wrap').scrollIntoView({behavior:'smooth',block:'start'});}});new MutationObserver(()=>{if(!panes.tools.hidden&&!tools.open)tools.open=true;}).observe(tools,{attributes:true,attributeFilter:['open']});const toolHeading=document.createElement('h2');toolHeading.textContent='碁石・記号・文字の配置';panes.tools.prepend(toolHeading);

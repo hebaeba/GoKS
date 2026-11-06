@@ -52,3 +52,14 @@
 #engine-order .engine-order-row{display:grid;grid-template-columns:minmax(0,1fr) 26px;align-items:center;gap:5px}#engine-order input[type=radio]{justify-self:center;margin:0;width:16px;height:16px;min-height:0}#engine-order .engine-order-row>button{min-width:0;text-overflow:ellipsis;overflow:hidden;text-align:left}.engine-list-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.engine-move-buttons{display:inline-flex;gap:3px;margin-left:auto}.engine-startup-heading{margin-left:6px}
 
 #engine-folder-tools{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px} #engine-suggestions{flex-basis:100%;min-width:0} #engine-suggestions:empty{display:none} #engine-suggestions select{max-width:100%}
+
+/* Update116: missing engine is a neutral configuration state, not an error. */
+#engine-notice[data-state="unconfigured"]{background:#f1f4f4;border:1px solid #b9c5c3;color:#46524f;min-height:0;padding:8px 10px}
+#engine-state[data-state="idle"],#engine-state[data-state="unconfigured"]{background:#e7ebea;color:#43514d}
+#engine-state[data-state="starting"],#engine-state[data-state="tuning"]{background:#dcecff;color:#144d7d}
+#engine-state[data-state="ready"],#engine-state[data-state="analyzing"]{background:#236b46;color:#fff}
+#engine-settings .engine-actions{margin-top:8px}
+
+#engine-active[data-state="unconfigured"],#engine-active[data-state="idle"]{background:#687672}
+
+#analyze-live:disabled,#analyze-all:disabled,#engine-quick:disabled,#engine-connect:disabled,#engine-disconnect:disabled{opacity:.42;cursor:not-allowed}
