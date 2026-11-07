@@ -7,7 +7,7 @@
  const title=document.createElement('span');title.id='simple-title';bar.append(title);
  const toggle=document.createElement('button');toggle.id='simple-toggle';toggle.textContent='シンプル表示';toggle.title='碁盤を大きく表示するシンプルモードへ切り替えます';toggle.setAttribute('aria-pressed','false');q('.header-actions').append(toggle);
  const back=document.createElement('button');back.id='simple-return';back.textContent='通常表示';back.title='通常モードに戻ります';bar.append(back);
- let simple=false,requestedMode=false,modeRevision=0,moves=[],menuTracking=false;const menus=[];
+ let simple=false,requestedMode=false,moves=[],menuTracking=false;const menus=[];
  function hideMenus(){menuTracking=false;for(const d of menus){d.open=false;delete d.dataset.hoverOpened;}context.hidden=true;}
  function move(el,parent){if(!el)return;const marker=document.createComment('simple-home');el.before(marker);moves.push([el,marker]);parent.append(el);}
  async function panel(id){hideMenus();if(simple){closePanel();try{if(!window.KifuPanelWindow)throw Error('独立窓の機能を読み込めませんでした。更新93のweb・src-tauriを一緒に反映して再ビルドしてください。');await window.KifuPanelWindow.open(id);}catch(error){await KifuDialogs.confirm(error.message||String(error),{accept:'閉じる'});}return;}KifuWorkspace.activate(id);}
@@ -68,28 +68,15 @@
   else{for(const [el,marker]of moves.reverse()){marker.replaceWith(el);}moves=[];window.KifuSidebar?.leaveSimple();q('.canvas-wrap').style.removeProperty('--fit-board-size');}
   try{localStorage.setItem('gokifu-simple',value?'1':'0');}catch{}sync();window.dispatchEvent(new Event('resize'));window.dispatchEvent(new Event('workspace-layout'));window.KifuLayout?.fit();fit();window.scrollTo(0,0);q('.workspace').scrollLeft=0;q('.board-panel').scrollLeft=0;
  }
- let normalTransition=null;
- function finishNormal(revision){
-  if(revision!==modeRevision||requestedMode)return;
-  if(normalTransition){clearTimeout(normalTransition.timer);normalTransition=null;}
-  applyMode(false);
- }
- // Resize is delivered before paint, but the native command reply may arrive later.
- window.addEventListener('resize',()=>{
-  const pending=normalTransition;
-  if(pending&&(innerWidth!==pending.width||innerHeight!==pending.height))finishNormal(pending.revision);
- });
- async function setMode(value){
-  requestedMode=value;const revision=++modeRevision;
-  if(normalTransition){clearTimeout(normalTransition.timer);normalTransition=null;}
-  if(value){applyMode(true);resizeNative(true,true);return;}
-  if(!window.__TAURI_INTERNALS__?.invoke){finishNormal(revision);return;}
-  const pending={revision,width:innerWidth,height:innerHeight};normalTransition=pending;
-  pending.timer=setTimeout(()=>finishNormal(revision),2000);
-  const result=await resizeNative(false,true);
-  if(revision!==modeRevision||!normalTransition)return;
-  if(!result?.width||innerWidth!==pending.width||innerHeight!==pending.height||
-     (Math.abs(innerWidth-result.width)<=2&&Math.abs(innerHeight-result.height)<=2))finishNormal(revision);
+ // Commit both mode layouts synchronously. Native Tauri geometry is saved/restored
+ // separately and can arrive a few frames later; never delay the visible mode.
+ function setMode(value){
+  requestedMode=value;
+  if(simple===value)return;
+  applyMode(value);
+  // The native command queue keeps rapid simple/normal/simple clicks ordered.
+  // Subsequent resize events fit the square board to the actual WebView size.
+  resizeNative(value,true);
  }
  function fit(){if(!simple)return;const wrap=q('.canvas-wrap');const available=Math.max(80,Math.min(innerWidth-12,innerHeight-bar.getBoundingClientRect().height-info.getBoundingClientRect().height-slide.getBoundingClientRect().height-14));const size=Math.floor(available);wrap.style.setProperty('--fit-board-size',size+'px');info.style.width=Math.max(size,Math.min(680,innerWidth-12))+'px';slide.style.width=size+'px';main.style.setProperty('--simple-board-edge',size+'px');if(requestedMode)resizeNative(true);}
  toggle.onclick=()=>setMode(true);back.onclick=()=>setMode(false);

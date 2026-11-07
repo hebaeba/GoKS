@@ -14,13 +14,14 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
  await page.evaluate(()=>{window.__TAURI_INTERNALS__={invoke:(cmd,args)=>cmd==='desktop_simple_window'?resizeMock(args):Promise.resolve({})};window.badFrames=[];window.sample=true;
  const tick=()=>{if(!sample)return;const simple=document.body.classList.contains('simple-mode'),r=document.querySelector('.canvas-wrap').getBoundingClientRect();
   if(simple&&(r.x<0||r.x>12||r.right>innerWidth+1))badFrames.push({simple,width:innerWidth,x:r.x,right:r.right});
-  if(!simple&&innerWidth<1500)badFrames.push({simple,width:innerWidth});
+  // The normal layout is committed immediately even before native window expansion.
   requestAnimationFrame(tick);
  };requestAnimationFrame(tick);});
  for(let i=0;i<4;i++){
   await page.evaluate(()=>KifuSimple.setMode(true));await page.waitForTimeout(450);
   await page.evaluate(()=>{window.dispatchEvent(new Event('resize'));KifuSimple.setMode(false);});
-  await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>document.body.classList.contains('simple-mode')),true,'must keep simple board until native width arrives');
+  assert.equal(await page.evaluate(()=>document.body.classList.contains('simple-mode')),false,'normal layout must commit before delayed native width');
+  await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>document.body.classList.contains('simple-mode')),false);
   await page.waitForTimeout(450);assert.equal(await page.evaluate(()=>document.body.classList.contains('simple-mode')),false);
  }
  assert.deepEqual(await page.evaluate(()=>{sample=false;return badFrames}),[]);
@@ -34,5 +35,5 @@ const root=path.resolve(__dirname,'../web');const server=http.createServer((req,
   if(width===800&&lang==='ja')await page.screenshot({path:'/tmp/gks103-edit.png'});
   await page.evaluate(()=>KifuSimple.setMode(false));
  }
- assert.deepEqual(errors,[]);console.log('PASS: delayed native resize sampled every frame; four normal/simple round trips; compact ja/en Edit across 3 widths');
+ assert.deepEqual(errors,[]);console.log('PASS: immediate normal/simple layout with delayed native window resize; four round trips; compact ja/en Edit across 3 widths');
  }finally{await browser?.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

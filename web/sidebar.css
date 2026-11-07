@@ -135,9 +135,6 @@ html body .controls .side-row .history-pair{width:auto}
 html body .controls .side-group{padding:5px 0}
 html body .controls .side-row #undo:not(:disabled),html body .controls .side-row #redo:not(:disabled){background:#205a50;color:#fff;border-color:#17483e}
 html body .controls .side-row #undo:not(:disabled):hover,html body .controls .side-row #redo:not(:disabled):hover{background:#123f37}
-.panel-width-handle{position:fixed;width:7px;cursor:col-resize;z-index:32;touch-action:none;background:transparent;border-radius:3px}
-.panel-width-handle:hover,.panel-width-handle.dragging,.panel-width-handle:focus-visible{background:#6f9a8b80}
-.panel-width-handle[hidden]{display:none!important}
 html body .image-save-row{flex-wrap:wrap;gap:5px}
 
 #board-sidebar{container-type:inline-size}
@@ -215,3 +212,9 @@ html body #engine-settings button:disabled{opacity:.43;cursor:not-allowed}
 
 /* Update119: top engine selector and quick control replace duplicate detail buttons. */
 #engine-list-disclosure .engine-actions[hidden]{display:none!important}
+
+/* Update121: fixed left/right columns; window dimensions, not drag handles, bound the board. */
+html body.sidebar-layout:not(.simple-mode) .workspace{
+ --side-width:400px;
+ --right-width:500px;
+}

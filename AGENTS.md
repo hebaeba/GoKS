@@ -99,3 +99,5 @@ Update112: Windows clock is an owned top-level window of main (not embedded or g
 Update113: appearance Reset defaults affects only the active tab. Text resets current-language typography and board labels; board reset must preserve graph colors and sound. Keep imported media in other tabs, preview/apply/revert behavior, and native-child synchronization.
 
 Update114 supersedes bundled engine requirements. No engine, network or DLL in source or release. No automatic startup unless a user selected a startup profile. Preserve manually configured engines.
+
+- Update121: left/right normal panels have fixed width (400px/500px) and no split handles or persisted panel-width preferences. The board alone fits remaining window width/height. Both simple and normal DOM transitions happen synchronously on user click, independently of delayed Tauri window geometry; no 2-second transition timer. Preserve native normal/simple independent window rectangles and the same live board/controls.

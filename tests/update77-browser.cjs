@@ -15,11 +15,16 @@ const server=http.createServer((req,res)=>{let p=path.join(root,decodeURICompone
  await p.setViewportSize({width:1600,height:940});await p.waitForTimeout(100);
  const firstLeft=(await box('#board-sidebar')).width,firstRight=(await box('.inspector')).width;
 
- async function drag(side,dx){const h=await box('.panel-width-handle[data-side='+side+']');await p.mouse.move(h.x+3,h.y+30);await p.mouse.down();await p.mouse.move(h.x+3+dx,h.y+30,{steps:6});await p.mouse.up();await p.waitForTimeout(80);}
- await drag('left',40);assert(Math.abs((await box('#board-sidebar')).width-firstLeft-40)<2);
- await drag('right',-40);assert(Math.abs((await box('.inspector')).width-firstRight-40)<2);
- const prefs=await p.evaluate(()=>localStorage.getItem('gokifu-panel-widths'));await p.reload();await p.waitForTimeout(150);assert.equal(await p.evaluate(()=>localStorage.getItem('gokifu-panel-widths')),prefs);assert(Math.abs((await box('#board-sidebar')).width-firstLeft-40)<2);
- await p.locator('#simple-toggle').click();assert.equal(await p.locator('#simple-info').evaluate(e=>e.firstElementChild.id),'komi');await p.locator('#simple-return').click();assert(Math.abs((await box('#board-sidebar')).width-firstLeft-40)<2);
+ // Update121: panel sizes are fixed, and previously stored draggable widths are ignored.
+ assert.equal(await p.locator('.panel-width-handle').count(),0);
+ await p.evaluate(()=>localStorage.setItem('gokifu-panel-widths',JSON.stringify({left:620,right:800})));
+ await p.reload();await p.waitForTimeout(150);
+ assert(Math.abs((await box('#board-sidebar')).width-400)<2);
+ assert(Math.abs((await box('.inspector')).width-500)<2);
+ await p.locator('#simple-toggle').click();assert.equal(await p.locator('#simple-info').evaluate(e=>e.firstElementChild.id),'komi');
+ await p.locator('#simple-return').click();
+ assert(Math.abs((await box('#board-sidebar')).width-firstLeft)<2);
+ assert(Math.abs((await box('.inspector')).width-firstRight)<2);
  const sgf='(;SZ[9]KM[0];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
  const archive={format:'kifu-katago-analysis',version:1,perspective:'BLACK',rules:'japanese',snapshot:{sgf,size:9,komi:0,index:3,path:[0,0,0,0,0,0]},results:[0,1,3,6].map(i=>({index:i,result:{rootInfo:{winrate:i===3?.7:.5,scoreLead:i-2,visits:100},moveInfos:[]}}))};
  await p.locator('#analysis-file').setInputFiles({name:'test.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(archive))});await p.waitForTimeout(150);
@@ -42,5 +47,5 @@ const server=http.createServer((req,res)=>{let p=path.join(root,decodeURICompone
  const m=await browser.newPage({viewport:{width:1600,height:940}});const matchErrors=[];m.on('pageerror',e=>matchErrors.push(e.message));await m.goto('http://127.0.0.1:'+server.address().port);await m.waitForTimeout(150);
  await m.evaluate(()=>{let turn=0;KifuGTP.Bridge=class{async call(action){return action==='poll'?{events:[],logs:[]}:{};}reset(){}async commands(list){return list.map(c=>{if(c==='name')return 'KataGo test';if(c==='list_commands')return 'kata-genmove_analyze kata-set-param kata-set-rules set_position';if(c.startsWith('kata-genmove_analyze')){const i=turn++;return 'rootInfo winrate '+(i%2?.7:.6)+' scoreLead '+(i%2?3:2)+' visits 100\nplay '+['A1','B1','pass','pass'][i];}return '';});}};KifuAnalysisControl.suspend=async()=>{};KifuAnalysisControl.profiles=()=>[{id:'test',name:'Mock KataGo',exe:'test.exe',model:'test.bin.gz',config:'test.cfg',kind:'katago'}];window.dispatchEvent(new Event('kifu-engine-profiles'));document.getElementById('match-black').value='test';document.getElementById('match-white').value='test';KifuWorkspace.activate('match');document.getElementById('match-start').click();});
  await m.waitForFunction(()=>KifuMatch.phase==='finished',{},{timeout:8000});await m.evaluate(()=>IndependentGo.analysisAt(1,IndependentGo.peekAnalysisSnapshot().sgf));await m.waitForTimeout(70);assert.equal(await m.textContent('#side-black-rate'),'黒 70.0%');assert.equal(await m.textContent('#side-white-rate'),'白 30.0%');const md=await m.getAttribute('#side-eval-graph path[data-metric=winrate]','d');assert.equal((md.match(/L/g)||[]).length,3);
- await m.evaluate(()=>IndependentGo.matchInfo({RE:'B+R'}));await m.waitForTimeout(50);assert.equal(await m.textContent('#side-black-rate'),'黒 70.0%');assert.deepEqual(matchErrors,[]);await m.close();console.log('update77: resizable panels, line graph, sparse gaps, game evaluation, edge fill, undo/redo, monochrome export, names: OK');
+ await m.evaluate(()=>IndependentGo.matchInfo({RE:'B+R'}));await m.waitForTimeout(50);assert.equal(await m.textContent('#side-black-rate'),'黒 70.0%');assert.deepEqual(matchErrors,[]);await m.close();console.log('update121: fixed panels, line graph, sparse gaps, game evaluation, edge fill, undo/redo, monochrome export, names: OK');
  }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
