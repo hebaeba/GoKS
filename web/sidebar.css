@@ -218,3 +218,6 @@ html body.sidebar-layout:not(.simple-mode) .workspace{
  --side-width:400px;
  --right-width:500px;
 }
+
+/* Update122: no redundant folder chooser or decorative status paragraphs. */
+#engine-folder[hidden],#engine-profile-message[hidden],#engine-platform[hidden],#engine-action-feedback[hidden],#engine-install-status[hidden],#engine-notice-message[hidden]{display:none!important}

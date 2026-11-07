@@ -11,7 +11,7 @@ window.addEventListener('workspace-layout',syncAnalysisRows);new MutationObserve
 const navigation=document.createElement('div');navigation.className='inspector-navigation';inspector.prepend(navigation);navigation.append(q('.workspace-mode'),q('.workspace-tabs'));navigation.after(dock);$('engine-connect').title='選択したエンジンを起動し、解析の準備をします';
 q('.analysis-heading').remove();
 const files=document.createElement('details');files.className='engine-running-details';files.innerHTML='<summary>実行中のエンジンを確認</summary><pre id="engine-running-files">エンジンは停止しています。</pre>';$('engine-settings').prepend(files);
-const hintSettings=document.createElement('p');hintSettings.className='analysis-note';hintSettings.textContent='起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。';files.after(hintSettings);
+const hintSettings=document.createElement('p');hintSettings.className='analysis-note';hintSettings.textContent='起動中でも選択・入力できます。変更を反映するには「適用して再起動」を押してください。';hintSettings.hidden=true;files.after(hintSettings);
 
 // One lifecycle badge; show startup/error details beside the connection controls only.
 dock.append($('engine-notice'));$('engine-notice-title').hidden=true;$('engine-nearby-name').hidden=true;

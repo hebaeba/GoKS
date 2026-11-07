@@ -1,73 +1,112 @@
-# GoKifuStudio
+# GoKifuStudio / Go棋譜Studio
 
-**GoKS-v.1.0** (internal version 1.0.0). Windows PC Go record editor, KataGo analysis and game interface. Japanese/English and normal/simple views are supported.
+**GoKS-v.1.0 (internal version 1.0.0)**
 
-Extract the entire Windows ZIP and run `GoKS.exe`. No engine is included. Record editing and human games work without an engine. Read `Manual.html` for offline instructions in either language. Source ZIPs do not contain the executable; use the Windows GitHub Actions build to produce it.
+GoKifuStudio is a Windows PC application for editing Go game records, analyzing positions with KataGo, and playing games. It supports Japanese and English and both Normal View and Simple View. The executable is `GoKS.exe`.
 
-Open the Engine tab (the leftmost right-panel tab) and select Set up CPU engine. GoKS shows stage-based progress while it downloads and extracts KataGo Eigen v1.18.1 and its DLLs into katago beside GoKS.exe and places the compressed model in katago/models. A profile is registered automatically when setup succeeds. Existing folders are never overwritten. If the folder is not writable, move GoKS to a writable location or register an external engine manually.
+## Getting started
 
-The recommended versions are pinned and never update automatically. For a newer engine, extract the new official Windows ZIP including DLLs into a separate folder such as katago-new, place a model in its models subfolder, and register the folder under a new name. For a model-only update, obtain the Network File from the official model list, keep it compressed under a different filename in models, and create a new profile using the existing executable and new model. Test analysis before changing the startup radio button. Select the old profile to roll back.
+Extract the complete Windows ZIP and run `GoKS.exe`. No KataGo engine is included. You can edit game records and play human-versus-human games without an engine.
+
+To register KataGo for CPU use, choose **CPU engine automatic setup** at the top of the Engine menu. After you confirm, GoKS downloads KataGo Eigen v1.18.1 and a model and installs them in the `katago` folder beside `GoKS.exe`. Progress is shown for each stage, and the engine is registered automatically on completion (there is no need to click Add to List). If an existing `katago` folder is present, it is backed up before replacement. If the destination is not writable, move GoKS into a writable folder or register the engine manually.
+
+The CPU engine version used by automatic setup is fixed and does not update automatically. For a newer engine, download the Windows ZIP from the official KataGo releases and extract it into a different folder, such as `katago-new`. Put the .gz model in that folder's `models` subfolder and register it under a different name in Engine List. For a model-only update, download a Network File from the official models list and save it in `models` under another filename. Use New to register the existing engine (`katago.exe`) with the new compressed model.
 
 [KataGo releases](https://github.com/lightvector/KataGo/releases) · [KataGo networks](https://katagotraining.org/networks/)
 
+Open **Individual downloads** under Engine. Choose **Get CPU engine** to download KataGo Eigen v1.18.1 and extract the ZIP. Choose **Get CPU model** and place the downloaded .gz file, without decompressing it, in the extracted engine folder or its `models` subfolder. Under Engine List, choose New, enter an Engine name, and use Browse beside the Engine, Model, and Config CFG fields to select the files. Click Add to List. Config CFG may be left blank. Check the Startup radio button beside an engine name if you want GoKS.exe to start it automatically.
 
-Use **Appearance & Sound** in the left panel or **View → Appearance & Sound** in Simple View. Settings open in an independent, resizable window. Preview changes, Apply to save without closing, or Revert/Close to restore saved preferences. Japanese and English store their text settings separately.
+[CPU engine](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) / [CPU model](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
 
-- Body text: 12/14/16/18px; prominent text: 14/16/18/20px; help: 12/12/14/16px.
-- Normal button height: 24/26/28/30px, padding 3px.
-- Choose or enter an installed font family. Missing fonts fall back to the system font.
-- Board labels: 80/100/120%; themes: Warm wood / Paper / Night; custom colors and images.
-- Graph colors, 1–4px line widths in 0.5px increments, solid/dashed lines.
-- Three original synthesized stone sounds, or a WAV file; volume 0–100%; separate move/navigation/autoplay options. PV hover is silent.
+For instructions, open the included **Manual.html** and choose Japanese or English.
 
-Images: PNG/JPEG/WebP up to 8 MB, resized to at most 512px. WAV: up to 1 MB. Large text may wrap or require scrolling. The graph's move axis uses numeric labels with collision avoidance and 25-move ruler ticks.
+If this is the source ZIP, it does not include an executable. Run the Windows build using GitHub Actions and obtain the generated `GoKS-v.1.0` artifact. Do not confuse the ready-to-use Windows ZIP from Releases with GitHub's automatically generated “Source code” archives.
 
-The Windows package contains the EXE, READMEs, Manual.html, LICENSE.txt, license pages and notices, and SHA256.txt. App assets are embedded in the EXE.
+## Features
 
-Author-owned portions use the MIT license, allowing commercial use, modification and redistribution with the copyright and permission notice retained. Third-party components retain their own licenses. See LICENSE.txt and THIRD_PARTY_NOTICES.md.
+- Viewing and editing game records, variations, comments, handicap and free handicap setups, and board symbols.
+- Importing record and image files from file selection, drag and drop, and the clipboard.
+- KataGo current-position and full-game analysis, principal variations, graphs, and score-loss / win-rate rankings.
+- Human versus AI, AI versus AI, and human versus human games, with pause, resume, and takeback.
+- Estimates and end-of-game scoring.
+- Saving records and analysis, board images, printing, move-sequence GIFs, and temporary saved states.
+- Customizing fonts, board, background, graphs, and stone sounds.
 
-This is a pre-release validation build. Final third-party notice verification and actual Windows testing remain required before public distribution. No professional games or tsumego are included as sample material. The Manual currently uses text instructions without game screenshots.
+## Text, appearance, and sound
 
-Repository: https://github.com/hebaeba/GoKS
+Open Appearance & Sound from the left panel, or use View → Appearance & Sound in Simple View, to open a separate settings window. The window can be moved and resized.
 
-## Engines and games
+| Setting | Available options |
+|---|---|
+| Standard text | Small 12 / Normal 14 / Large 16 / Extra Large 18px |
+| Headings and prominent labels | 14 / 16 / 18 / 20px |
+| Helper text | 12 / 12 / 14 / 16px |
+| Standard button height | 24 / 26 / 28 / 30px, with 3px internal padding |
+| Fonts | Select or enter the name of a font installed on the PC |
+| Board numbers and symbols | 80 / 100 / 120%, scaled with the board size |
+| Themes | Warm wood, paper-white, night; individual color adjustment |
+| Board and stones | Plain, wood grain, custom image; shaded, flat, or image-based stones |
+| Graphs | Colors, line widths of 1–4px in 0.5px steps, solid or dashed lines |
+| Stone sounds | Three original synthesized sounds or WAV, volume 0–100% |
 
-The most recently selected or used engine is remembered and automatically starts on the next launch. The radio button at the right of each engine row is a fallback startup engine. The shared up/down buttons move the selected row. An unconfigured engine is a normal initial state, not an error. Open Engine → Individual downloads for separate downloads or Engine List to manage profiles. Use an existing KataGo folder, or choose Get CPU engine, extract the entire ZIP including DLLs, and use Get model. Put the compressed model in the same folder or its models subfolder. Choose KataGo folder, select among multiple matches, browse for missing files, and click Add to List. A GTP config is optional. Select the startup radio only as a fallback if the last-selected profile is unavailable.
+Text sizes and fonts are saved separately for Japanese and English. Larger text may wrap or require scrolling. If a selected font is unavailable, the system font is used. Font files are not distributed.
 
-[CPU engine](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) · [Model](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
+Changes are previewed. Revert or Close restores any unsaved settings. Reset defaults resets only the currently selected section, retaining the others. Text settings apply to the current language and to board numbers and symbols. Stone sounds can be configured separately for moves, navigation, and autoplay; hovering over a candidate variation is silent. Choose **Save** to keep the changes.
 
-New Game contains setup and pre-game controls in one foldable section. Once play starts, the controls and a bordered summary of Black, White, handicap stone count and komi remain visible. Pause and takeback reuse engines that support cancellable search; older engines may need to restart during an active search. Human–AI score graphs use Black’s perspective. AI–AI win rates and scores use each AI’s own perspective. Switching views preserves the game. Keyboard Shortcuts is in the left panel.
+Choose from the Windows installed-font list, or enter a font family name and press Enter. You can enter a name manually even if the list is unavailable. For each of black and white stones, choose among three examples of shaded, flat, or image-based styles, or register your own images. The warm-wood theme adds a subtle grain while retaining the board color. Outer background applies to the space around the interface; Panel background applies to panels.
 
-## More appearance options
+Images must be PNG/JPEG/WebP and at most 8 MB (resized to a maximum of 512px for storage). Sound files must be WAV and at most 1 MB. Depending on the environment, sound may not play before the first user interaction.
 
-Select an installed Windows font or enter its family name and press Enter; manual entry is available if enumeration fails. Shaded, flat and image stones each offer three presets per color, plus custom images. The warm wood theme applies subtle grain while retaining the board color. Outer background controls the main window’s margins; panel background controls its panels.
+Importing a board image automatically switches the board texture to Image; importing a WAV sets the sound to WAV File. The filename is retained. Clearing the WAV restores the standard stone sound.
 
-Importing a board image automatically selects Image texture. Importing a WAV selects custom audio. Imported filenames are retained; clearing a WAV restores the default sound.
+The bottom of the graph shows move numbers only. Tick labels are thinned to avoid overlap, but short ticks at every 25 moves and the final move number remain. For extremely narrow ranges, such as an empty board, the number of displayed labels is limited to what fits.
 
-## Updating and reporting bugs
+## Engine and games
 
-Preserve the ZIP folder structure when updating. Report the version, Windows environment, engine and reproduction steps. Remove personal names, IP addresses, local paths and tokens from logs, and do not publish games without permission.
+The engine with the Startup radio button selected at the right of Engine List is launched when GoKS starts. The ↑ and ↓ controls beside the registered-engine count move the selected engine. If the registered engine or its files cannot be found, a warning is displayed. No engine is registered on the first launch.
 
-Build with `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. Upload a consistent source set; `web/window-assets.json` checks release integrity. Change histories and changed-file lists are kept in `UPDATE*.md`; this README describes current features rather than accumulating update-specific instructions. See `UPDATE109.md` for this update.
+Set up a game in New Game (Players / Conditions). Before starting, the settings and controls can be collapsed together. Once the game begins, the controls and a panel showing Black's and White's names, even game / handicap count, and komi appear. Pause and Takeback reuse the KataGo engines running the game; older engines without interruptible search support may need to restart when interrupted during thinking.
+
+In a human-versus-KataGo game, the score-difference graph is from Black's perspective. In AI-versus-AI games, both win rate and score difference are shown from each AI's own perspective. Switching between Simple View and Normal View preserves the record and game. Keyboard controls are listed in the left panel under Key controls.
 
 ## Human game clock
 
-Select a System for each human player. AI players retain their existing time/visit search limits. The five systems are Absolute, Byo-yomi, Fischer, Canadian and Unlimited, in that order. Unlimited has no timeout.
+For a human player, choose among Absolute, Byo-yomi, Fischer, Canadian, and Unlimited in the System field. AI players continue to use the usual time and visit limits.
 
-| System | Fields and defaults | Behavior |
+| System | Default fields and values | Behavior |
 |---|---|---|
-| Absolute | Main 30 min | Exhausting main time loses on time. |
-| Byo-yomi | Main 30 min / Byo-yomi 30 s / 5 periods | After main time, moving in time resets the current period. Exhausted periods never return. Exhausting the final period loses on time. |
-| Fischer | Main 10 min / Increment 5 s | Add 5 seconds after each legal move or pass, never after flagfall. |
-| Canadian | Main 0 min / Block 10 min / 15 moves | Start with 15 moves in 10 minutes. Completing the quota resets the block to 10 minutes and 15 moves; unused time is not carried over. Optional main time precedes the repeating blocks. |
-| Unlimited | No fields | No timeout. |
+| Absolute | Main time: 30 minutes | Running out of time loses the game. |
+| Byo-yomi | Main time: 30 minutes; 30 seconds / 5 periods | After main time, moves within a period reset that period; fully used periods are lost. Using up the last period loses the game. |
+| Fischer | Main time: 30 minutes; increment: 10 seconds / move | Ten seconds is added after each legal move or pass. Flagfall loses the game. No maximum is imposed. |
+| Canadian | Main time: 0 minutes; block: 10 minutes; quota: 15 moves | From the start, play 15 moves within 10 minutes. Each completed quota grants a fresh 10 minutes / 15 moves without carrying over unused time. A nonzero main time precedes the block phase. |
+| Unlimited | No fields | No flagfall. |
 
-Only relevant fields are shown, normally in one row. Main time and byo-yomi have extra space between them; seconds and periods are paired as 30 / 5. Very narrow panels or larger text may still wrap. Zero main time starts directly in byo-yomi or Canadian overtime; zero byo-yomi periods gives absolute time.
+Only the input fields needed for the selected system are normally shown on one line. Seconds and number of periods appear together as `30 / 5`. Very narrow panels or large fonts may wrap to avoid overlap. In Byo-yomi, main time 0 starts directly in overtime; 0 periods means main time only.
 
-A movable, resizable clock window opens on game start; use Game Clock to reopen it. Closing it does not stop time. Pause, estimates and move validation stop the clock. Takeback does not refund thinking time and removes increments or block renewals earned by undone moves; this can result in flagfall.
+An independent clock window opens at the start of the game. Reopen it with Game Clock. Closing the window does not stop the clock. Pausing the game, calculating estimates, and confirming moves pause the clock. Takeback does not return time already spent, and any increments or block renewals earned by undone moves are reversed; this may cause flagfall.
 
-Byo-yomi beeps every second, louder at one second remaining and during the final period. Other systems beep in the final ten seconds. Uncheck Clock sound to mute.
+Byo-yomi sounds a warning every second, with a stronger sound on the last second and final period. Other modes sound warnings during the final ten seconds. Uncheck Clock sound in the clock window to mute the warnings.
 
-On Windows, the clock stays above the main app when playing moves. Its position, size and monitor are remembered for the next opening, adjusted to the available work area if the display setup changes. Minimizing the main app also hides the clock; restoring it shows the clock again.
+## Contents of the Windows distribution ZIP
 
-Reset defaults in Appearance & Sound resets only the selected tab and preserves other tabs. In Text, it resets the current language and board labels. Choose Apply to save the reset.
+| File or folder | Purpose |
+|---|---|
+| GoKS.exe | Main application (UI and assets are bundled into the executable) |
+| README.md / README-en.md | Startup and overview |
+| Manual.html | Offline user manual in Japanese and English |
+| LICENSE.txt | MIT license for the application's original code |
+| licenses.html / licenses-en.html / licenses/ | License details, including third-party materials |
+| THIRD_PARTY_NOTICES.md | Bundled components, sources, and related notices |
+| SHA256.txt | Executable checksum |
+
+## License
+
+The parts of the application owned by its author are licensed under MIT terms, allowing use, modification, and redistribution including commercial use. Retain the copyright and license notice and consult `LICENSE.txt` for the exact terms. KataGo, its models, DLLs, and other third-party materials are governed by their own terms.
+
+## Development and bug reports
+
+Source: https://github.com/hebaeba/GoKS
+
+When reporting an issue, include the version, Windows environment, engine used, and steps to reproduce. Do not publish names, IP addresses, local paths, or tokens from logs, or game records you are not permitted to share.
+
+Build using `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. The `web/window-assets.json` manifest checks consistency of the independent windows. When updating source files, apply all files from the same revision together.

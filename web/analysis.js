@@ -7,7 +7,7 @@ pane.innerHTML=`<div class="analysis-heading"><h2>KataGo解析</h2><span id="eng
 <section id="engine-notice" data-state="idle" role="status" aria-live="polite"><strong id="engine-nearby-name" hidden></strong><strong id="engine-notice-title">エンジン未接続</strong><p id="engine-notice-message">上部のエンジン名をクリックして選択すると、自動的に起動します。</p><small id="engine-elapsed" aria-live="off"></small></section>
 <section id="engine-settings"><p class="analysis-note">Windows上のKataGoとモデルを指定します。GPU版にも切り替えられます。</p>
 <label class="engine-kind-row">エンジンの種類<select id="engine-kind"><option value="katago">KataGo（解析対応）</option></select></label><p id="engine-kind-note" class="engine-kind-note"></p><div class="engine-profiles"><label>エンジンリスト<select id="engine-profile"><option value="">新しく登録する</option></select></label>
-<div id="engine-folder-tools"><button id="engine-install">推奨CPU版を自動セットアップ</button> <button id="engine-folder">KataGoのフォルダーを選ぶ</button> <button id="engine-cpu">推奨CPU版を入手</button> <button id="engine-network">推奨モデルを入手</button><p id="engine-install-status" role="status" hidden></p><div id="engine-suggestions"></div></div><div id="engine-order" aria-label="エンジンの並び順"></div><div class="engine-list-footer"><span id="engine-profile-count"></span><span class="engine-move-buttons"><button type="button" id="engine-order-up" title="選択中のエンジンを上へ移動">↑</button><button type="button" id="engine-order-down" title="選択中のエンジンを下へ移動">↓</button></span><span class="engine-startup-heading">起動時</span><button type="button" id="engine-order-expand" aria-expanded="false">すべて表示</button></div><label>エンジンの名前<input id="engine-name" maxlength="100" placeholder="例：CPU・軽量モデル／TensorRT・検討用"></label>
+<div id="engine-folder-tools"><button id="engine-install">CPU版エンジンを自動セットアップ</button> <button id="engine-folder">KataGoのフォルダーを選ぶ</button> <button id="engine-cpu">CPU版エンジンを入手</button> <button id="engine-network">CPU版モデルを入手</button><p id="engine-install-status" role="status" hidden></p><div id="engine-suggestions"></div></div><div id="engine-order" aria-label="エンジンの並び順"></div><div class="engine-list-footer"><span id="engine-profile-count"></span><span class="engine-move-buttons"><button type="button" id="engine-order-up" title="選択中のエンジンを上へ移動">↑</button><button type="button" id="engine-order-down" title="選択中のエンジンを下へ移動">↓</button></span><span class="engine-startup-heading">起動時</span><button type="button" id="engine-order-expand" aria-expanded="false">すべて表示</button></div><label>エンジンの名前<input id="engine-name" maxlength="100" placeholder="例：CPU・軽量モデル／TensorRT・検討用"></label>
 <div class="analysis-buttons"><button id="engine-profile-new" title="入力欄を空にして、別の設定を登録します">新規</button><button id="engine-profile-edit" disabled title="選択したエンジンの名前・実行ファイル・モデル・cfgを編集します">編集</button><button id="engine-profile-save" title="名前・ファイル・追加引数をこのブラウザーに保存します">リストに追加</button><button id="engine-profile-delete" disabled title="選択した登録だけを削除します。ファイルは削除しません">削除</button></div>
 <p id="engine-profile-message" class="analysis-note" role="status">登録内容はこの端末に保存します。上部のエンジン名から選ぶと起動します。</p></div>
 <label>実行ファイル（フルパス）<input id="engine-exe" placeholder="実行ファイルを選択" spellcheck="false"></label><button type="button" id="engine-pick-exe" class="engine-pick" title="端末内からファイルを選択します">参照…</button>
@@ -57,7 +57,7 @@ for(const name of ['count','detail','perspective']){const e=$('candidate-'+name)
 
 const native=()=>window.__TAURI_INTERNALS__?.invoke,token=document.querySelector('meta[name="kifu-local-token"]')?.content;
 const available=!!native()||!!token||!!window.KifuRemote;
-$('engine-platform').textContent=available?'エンジンのフォルダーにDLLを置いたまま、実行ファイルとモデルのパスを指定してください。':'この開き方ではKataGoを起動できません。Windowsでは「Windowsで解析を起動.cmd」を使ってください。Tauri版でも接続できます。';
+$('engine-platform').hidden=true;$('engine-platform').textContent=available?'エンジンのフォルダーにDLLを置いたまま、実行ファイルとモデルのパスを指定してください。':'この開き方ではKataGoを起動できません。Windowsでは「Windowsで解析を起動.cmd」を使ってください。Tauri版でも接続できます。';
 $('engine-connect').disabled=!available;
 // Collapsed path fields are visually empty; launch configuration remains intact.
 let pathFieldsCollapsed=false;const retainedPaths={};
@@ -73,7 +73,7 @@ let missingFileCheck={signature:'',missing:[]};
 function fileSignature(config){return JSON.stringify(['exe','model','config','workdir'].map(k=>config[k]||''));}
 function missingFiles(){return missingFileCheck.signature===fileSignature(paths())?missingFileCheck.missing:[];}
 function recordMissingFiles(config,missing){missingFileCheck={signature:fileSignature(config),missing:missing||[]};controls();}
-function missingFileMessage(missing){const names={exe:'KataGoの実行ファイル',model:'モデルファイル',config:'GTP設定ファイル',workdir:'作業フォルダー'};return missing.map(k=>names[k]||k).join('・')+'が見つかりません。自動セットアップで修復するか、フォルダーから指定し直してください。';}
+function missingFileMessage(missing){const names={exe:'KataGoの実行ファイル',model:'モデルファイル',config:'GTP設定ファイル',workdir:'作業フォルダー'};return missing.map(k=>names[k]||k).join('・')+'が見つかりません。自動セットアップで修復するか、エンジンリストの「参照」でファイルを指定し直してください。';}
 // Registered names are editable: reinstallation must identify the engine by path, not by name.
 function engineLocation(path){return String(path||'').trim().replace(/^"|"$/g,'').replace(/\\/g,'/').replace(/\/+/g,'/').replace(/^\.\//,'').toLowerCase();}
 function installedProfileFor(exe){const target=engineLocation(exe),tail=target.match(/(?:^|\/)katago\/(?:katago|katago-eigen)\.exe$/)?.[0];return profiles.find(p=>{const saved=engineLocation(p.exe);return saved===target||(tail&&saved.endsWith(tail));});}
@@ -98,7 +98,9 @@ function engineKindUI(){
 }
 $('engine-kind').onchange=()=>{engineKindUI();clearConfigurationError();controls();};
 engineKindUI();
-function profileMessage(text){$('engine-profile-message').textContent=text;}
+function engineMessageIsImportant(message){return /(?:できません|失敗|見つかりません|不足|修復|未対応|利用できません|確認してください|入力してください|指定してください|保存できません|エラー|問題|停止してから|動作中|処理中|開けません)/.test(String(message||''));}
+function profileMessage(text){const box=$('engine-profile-message');box.textContent=text;box.hidden=!engineMessageIsImportant(text);}
+$('engine-profile-message').hidden=true;
  // Leave status messages visible: dismissing on every click made failed operations appear unresponsive.
 function paths(){return {kind:$('engine-kind').value,...Object.fromEntries(['exe','model','config','workdir'].map(k=>[k,readPath(k).trim().replace(/^"|"$/g,'')])),extraArgs:KifuEngineArgs.parse($('engine-extraArgs').value)};}
 function renderProfiles(selected=''){$('engine-suggestions').replaceChildren();$('engine-settings').classList.remove('profile-editing');$('engine-profile').replaceChildren(new Option('新しく登録する',''));for(const p of profiles)$('engine-profile').append(new Option(p.name,p.id));$('engine-profile').value=selected;$('engine-profile-save').textContent=selected?'登録を更新':'リストに追加';$('engine-profile-delete').disabled=!selected;renderOrder(selected);}
@@ -132,7 +134,7 @@ async function offerSetup(){
  }
 }
 for(const kind of ['cpu','network'])$('engine-'+kind).onclick=async()=>{
- const label=kind==='cpu'?'推奨CPU版':'推奨モデル';showSetupMessage(label+'のダウンロードページを開きます。');
+ const label=kind==='cpu'?'CPU版エンジン':'CPU版モデル';showSetupMessage(label+'のダウンロードページを開きます。');
  try{await rawCall('pick',{kind});}catch(e){showSetupMessage(label+'のページを開けませんでした：'+e.message);}
 };
 $('engine-install').hidden=!native()||!!window.KifuRemote;
@@ -141,24 +143,24 @@ function actionFeedback(message){
  let box=$('engine-action-feedback');
  if(!box){box=document.createElement('p');box.id='engine-action-feedback';box.setAttribute('role','status');box.setAttribute('aria-live','polite');
    const anchor=$('engine-picker')||$('engine-active');anchor.after(box);}
- box.textContent=String(message||'');box.hidden=!message;
+ box.textContent=String(message||'');box.hidden=!engineMessageIsImportant(message);
 }
-function showSetupMessage(message){$('engine-install-status').hidden=false;$('engine-install-status').textContent=message;actionFeedback(message);}
+function showSetupMessage(message){$('engine-install-status').hidden=!engineMessageIsImportant(message);$('engine-install-status').textContent=message;actionFeedback(message);}
 function installProgress(stage,percent){
  const msg=$('engine-install-status'),bar=installBar();msg.hidden=false;bar.hidden=false;
  const n=Math.max(0,Math.min(100,Number(percent)||0));bar.value=n;
  msg.textContent=stage+'（'+Math.round(n)+'%）';actionFeedback(msg.textContent);
 }
 $('engine-install').title='CPU版は通常のWindowsパソコンで使用できるKataGoです。エンジン本体とモデルを自動で取得・登録します。';
-$('engine-folder').title='既に入手したKataGoのフォルダーを選びます。エンジンは囲碁の局面を解析するAIプログラムです。';
+$('engine-folder').title='既に入手したKataGoのフォルダーを選びます。エンジンは囲碁の局面を解析するAIプログラムです。';$('engine-folder').hidden=true;
 $('engine-cpu').title='エンジンは囲碁を解析するAIプログラムです。CPU版は一般的なパソコンのCPUで動作します。';
 $('engine-network').title='モデルはKataGoが学習した知識を収めたファイルで、解析に必要です。';
 $('engine-install').onclick=async()=>{
- actionFeedback('推奨CPU版のセットアップを確認しています。');
+ actionFeedback('CPU版エンジンのセットアップを確認しています。');
  if(installing){showSetupMessage('既にセットアップ中です。');return;}
  if(!native()){showSetupMessage('自動セットアップはWindows版GoKSで利用できます。');return;}
  if(pendingCalls||running||handshake){showSetupMessage('エンジンが動作中です。上部右の「終了」で停止してから、セットアップしてください。');return;}
- const answer=await KifuDialogs.confirm('推奨CPU版とモデルを取得します。katagoフォルダーが既にある場合は、新しい内容に置き換え、以前のフォルダーはバックアップとして保存します。続けますか？',{accept:'セットアップ'});
+ const answer=await KifuDialogs.confirm('CPU版エンジンとモデルを取得します。katagoフォルダーが既にある場合は、新しい内容に置き換え、以前のフォルダーはバックアップとして保存します。続けますか？',{accept:'セットアップ'});
  if(!answer){showSetupMessage('セットアップを中止しました。');return;}
  installing=true;pendingCalls++;controls();installProgress('KataGoをダウンロード中',0);
  let ticker=null,checking=false;
@@ -166,7 +168,7 @@ $('engine-install').onclick=async()=>{
  try{
   ticker=setInterval(check,250);
   const r=await rawCall('install_recommended');
-  if(!r?.exe){installBar().hidden=true;showSetupMessage(({exists:'katagoフォルダーは既にあります。「KataGoのフォルダーを選ぶ」で登録してください。',write:'保存できません。GoKSをユーザーが書き込めるフォルダーに置いてください。',download:'ダウンロードできませんでした。接続を確認するか、手動で入手してください。',verify:'配布ファイルの照合に失敗しました。インストールは行いませんでした。',extract:'CPU版を展開できませんでした。手動セットアップをご利用ください。'})[r?.error]||'セットアップできませんでした。');return;}
+  if(!r?.exe){installBar().hidden=true;showSetupMessage(({exists:'katagoフォルダーが既にあります。自動セットアップをやり直すか、エンジンリストの「参照」で指定してください。',write:'保存できません。GoKSをユーザーが書き込めるフォルダーに置いてください。',download:'ダウンロードできませんでした。接続を確認するか、手動で入手してください。',verify:'配布ファイルの照合に失敗しました。インストールは行いませんでした。',extract:'CPU版を展開できませんでした。手動セットアップをご利用ください。'})[r?.error]||'セットアップできませんでした。');return;}
   const existing=installedProfileFor(r.exe);
   // Reuse the registered profile even if it was renamed to another version.
   $('engine-profile').value=existing?.id||'';
@@ -207,16 +209,16 @@ $('engine-folder').onclick=async()=>{
  }catch(e){showSetupMessage('フォルダーを選択できませんでした：'+e.message);}finally{choosingFolder=false;controls();}
 };
 function configuredEngine(){const c=paths();return !!(c.exe&&(c.kind==='gtp'||c.model));}
-function engineState(state,title,message){$('engine-active-name').dataset.i18nDefault=['starting','tuning','ready'].includes(state)||$('engine-name').value.trim()?'':'未選択';$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':$('engine-name').value.trim()||'未選択';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
+function engineState(state,title,message){$('engine-active-name').dataset.i18nDefault=['starting','tuning','ready'].includes(state)||$('engine-name').value.trim()?'':'未選択';$('engine-active-name').textContent=['starting','tuning','ready'].includes(state)?startupName||'KataGo':$('engine-name').value.trim()||'未選択';$('engine-active').dataset.state=state;$('engine-nearby-name').hidden=!['starting','tuning','ready'].includes(state);$('engine-nearby-name').textContent=startupName||'KataGo';startupPhase=state;$('engine-notice').dataset.state=state;$('engine-notice-title').textContent=title;$('engine-notice-message').textContent=message;$('engine-notice-message').hidden=!engineMessageIsImportant(message);$('engine-state').textContent=title;$('engine-state').dataset.state=state;$('engine-elapsed').textContent='';syncEngineStatus();}
 function syncEngineStatus(){
  const state=startupPhase==='error'?'error':ready?(active||live?'analyzing':'ready'):['starting','tuning'].includes(startupPhase)?startupPhase:missingFiles().length?'missing':configuredEngine()?'idle':'unconfigured';
  const label={missing:'エンジン設定の修復が必要です',unconfigured:'エンジン未設定',idle:'エンジン停止中',starting:'エンジン接続中…',tuning:'エンジン接続中…',ready:'エンジン接続中',analyzing:'エンジン接続中・解析中',error:'エンジンを起動できませんでした'}[state];
  $('engine-state').textContent=label;$('engine-state').dataset.state=state;
  $('engine-active').dataset.state=state;
  $('engine-notice').dataset.state=state;
- $('engine-notice').hidden=!['unconfigured','missing','starting','tuning','error'].includes(state);
+ $('engine-notice').hidden=!['unconfigured','missing','starting','tuning','error'].includes(state);$('engine-notice-message').hidden=!['missing','error'].includes(state);
  if(state==='missing'){$('engine-notice-title').hidden=false;$('engine-notice-title').textContent='エンジン設定の修復が必要です';$('engine-notice-message').textContent=missingFileMessage(missingFiles());}
- else if(state==='unconfigured'){$('engine-notice-title').hidden=false;$('engine-notice-title').textContent='エンジン未設定';$('engine-notice-message').textContent='囲碁AIを利用する場合は、「エンジン」メニューの「推奨CPU版を自動セットアップ」を選んでください。';}
+ else if(state==='unconfigured'){$('engine-notice-title').hidden=false;$('engine-notice-title').textContent='エンジン未設定';$('engine-notice-message').textContent='囲碁AIを利用する場合は、「エンジン」メニューの「CPU版エンジンを自動セットアップ」を選んでください。';}
  else $('engine-notice-title').hidden=true;
 }
 function startingStatus(){if(!['starting','tuning'].includes(startupPhase))return;const text='経過 '+Math.floor((Date.now()-startupAt)/1000)+'秒';if($('engine-elapsed').textContent!==text)$('engine-elapsed').textContent=text;}
@@ -229,7 +231,7 @@ function clearConfigurationError(){
  if(hadError){dismissedRunEpoch=engineEpoch;note('');logs=[];$('engine-log').textContent='';document.querySelector('.engine-log').open=false;if(startupPhase==='error')engineState(ready?'ready':'idle',ready?'エンジン接続中':'エンジン停止中','');else syncEngineStatus();}
 }
 for(const key of ['exe','model','config','extraArgs','workdir'])$('engine-'+key).addEventListener('input',()=>{clearConfigurationError();controls();});
-function engineError(message){actionFeedback('エンジンを起動できませんでした：'+message);stopBatchProgress();requestedScope=null;if(!ready)engineState('error','エンジンを起動できませんでした','下の詳細と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-notice-message').textContent=message;$('engine-notice').hidden=false;}
+function engineError(message){actionFeedback('エンジンを起動できませんでした：'+message);stopBatchProgress();requestedScope=null;if(!ready)engineState('error','エンジンを起動できませんでした','下の詳細と接続ログを確認してください。');$('engine-error').hidden=false;$('engine-error-text').textContent=message+'\n\n'+logs.slice(-20).join('\n');document.querySelector('.engine-log').open=true;note(message);$('engine-notice-message').textContent=message;$('engine-notice-message').hidden=false;$('engine-notice').hidden=false;}
 for(const kind of ['exe','model','config'])$('engine-pick-'+kind).onclick=async()=>{pendingCalls++;controls();try{const picked=await call('pick',{kind});if(picked.path){writePath(kind,picked.path);clearConfigurationError();controls();}}catch(e){engineError(e.message);}finally{pendingCalls--;controls();}};
 async function rawCall(action,payload={}){if(window.KifuRemote)return window.KifuRemote.call(action,payload);if(native()){try{return await native()('engine_call',{action,payload});}catch(error){throw error instanceof Error?error:new Error(typeof error==='string'?error:JSON.stringify(error)||'エンジンとの通信に失敗しました。');}}if(!token)throw Error('Windowsの解析用ランチャーまたはTauri版から起動してください。');const response=await fetch('/api/engine',{method:'POST',headers:{'Content-Type':'application/json','X-Kifu-Token':token},body:JSON.stringify({action,payload})});const data=await response.json();if(!data.ok)throw Error(data.error||'接続エラー');return data.result;}
 const gtpBridge=new KifuGTP.Bridge(rawCall);

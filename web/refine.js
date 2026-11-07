@@ -72,7 +72,7 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const $=id=>document.getElementById(id),settings=$('engine-settings'),d=$('engine-list-disclosure');
  const running=settings.querySelector('.engine-running-details');
  const tools=$('engine-folder-tools'),setup=document.createElement('div');
- setup.className='engine-setup-row';setup.append($('engine-install'),$('engine-folder'));
+ setup.className='engine-setup-row';setup.append($('engine-install'),$('engine-folder'));$('engine-folder').hidden=true;
  const downloads=document.createElement('details');downloads.id='engine-downloads';
  downloads.innerHTML='<summary title="KataGo本体とモデルを別々に入手したい方向けです">個別ダウンロード</summary><div class="engine-download-row"></div>';
  downloads.lastElementChild.append($('engine-cpu'),$('engine-network'));
@@ -80,6 +80,7 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  tools.prepend(setup,downloads);$('engine-install-status').after(progress);
  const separator=document.createElement('hr');separator.className='engine-divider';
  const note=settings.querySelector(':scope > .analysis-note'),kind=settings.querySelector(':scope > .engine-kind-row'),kindNote=$('engine-kind-note');
+ for(const helper of [note,kindNote])if(helper)helper.hidden=true;
  const hint=running.nextElementSibling;
  d.querySelector('summary').after(...[note,kind,kindNote,hint].filter(Boolean));
  for(const key of ['exe','model','config']){const input=$('engine-'+key),row=input.closest('.engine-path-row'),label=document.querySelector('label[for="'+input.id+'"]');d.append(label,row);}
