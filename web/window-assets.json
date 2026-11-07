@@ -1,5 +1,5 @@
 {
-  "update": 122,
+  "update": 123,
   "files": {
     "scripts/check-window-assets.cjs": "a7448eb8c05857e9c1026e6dee56b054a4390bbda129eb0e8693efc7c688eb31",
     "src-tauri/src/auxiliary.rs": "c4e2aa9ae69c6846785898eaa0a726851f510377005cd5929c352f7a1d49a1b4",
@@ -38,7 +38,7 @@
     "web/image-board.css": "5e822932c42e2355b8e3af8a52fd6d27536cd2fc98a8d27d5e98ce9dd1caf6ff",
     "web/image-board.js": "afb89964ecf993fec15d91d24944263d021b989d6fdaa480720b33c7d675501c",
     "web/import.js": "05bacfadd1c9a6c30ab39cac4ba696824cbc77a9e219747cbddfb23203c10b64",
-    "web/index.html": "195ee75fea5be616595f3daad13e42c949d17cb38c645e904bc8ff7d7ad0ea27",
+    "web/index.html": "fb71f6653c6f24d693d897b6a6cf853fe1b69fadb326179b1d5e90ee097e38fc",
     "web/interaction.js": "00bccde8749abf77aeb0eef66927d37b1df0a66bb103f527f72a1f45abec0e85",
     "web/layout60.css": "5a2cd99ec8ac92b730f81be0ffba6d6f07dda502340043e468c4102102027509",
     "web/layout60.js": "ad0bb19c1d80e8d38605a22fe10f94e27c34a7a7ed3c0a0e6c671c46ff117406",
@@ -54,7 +54,7 @@
     "web/ranking-fold.js": "9c1574add8e33d45ab6e509fe1902c336303b4ba56f00ea0566cccc424dcd569",
     "web/record-state.js": "45a4fcc90adc5c22226f08bb0bd9b0c22bc20ea3215521de6970a705643b9984",
     "web/refine.css": "3adfb7066edc31f37d8d57322b06e90ae8c3af163d1ff7bcbf50d5edee9b8f89",
-    "web/refine.js": "1ade957a701c5ef54320f2aaabbc1a2d5a31211639afb5c09b2ab8865e55c604",
+    "web/refine.js": "8aea451c14d2f161430fabce5b722ce480dec9e3bc27d775d518421141310f4f",
     "web/score.js": "ceb9a27bd9e7248af7de6584b037f8390a6a133bac6c9a865db4457d4312f5fb",
     "web/sgf.js": "2ae89cb523209d7903223a2d3144858939aabc51e4772bd001cbedced504b340",
     "web/side-evaluation.css": "2319166ae0d789743ad8bc79bc2c69a933d468de70e0b1d9e72859fa4f3fcfc5",
@@ -120,6 +120,7 @@
     "backend-rs/src/lib.rs": "6c82e8ff68331010ec559e59f40ef58414f43a95582635c74a569a59f3450312",
     "tests/update117.test.cjs": "2e4bd1a7edb74b649dd1e37f3747fcfa206181d0967baf8a6ff15972bdacaa42",
     "tests/update120.test.cjs": "1b7b63ee9eb4489f43c574be9bb99553a634211183f42ee21031d97bcf850ff4",
-    "tests/update122.test.cjs": "237447eb5d2166ea077cc1606a3dc5cd5aa99c5f2a4fe3f6b6895c49cfc88cde"
+    "tests/update122.test.cjs": "237447eb5d2166ea077cc1606a3dc5cd5aa99c5f2a4fe3f6b6895c49cfc88cde",
+    "tests/update123.test.cjs": "2b5545cf17a510692f31b2340aad963335aea8dedc545b53bc71f9955764c1fa"
   }
 }

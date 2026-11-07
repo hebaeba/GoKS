@@ -72,7 +72,7 @@ q('.analysis-primary').append(q('.region-analysis-toggle'));
  const $=id=>document.getElementById(id),settings=$('engine-settings'),d=$('engine-list-disclosure');
  const running=settings.querySelector('.engine-running-details');
  const tools=$('engine-folder-tools'),setup=document.createElement('div');
- setup.className='engine-setup-row';setup.append($('engine-install'),$('engine-folder'));$('engine-folder').hidden=true;
+ setup.className='engine-setup-row';$('engine-folder').hidden=true;setup.append($('engine-install'),$('engine-folder'));
  const downloads=document.createElement('details');downloads.id='engine-downloads';
  downloads.innerHTML='<summary title="KataGo本体とモデルを別々に入手したい方向けです">個別ダウンロード</summary><div class="engine-download-row"></div>';
  downloads.lastElementChild.append($('engine-cpu'),$('engine-network'));
