@@ -26,7 +26,7 @@ If this is the source ZIP, it does not include an executable. Run the Windows bu
 
 - Viewing and editing game records, variations, comments, handicap and free handicap setups, and board symbols.
 - Importing record and image files from file selection, drag and drop, and the clipboard.
-- KataGo current-position and full-game analysis, principal variations, graphs, and score-loss / win-rate rankings.
+- KataGo current-position and full-game analysis, principal variations, graphs, and score-loss / win-rate rankings / analyze Shaded Region.
 - Human versus AI, AI versus AI, and human versus human games, with pause, resume, and takeback.
 - Estimates and end-of-game scoring.
 - Saving records and analysis, board images, printing, move-sequence GIFs, and temporary saved states.
