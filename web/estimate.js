@@ -2,7 +2,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);let loaded=false,busy=false,revision=0,epoch=0,popup=null,channel=null,nativeOpen=false;
 let value=null,message='',positionKey='';
-const button=document.createElement('button');button.id='estimate-open';button.textContent='推定値';button.title='解析用エンジンで現在局面を推定します。対局中は双方の思考を停止して中断します';$('score').after(button);
+const button=document.createElement('button');button.id='estimate-open';button.textContent='盤面の推定値';button.title='解析用エンジンで現在局面を推定します。対局中は双方の思考を停止して中断します';$('score').before(button);
 function enabled(){return loaded||['playing','paused','finished'].includes(window.KifuMatch?.phase);}
 function canScore(){try{return KifuEstimateCore.canScore(IndependentGo.peekAnalysisSnapshot(),GoSgf,window.KifuMatch?.phase,loaded);}catch{return false;}}
 function data(){const snap=IndependentGo.peekAnalysisSnapshot();return {revision:++revision,enabled:enabled(),phase:KifuMatch.phase,currentMove:KifuAnalysis.positionAt(snap).state.move,options:[{color:'analysis',name:KifuAnalysisControl.runningName()}],values:value?{analysis:value}:{},message,busy};}
@@ -37,8 +37,8 @@ button.onclick=estimate;
 window.KifuEstimate={canScore,requested:()=>false,accept(){},get busy(){return busy;}};
 window.addEventListener('kifu-aux',e=>{if(e.detail.kind==='estimate'&&e.detail.type==='closed'){nativeOpen=false;cancel();sync();}});
 window.addEventListener('kifu-match-state',sync);
-window.addEventListener('kifu-match-start',()=>{loaded=false;cancel();value=null;message='局面が変わりました。推定値ボタンで再計算してください。';sync();});
-window.addEventListener('kifu-record-replaced',e=>{loaded=e.detail?.source==='load';cancel();value=null;message='棋譜が変わりました。推定値ボタンで計算してください。';sync();});
-window.addEventListener('kifu-position-change',()=>{if((value||busy)&&JSON.stringify([KifuAnalysis.identity(IndependentGo.peekAnalysisSnapshot()),IndependentGo.peekAnalysisSnapshot().index])!==positionKey){cancel();value=null;message='局面が変わりました。推定値ボタンで再計算してください。';}sync();});
+window.addEventListener('kifu-match-start',()=>{loaded=false;cancel();value=null;message='局面が変わりました。「盤面の推定値」で再計算してください。';sync();});
+window.addEventListener('kifu-record-replaced',e=>{loaded=e.detail?.source==='load';cancel();value=null;message='棋譜が変わりました。「盤面の推定値」で計算してください。';sync();});
+window.addEventListener('kifu-position-change',()=>{if((value||busy)&&JSON.stringify([KifuAnalysis.identity(IndependentGo.peekAnalysisSnapshot()),IndependentGo.peekAnalysisSnapshot().index])!==positionKey){cancel();value=null;message='局面が変わりました。「盤面の推定値」で再計算してください。';}sync();});
 window.addEventListener('pagehide',()=>{cancel();popup?.close();channel?.close();});sync();
 })();

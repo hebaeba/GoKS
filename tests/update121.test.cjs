@@ -27,5 +27,5 @@ test('fixed panels preserve their widths across normal layout fits and old store
  simple=false;grid.clientWidth=1256;f();assert.equal(attrs['--normal-board-size'],'328px');
  assert.doesNotMatch(read('sidebar.css'),/\.panel-width-handle\{/);
  assert.match(read('sidebar.css'),/--side-width:400px/);assert.match(read('sidebar.css'),/--right-width:500px/);
- assert.match(read('index.html'),/simple-window-menu\.js\?v=121/);
+ assert.match(read('index.html'),/simple-window-menu\.js\?v=\d+/);
 });
