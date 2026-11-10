@@ -1,7 +1,7 @@
 /* Live match deltas are provisional: opposing engines can disagree. */
 (()=>{'use strict';
  const $=id=>document.getElementById(id),panel=document.createElement('details');panel.id='match-ranking';
- panel.innerHTML='<summary title="対局中の着手前後の評価差です。AI同士では異なるAIの評価差を含みます。確定的な悪手判定には対局後の全局解析を使ってください。">目数／勝率ランキング（暫定）</summary><div class="match-ranking-sort"><label>並び順 <select id="match-ranking-metric"><option value="winrate">勝率</option><option value="score">目数</option></select></label></div><div class="match-ranking-columns"></div>';
+ panel.innerHTML='<summary title="対局中の着手前後の評価差です。AI同士では異なるAIの評価差を含みます。確定的な悪手判定には対局後の全局解析を使ってください。">悪手ランキング（勝率／目数差・暫定）</summary><div class="match-ranking-sort"><label>並び順 <select id="match-ranking-metric"><option value="winrate">勝率</option><option value="score">目数</option></select></label></div><div class="match-ranking-columns"></div>';
  $('match-sgf').closest('details').before(panel);
  const tables={};for(const color of ['B','W']){const table=document.createElement('table');table.innerHTML='<caption><span class="ranking-stone '+(color==='B'?'black':'white')+'" aria-hidden="true"></span> '+(color==='B'?'黒':'白')+'</caption><thead><tr><th>順位</th><th>手数</th><th>目数</th><th>勝率</th></tr></thead><tbody></tbody>';tables[color]=table.querySelector('tbody');const side=document.createElement('section');side.className='match-ranking-side';side.append(table);panel.querySelector('.match-ranking-columns').append(side);}
  let entries=new Map();

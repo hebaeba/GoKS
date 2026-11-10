@@ -169,6 +169,20 @@
     }else {const existed=R.expanded(props[tool]||[],size).includes(point);removeAt(props,point,markerKeys);if(!existed)(props[tool]??=[]).push(coordinate);}
     if(root.props.XIGFREEHANDICAP&&!root.children.length){const count=R.expanded(root.props.AB||[],size).length;root.props.HA=[String(count)];root.props.PL=['W'];}
   },'盤上の編集を反映しました。',true);}
+  // Delete just the DD property of the displayed node, never stones, labels or other SGF nodes.
+  // Use the normal edit transaction so Undo restores the exact shaded area.
+  window.addEventListener('kifu-clear-shading',async ()=>{
+    if(scoreSession||insertion||exportBusy||window.KifuMatch?.locked){report('対局・処理中は網掛けを消去できません。',true);return;}
+    if(!(await canLeave()))return;
+    const node=route[index];
+    if(!node.props.DD?.length){report('現在の局面に網掛けはありません。');return;}
+    if(!editing){$('edit').click();if(!editing){report('編集モードに切り替えられません。',true);return;}}
+    const regionOnly=document.getElementById('analysis-region'),previous=!!regionOnly?.checked;
+    if(regionOnly)regionOnly.checked=false;
+    const success=transaction(()=>{delete node.props.DD;},'現在の局面の網掛けをすべて消去しました。取り消しで戻せます。');
+    if(!success&&regionOnly)regionOnly.checked=previous;
+    if(success&&previous)regionOnly.dispatchEvent(new Event('change',{bubbles:true}));
+  });
   $('delete-move').onclick=async ()=>{if(!editing||insertion||index===0||!(await canLeave()))return;transaction(()=>{const parent=route[index-1],child=route[index];parent.children.splice(parent.children.indexOf(child),1);choices.set(parent,0);index--;},'表示中の局面とその先を削除しました。取り消しで元に戻せます。');};
   $('undo').onclick=async ()=>(await history(true));$('redo').onclick=async ()=>(await history(false));$('insert').onclick=startOrFinishInsert;
   $('cancel-insert').onclick=()=>{if(insertion){const before=insertion.before;insertion=null;restore(before);report('挿入を中止しました。');}};
@@ -489,6 +503,7 @@
     const header=document.createElement('strong');header.textContent='碁盤のツール';header.className='tool-heading';popup.prepend(header);const help=document.createElement('p');help.className='tool-drag-help';help.textContent='＊印はドラッグで連続操作できます';table.before(help);
     const commentEditor=firstElement('.editor-fields');commentEditor.hidden=true;$('info-edit').hidden=true;const editGroup=document.createElement('div');editGroup.className='tool-other';
     for(const [label,target,title]of [['コメントの編集',commentEditor,'現在の局面のコメントを編集します'],['対局情報の編集',$('info-edit'),'対局者名やコミなどの対局情報を編集します']]){const button=document.createElement('button');button.type='button';button.dataset.editor='1';button.textContent=label;button.title=title;button.onclick=()=>{commentEditor.hidden=target!==commentEditor;$('info-edit').hidden=target!==$('info-edit');$('info-edit').open=true;tools.querySelector('summary').textContent=label;target.scrollIntoView({block:'nearest'});};editGroup.append(button);}table.after(editGroup);
+    const clearShading=document.createElement('button');clearShading.type='button';clearShading.className='clear-shading';clearShading.textContent='網掛けを全消去';clearShading.title='表示中の局面の網掛けだけを消します。取り消しで元に戻せます。';clearShading.onclick=()=>window.dispatchEvent(new Event('kifu-clear-shading'));popup.append(clearShading);
     const empty=document.createElement('button');empty.type='button';empty.dataset.editor='1';empty.textContent='碁盤をクリア';empty.title='棋譜と盤上のすべての石・記号を消して空盤に戻します';empty.className='clear-board';empty.onclick=async ()=>{if(!editing||insertion||!(await canLeave())||!(await KifuDialogs.confirm('棋譜と盤上のすべての石・記号を消去しますか？',{accept:'消去する'})))return;resetBoardTasks();transaction(()=>{root=S.create(size);originalName='kifu.sgf';choices=new WeakMap();index=0;commentTarget=null;infoTarget=null;},'碁盤をクリアしました。取り消しで戻せます。');window.dispatchEvent(new Event('kifu-record-replaced'));window.dispatchEvent(new Event('kifu-board-cleared'));clearTimeout(recoveryTimer);tools.open=false;};popup.append(empty);
     popup.querySelector('.close-tools').title='ツールの使用を終了して通常の操作に戻ります';popup.querySelector('.close-tools').addEventListener('click',()=>{commentEditor.hidden=true;$('info-edit').hidden=true;});
     // File loading: the three original choices, with a manual encoding override.

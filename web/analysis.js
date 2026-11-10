@@ -40,7 +40,7 @@ $('engine-advanced').after(registration);
 for(const kind of ['exe','model','config']){const input=$('engine-'+kind),label=input.parentElement,row=document.createElement('div');row.className='engine-path-row';label.htmlFor=input.id;label.after(row);row.append(input,$('engine-pick-'+kind));}
 $('engine-settings').after($('engine-connect').parentElement);$('engine-connect').parentElement.classList.add('engine-actions');
 $('engine-connect').parentElement.after($('engine-notice'));
-const regionLabel=document.createElement('div');regionLabel.className='region-analysis-toggle';regionLabel.innerHTML='<label><input type="checkbox" id="analysis-region"> 網掛け領域内だけ解析</label><button type="button" id="analysis-shade" title="ドラッグで網掛けします。囲んだ内側を右クリックすると一括で塗ります">網掛け</button>';regionLabel.title='対象の石と空点を含む部分全体を網掛けしてください。任意の形に対応。外側の石は残し、黒白とも領域内とパスだけを検討します。死活の正解を保証する機能ではありません。';pane.prepend(regionLabel);
+const regionLabel=document.createElement('div');regionLabel.className='region-analysis-toggle';regionLabel.innerHTML='<label><input type="checkbox" id="analysis-region"> 網掛け領域内だけ解析</label><button type="button" id="analysis-shade" title="ドラッグで網掛けします。囲んだ内側を右クリックすると一括で塗ります">網掛け</button><button type="button" id="analysis-clear-shading" title="表示中の局面の網掛けだけをすべて消します。石や他の記号は残り、取り消しで元に戻せます。">網掛けを全消去</button>';regionLabel.title='対象の石と空点を含む部分全体を網掛けしてください。任意の形に対応。外側の石は残し、黒白とも領域内とパスだけを検討します。死活の正解を保証する機能ではありません。';pane.prepend(regionLabel);
 const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.id='analysis-overlay';overlay.setAttribute('aria-hidden','true');document.querySelector('.canvas-wrap').append(overlay);
 let running=false,ready=false,polling=false,session=null,results=new Map(),active=null,engineMeta=null,handshake=null,selectedCandidate=0,logs=[],timer=null,unsaved=false,pendingCalls=0,lastRu=null,previewLine=null;
 // Must exist before restoring a saved profile: the restore path calls controls().
@@ -430,6 +430,7 @@ window.addEventListener('blur',()=>spaceReserved=false);
 window.addEventListener('kifu-board-view',()=>{clearPreview();renderResult();});
 $('analyze-live').onclick=toggleLive;
 $('analysis-shade').onclick=()=>{$('edit').click();if(!document.body.classList.contains('editing-mode'))return;document.querySelector('[data-tool="DD"]')?.click();};
+$('analysis-clear-shading').onclick=()=>window.dispatchEvent(new Event('kifu-clear-shading'));
 $('analysis-region').onchange=async()=>{await cancel();clearPreview();controls();displayState();};
 async function requestAnalysis(scope){if(estimateJob)return;
  if(!analysisAllowed()){note('選択したエンジンは接続確認用です。解析にはKataGoを選択してください。');return;}
