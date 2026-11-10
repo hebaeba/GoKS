@@ -14,26 +14,32 @@ function parseInfo(line,pvLength=30){
   if(arrays.has(key)){const values=[];while(i<t.length&&(key==='pv'?/^(?:[A-Z]\d+|pass|resign)$/i.test(t[i]):!field.test(t[i])))values.push(t[i++]);if(key==='pv')current.pv=values.slice(0,pvLength);continue;}
   const value=t[i++];if(value===undefined)break;current[key]=['move','isSymmetryOf'].includes(key)?value:Number(value);
  }
+ // KataGo 1.2 predates rootInfo; scoreMean is its score estimate.
+ for(const m of moves)if(!Number.isFinite(m.scoreLead)&&Number.isFinite(m.scoreMean))m.scoreLead=m.scoreMean;
+ if(!rootInfo&&moves.length){const best=moves.find(m=>m.order===0)||moves[0];rootInfo={winrate:best.winrate,scoreLead:best.scoreLead,visits:moves.reduce((n,m)=>n+(Number.isFinite(m.visits)?m.visits:0),0),legacyEstimate:true};}
  if(!rootInfo||!Number.isFinite(rootInfo.winrate)||!Number.isFinite(rootInfo.scoreLead))return null;
  return {rootInfo,moveInfos:moves.filter(m=>m.move&&Number.isFinite(m.winrate)&&Number.isFinite(m.scoreLead)).sort((a,b)=>a.order-b.order)};
 }
-function positionCommands(q){
+function positionCommands(q,capabilities=null,legacyRules=null){
  const n=q.boardXSize;if(!Number.isInteger(n)||n<2||n>25||q.boardYSize!==n)throw Error('GTPでは正方形の盤面を指定してください。');
  const point=p=>{if(!/^(?:[A-HJ-Z]\d{1,2}|pass)$/i.test(p))throw Error('着点が不正です');return p;};
  const color=c=>{if(!['B','W'].includes(c))throw Error('手番が不正です');return c;};
  if(!['japanese','chinese'].includes(q.rules)||!Number.isFinite(q.komi))throw Error('ルール・コミが不正です');
- const out=['boardsize '+n,'clear_board','kata-set-rules '+q.rules,'komi '+q.komi];
+ const supports=(command)=>!capabilities||capabilities.has(command);
+ if(!supports('kata-set-rules')&&legacyRules&&q.rules!==legacyRules)throw Error('旧版KataGoでは解析中に日本・中国ルールを切り替えられません。ルールを選び直した後、エンジンを終了して再接続してください。');
+ const out=['boardsize '+n,'clear_board'];if(supports('kata-set-rules'))out.push('kata-set-rules '+q.rules);out.push('komi '+q.komi);
  if(q.initialStones?.length){const stones=q.initialStones;
   if(q.initialHandicap>=2&&stones.length===q.initialHandicap&&stones.every(s=>s[0]==='B'))out.push('set_free_handicap '+stones.map(s=>point(s[1])).join(' '));
-  else out.push('set_position '+stones.map(s=>color(s[0])+' '+point(s[1])).join(' '));
+  else if(supports('set_position'))out.push('set_position '+stones.map(s=>color(s[0])+' '+point(s[1])).join(' '));
+  else throw Error('この旧版KataGoは自由な配置石に対応していません。新しいKataGoをご利用ください。');
  }
  for(const s of q.moves||[])out.push('play '+color(s[0])+' '+point(s[1]));
  // Start every request with an empty search cache, so changing the time/region never reuses old visits.
  out.push('clear_cache');return out;
 }
-function analyzeCommand(q){
+function analyzeCommand(q,capabilities=null){
  const last=q.moves?.at(-1),turn=last?(last[0]==='B'?'W':'B'):(q.initialPlayer||'B');
- let cmd='kata-analyze '+turn+' 10 rootInfo true'+(q.includeOwnership?' ownership true':'');
+ let cmd='kata-analyze '+turn+' 10'+(!capabilities||capabilities.has('kata-set-rules')?' rootInfo true':'')+(q.includeOwnership?' ownership true':'');
  for(const restriction of q.allowMoves||[]){
   if(!['B','W'].includes(restriction.player))throw Error('領域の手番が不正です');
   const allowed=new Set(restriction.moves.map(p=>p.toUpperCase())),avoid=[];
@@ -42,7 +48,7 @@ function analyzeCommand(q){
  }return cmd;
 }
 class Bridge{
- constructor(raw){this.kind='katago';this.raw=raw;this.seq=0;this.pending=new Map();this.events=[];this.queue=Promise.resolve();this.epoch=0;this.jobs=new Map();this.response=null;this.current=null;}
+ constructor(raw){this.availableCommands=null;this.legacyRules=null;this.kind='katago';this.raw=raw;this.seq=0;this.pending=new Map();this.events=[];this.queue=Promise.resolve();this.epoch=0;this.jobs=new Map();this.response=null;this.current=null;}
  reset(){this.epoch++;for(const p of this.pending.values()){clearTimeout(p.timeout);p.reject(Error('エンジンを停止しました'));}this.pending.clear();if(this.current)clearTimeout(this.current.timer);this.current=null;this.jobs.clear();this.response=null;this.events=[];this.queue=Promise.resolve();}
  commands(commands,stream=null){
   const lines=[],promises=[];
@@ -70,15 +76,16 @@ class Bridge{
    try{
     if(q.action==='query_version'){
      const values=await this.commands(['protocol_version','name','version','list_commands']);
-     const available=new Set(values[3].split(/\s+/));const missing=['kata-analyze','kata-set-rules','set_position','clear_cache','stop'].filter(x=>!available.has(x));
+     const available=new Set(values[3].split(/\s+/));const missing=['kata-analyze','clear_cache','stop'].filter(x=>!available.has(x));
+     this.availableCommands=available;
      if(values[0].trim()!=='2'||(this.kind==='katago'&&missing.length))throw Error('対応するKataGo GTPが必要です。不足する命令：'+missing.join('、'));
      this.events.push({type:'result',data:{id:q.id,version:values[2],name:values[1],supportsAnalysis:this.kind==='katago'&&!missing.length,protocol:'GTP',commands:[...available]}});return;
     }
     if(q.action)throw Error('未対応のGTP操作です：'+q.action);
     if(this.kind!=='katago')throw Error('このエンジンの解析には未対応です。');
     this.current=job;
-    await this.commands(positionCommands(q));if(epoch!==this.epoch||job.cancelled)return;
-    await this.commands([analyzeCommand(q)],job);
+    await this.commands(positionCommands(q,this.availableCommands,this.legacyRules));if(epoch!==this.epoch||job.cancelled)return;
+    await this.commands([analyzeCommand(q,this.availableCommands)],job);
     if(epoch!==this.epoch)return;
     this.events.push({type:'result',data:job.last?{id:q.id,...job.last,isDuringSearch:false}:{id:q.id,isDuringSearch:false,error:job.cancelled?'解析を停止しました':'解析結果を取得できませんでした。１局面の時間を長くしてください。'}});
    }catch(e){if(epoch===this.epoch)this.events.push({type:'result',data:{id:q.id,error:e.message,isDuringSearch:false}});}
@@ -86,7 +93,7 @@ class Bridge{
   });return {accepted:true};
  }
  async call(action,payload={}){
-  if(action==='start'){this.reset();const r=await this.raw(action,payload);this.kind=r.meta?.kind||payload.kind||'katago';return r;}
+  if(action==='start'){this.reset();this.availableCommands=null;const r=await this.raw(action,payload);this.legacyRules=r.meta?.legacyRules||null;this.kind=r.meta?.kind||payload.kind||'katago';return r;}
   if(action==='stop'){this.reset();return this.raw(action,payload);}
   if(action==='send')return this.send(payload);
   if(action==='poll'){const r=await this.raw(action,payload);const other=[];for(const e of r.events||[]){if(e.type==='gtp')this.line(e.line);else other.push(e);}return {...r,events:[...other,...this.events.splice(0)]};}
