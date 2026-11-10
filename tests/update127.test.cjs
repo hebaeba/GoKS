@@ -31,5 +31,5 @@ test('Update127: manual and release baseline reflect change; prior engine UI rem
  const doc=read('Manual.html'),refine=read('web/refine.js'),app=read('web/analysis.js');
  assert.match(doc,/Clear All Shading/);assert.match(doc,/網掛けを全消去/);
  assert.match(refine,/tools\.prepend\(setup,downloads\)/);assert.match(app,/CPU版エンジンを自動セットアップ/);
- assert.match(read('web/window-assets.json'),/"update": 127/);
+ assert.match(read('web/window-assets.json'),/"update": 128/);
 });

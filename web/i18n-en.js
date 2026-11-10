@@ -1384,3 +1384,11 @@ Object.assign(window.KifuEnglish,{
  "を起動できませんでした。エンジン設定を確認してください。":" could not start. Check its configuration.",
  "エンジンを起動できませんでした：":"Could not start engine: "
 });
+
+// Update128: compatibility translations when obsolete update125/126 helper remains in checkout.
+Object.assign(window.KifuEnglish, {
+  "この旧版KataGoには付属のgtp_example.cfgが必要です。KataGoのZIPをすべて展開するか、設定CFGで旧版用ファイルを指定してください。": "This older KataGo version requires its included gtp_example.cfg. Extract the complete KataGo ZIP or select the older-version configuration file in Config.",
+  "KataGo v1.2は現在のGoKSのAI対局に必要なGTP命令を備えていません。解析専用に使用してください。": "KataGo v1.2 does not support the GTP commands required for AI games in this GoKS version. Use it for analysis only.",
+  "旧版KataGoには新しいCFG設定が指定されています。v1.2付属のgtp_example.cfgを設定CFGに指定してください。": "This configuration contains options unsupported by older KataGo. Select the gtp_example.cfg included with v1.2.",
+  "旧版エンジンの設定に不正な値があります": "Invalid value in the older engine configuration"
+});

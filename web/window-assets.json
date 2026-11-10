@@ -1,5 +1,5 @@
 {
-  "update": 127,
+  "update": 128,
   "files": {
     "scripts/check-window-assets.cjs": "a7448eb8c05857e9c1026e6dee56b054a4390bbda129eb0e8693efc7c688eb31",
     "src-tauri/src/auxiliary.rs": "c4e2aa9ae69c6846785898eaa0a726851f510377005cd5929c352f7a1d49a1b4",
@@ -31,14 +31,14 @@
     "web/fields.css": "f22f3f998ee32586b46768d77c6a9eebc2b8a66f00d4dda98aeb05bd8d5ac626",
     "web/fields.js": "91c716c131c8ea13f33569ab8e6d8cace37b6631f4de2685370975ef06985754",
     "web/gtp.js": "5bd300c832098ef2adf6c360bbd9bbf416d832573ca8c2395275cbec65e91fb7",
-    "web/i18n-en.js": "b5a0b28b246d46a96e0570e342264b155b3750f3fb8b341ca2602d2a225ab87e",
+    "web/i18n-en.js": "caeb5e9710bea74551d81e4aac704711656be118a59230af1d695e8103ce8c69",
     "web/i18n.css": "64c1f34acbe3008f36e2af13b1521c15dbbe5293d05cafed3727f90a2c8551f8",
     "web/i18n.js": "5b2bc819deea8d27ef33cd486ade1d14e3880cdb94b45eab1ce85c8dfeccab96",
     "web/image-board-core.js": "6acc3404027f6d39df0330adf06aedd881bb434df37af92b4330ea6c75fc60e4",
     "web/image-board.css": "5e822932c42e2355b8e3af8a52fd6d27536cd2fc98a8d27d5e98ce9dd1caf6ff",
     "web/image-board.js": "afb89964ecf993fec15d91d24944263d021b989d6fdaa480720b33c7d675501c",
     "web/import.js": "05bacfadd1c9a6c30ab39cac4ba696824cbc77a9e219747cbddfb23203c10b64",
-    "web/index.html": "08e598581c37299b08eba2dc060b670a75a3a41bbc47ad8daea4e3851050a8fe",
+    "web/index.html": "b69fe173550695a7cc099bfc0a3761cb142ee920cd23260a5ec30a6c14d7eb05",
     "web/interaction.js": "00bccde8749abf77aeb0eef66927d37b1df0a66bb103f527f72a1f45abec0e85",
     "web/layout60.css": "5a2cd99ec8ac92b730f81be0ffba6d6f07dda502340043e468c4102102027509",
     "web/layout60.js": "ad0bb19c1d80e8d38605a22fe10f94e27c34a7a7ed3c0a0e6c671c46ff117406",
