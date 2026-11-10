@@ -1,23 +1,14 @@
 'use strict';
-const fs=require('node:fs'),path=require('node:path'),files=require('./windows-files.cjs'),legacy=require('./legacy-katago.cjs');
+const fs=require('node:fs'),path=require('node:path'),files=require('./windows-files.cjs');
 function launchConfig(config,defaultConfig){
  const kind=config.kind||'katago';if(kind!=='katago')throw Error('KataGo専用です。KataGoの登録を選択してください。');
  const file=(key,required,fallback)=>{const value=config[key]||fallback;if(!value){if(required)throw Error(key+'を指定してください');return null;}const p=path.resolve(__dirname,'..',value);files.validateFile(key,p);return p;};
- const exe=file('exe',true),model=file('model',true);
- const isLegacy=legacy.needsLegacyMode(exe);
- const cfg=file('config',true,isLegacy?legacy.legacyBaseConfig(exe,config.config,defaultConfig):defaultConfig);
+ const exe=file('exe',true),model=file('model',true),cfg=file('config',true,defaultConfig);
  let extra=config.extraArgs||[];if(!Array.isArray(extra)||extra.length>100||extra.some(a=>typeof a!=='string'||/[\r\n\0]/.test(a)))throw Error('追加引数が不正です');
  extra=extra.map(arg=>{if(arg.includes('{model}')&&!model)throw Error('{model}に対応するモデルを指定してください');if(arg.includes('{config}')&&!cfg)throw Error('{config}に対応する設定ファイルを指定してください');return arg.replaceAll('{model}',model||'').replaceAll('{config}',cfg||'');});
  let matchOverride='';if(config.matchMode){const settings=config.matchSettings||{allowResignation:false};for(const [k,v]of Object.entries(settings)){if(!['allowResignation','maxTime','maxVisits','maxPlayouts','resignThreshold','resignConsecTurns','resignMinMovesPerBoardArea'].includes(k)||(k==='allowResignation'?typeof v!=='boolean':typeof v!=='number'||!Number.isFinite(v)))throw Error('対局条件が不正です');matchOverride+=','+k+'='+v;}}
+ const args=['gtp' ,'-model',model,'-config',cfg,...extra,'-override-config','reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false'+matchOverride];
  const cwd=config.workdir?path.resolve(__dirname,'..',config.workdir):path.dirname(exe);if(!fs.existsSync(cwd)||!fs.statSync(cwd).isDirectory())throw Error('作業フォルダーが見つかりません');
- let generated=null,selectedCfg=cfg,legacyRules=null,configText=null;
- if(isLegacy){
-  if(extra.some(a=>a==='-override-config'))throw Error('この旧版KataGoでは追加引数 -override-config を使用できません。追加引数欄から削除してください。');
-  const overlay=legacy.legacyOverrides(config);legacyRules=overlay.rules;
-  configText=legacy.buildLegacyConfig(fs.readFileSync(cfg,'utf8'),overlay.values);
-  generated=legacy.writeLegacyConfig(configText);selectedCfg=generated.cfg;
- }
- const args=isLegacy?['gtp','-model',model,'-config',selectedCfg,...extra]:['gtp','-model',model,'-config',cfg,...extra,'-override-config','reportAnalysisWinratesAs=BLACK,analysisPVLen=30,ponderingEnabled=false,rootSymmetryPruning=false'+matchOverride];
- return {kind,exe,model,cfg:selectedCfg,args,cwd,isLegacy,legacyRules,configText,legacyTempDir:generated?.dir||null};
+ return {kind,exe,model,cfg,args,cwd};
 }
 module.exports={launchConfig};
