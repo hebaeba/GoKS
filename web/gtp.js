@@ -20,6 +20,45 @@ function parseInfo(line,pvLength=30){
  if(!rootInfo||!Number.isFinite(rootInfo.winrate)||!Number.isFinite(rootInfo.scoreLead))return null;
  return {rootInfo,moveInfos:moves.filter(m=>m.move&&Number.isFinite(m.winrate)&&Number.isFinite(m.scoreLead)).sort((a,b)=>a.order-b.order)};
 }
+// KataGo v1.2 predates set_position. For legal setup diagrams, reconstruct
+// the exact stones with basic GTP play commands. This does not reconstruct
+// the actual game history, ko bans, or earlier captures; modern KataGo still
+// uses set_position to avoid this synthetic history.
+function replayLegacySetup(stones,n){
+ const cols='ABCDEFGHJKLMNOPQRSTUVWXYZ',board=Array(n*n).fill('');
+ if(!Array.isArray(stones)||stones.length>board.length)throw Error('配置石の数が不正です。');
+ for(const item of stones){
+  if(!Array.isArray(item)||item.length!==2||!['B','W'].includes(item[0]))throw Error('配置石の色が不正です。');
+  const m=/^([A-HJ-Z])(\d{1,2})$/i.exec(item[1]);
+  const x=m?cols.indexOf(m[1].toUpperCase()):-1,y=m?n-Number(m[2]):-1;
+  if(x<0||x>=n||y<0||y>=n)throw Error('配置石の座標が盤外です。');
+  const at=y*n+x;
+  if(board[at])throw Error('配置石の座標が重複しています。');
+  board[at]=item[0];
+ }
+ const adjacent=(i)=>{const x=i%n,y=Math.floor(i/n),out=[];if(x>0)out.push(i-1);if(x<n-1)out.push(i+1);if(y>0)out.push(i-n);if(y<n-1)out.push(i+n);return out;};
+ const vertex=(i)=>cols[i%n]+(n-Math.floor(i/n));
+ const ordered=[];
+ for(const color of ['B','W']){
+  const seen=new Set();
+  for(let i=0;i<board.length;i++){
+   if(board[i]!==color||seen.has(i))continue;
+   const group=[],queue=[i];seen.add(i);
+   for(let k=0;k<queue.length;k++){
+    const at=queue[k];group.push(at);
+    for(const next of adjacent(at))if(board[next]===color&&!seen.has(next)){seen.add(next);queue.push(next);}
+   }
+   // A group with no liberty cannot be reconstructed safely by play; never
+   // let an engine silently capture stones or analyze a different position.
+   const root=group.find(at=>adjacent(at).some(next=>!board[next]));
+   if(root===undefined)throw Error('旧版KataGoでは呼吸点のない配置石を再現できません。石の配置を確認するか、新しいKataGoをお使いください。');
+   const walk=[root],visited=new Set(walk);
+   for(let k=0;k<walk.length;k++)for(const next of adjacent(walk[k]))if(board[next]===color&&!visited.has(next)){visited.add(next);walk.push(next);}
+   for(const at of walk)ordered.push('play '+color+' '+vertex(at));
+  }
+ }
+ return ordered;
+}
 function positionCommands(q,capabilities=null,legacyRules=null){
  const n=q.boardXSize;if(!Number.isInteger(n)||n<2||n>25||q.boardYSize!==n)throw Error('GTPでは正方形の盤面を指定してください。');
  const point=p=>{if(!/^(?:[A-HJ-Z]\d{1,2}|pass)$/i.test(p))throw Error('着点が不正です');return p;};
@@ -29,9 +68,10 @@ function positionCommands(q,capabilities=null,legacyRules=null){
  if(!supports('kata-set-rules')&&legacyRules&&q.rules!==legacyRules)throw Error('旧版KataGoでは解析中に日本・中国ルールを切り替えられません。ルールを選び直した後、エンジンを終了して再接続してください。');
  const out=['boardsize '+n,'clear_board'];if(supports('kata-set-rules'))out.push('kata-set-rules '+q.rules);out.push('komi '+q.komi);
  if(q.initialStones?.length){const stones=q.initialStones;
-  if(q.initialHandicap>=2&&stones.length===q.initialHandicap&&stones.every(s=>s[0]==='B'))out.push('set_free_handicap '+stones.map(s=>point(s[1])).join(' '));
+  if(q.initialHandicap>=2&&stones.length===q.initialHandicap&&stones.every(s=>s[0]==='B')&&supports('set_free_handicap'))out.push('set_free_handicap '+stones.map(s=>point(s[1])).join(' '));
   else if(supports('set_position'))out.push('set_position '+stones.map(s=>color(s[0])+' '+point(s[1])).join(' '));
-  else throw Error('この旧版KataGoは自由な配置石に対応していません。新しいKataGoをご利用ください。');
+  else if(supports('play'))out.push(...replayLegacySetup(stones,n));
+  else throw Error('このKataGoには配置石を再現するためのGTP命令がありません。新しいKataGoをご利用ください。');
  }
  for(const s of q.moves||[])out.push('play '+color(s[0])+' '+point(s[1]));
  // Start every request with an empty search cache, so changing the time/region never reuses old visits.
@@ -100,5 +140,5 @@ class Bridge{
   return this.raw(action,payload);
  }
 }
-const api={Bridge,parseInfo,positionCommands,analyzeCommand};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.KifuGTP=api;
+const api={Bridge,parseInfo,positionCommands,replayLegacySetup,analyzeCommand};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.KifuGTP=api;
 })(typeof window!=='undefined'?window:globalThis);
