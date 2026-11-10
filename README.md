@@ -12,8 +12,6 @@ Windows用ZIPをすべて展開し、`GoKS.exe` を起動します。エンジ�
 
 CPU版エンジンは固定で、自動更新しません。エンジンを更新するにはKataGo公式リリースから新しいWindows版ZIPを入手し、既存のkatagoとは別のフォルダー（例：katago-new）に展開します。使うモデル（拡張子.gzのファイル）をその中のmodelsに置き、「エンジンリスト」で別名登録してください。モデルだけ更新する場合は公式モデル一覧からNetwork Fileを入手し、元のモデルとは別名でmodelsに置きます。「新規」でエンジン(katago.exe)と新しいモデル（拡張子.gzのファイル）を登録します。
 
-古いKataGo v1.2を使う場合は、同梱の `gtp_example.cfg` とDLLを `katago.exe` と同じ場所に残してください。「設定CFG」が空欄なら旧版付属のCFGを使用し、必要な設定を一時ファイルに生成します。v1.2は解析専用です。AI対局には対応しません。配置図はGTPの着手で可能な範囲を再現して解析できますが、元の着手履歴・コウ履歴・アゲハマは再現されず、新版と評価が異なることがあります。ルールを切り替えた場合はエンジンを再接続してください。旧版の一部評価値は近似値です。
-
 [KataGo releases](https://github.com/lightvector/KataGo/releases) · [KataGo networks](https://katagotraining.org/networks/)
 
 
