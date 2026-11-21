@@ -43,7 +43,7 @@ test('Update126: invalid diagrams fail rather than silently using the wrong posi
 });
 test('Update126: legacy manual and cache-busted scripts explain the setup replay limit',()=>{
  const root=path.resolve(__dirname,'..');const src=p=>fs.readFileSync(path.join(root,p),'utf8');
- assert.match(src('web/index.html'),/gtp\.js\?v=129/);assert.match(src('web/index.html'),/analysis\.js\?v=129/);
+ assert.match(src('web/index.html'),/gtp\.js\?v=130/);assert.match(src('web/index.html'),/analysis\.js\?v=129/);
  for(const file of ['README.md','Manual.html'])assert.match(src(file),/コウ履歴/);
  for(const file of ['README-en.md','Manual.html'])assert.match(src(file),/ko restrictions/);
 });

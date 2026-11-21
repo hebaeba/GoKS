@@ -55,7 +55,7 @@ test('Update129: preserve Update128 shading, ranking, quick picker and native en
  assert.match(source('web/studio.js'),/悪手ランキング（勝率／目数差）/);
  assert.match(source('web/analysis.js'),/initialRules:\$\('analysis-rules'\)\.value/);
  assert.match(source('backend-rs/src/lib.rs'),/legacy_engine\(&exe\)/);
- assert.match(source('web/index.html'),/gtp\.js\?v=129/);
+ assert.match(source('web/index.html'),/gtp\.js\?v=130/);
  assert.match(source('web/index.html'),/analysis\.js\?v=129/);
  assert.match(source('web/analysis.js'),/gokifu-startup-engine-v1/);
 });
