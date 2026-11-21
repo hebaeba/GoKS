@@ -16,9 +16,18 @@ function parseInfo(line,pvLength=30){
  }
  // KataGo 1.2 predates rootInfo; scoreMean is its score estimate.
  for(const m of moves)if(!Number.isFinite(m.scoreLead)&&Number.isFinite(m.scoreMean))m.scoreLead=m.scoreMean;
- if(!rootInfo&&moves.length){const best=moves.find(m=>m.order===0)||moves[0];rootInfo={winrate:best.winrate,scoreLead:best.scoreLead,visits:moves.reduce((n,m)=>n+(Number.isFinite(m.visits)?m.visits:0),0),legacyEstimate:true};}
- if(!rootInfo||!Number.isFinite(rootInfo.winrate)||!Number.isFinite(rootInfo.scoreLead))return null;
- return {rootInfo,moveInfos:moves.filter(m=>m.move&&Number.isFinite(m.winrate)&&Number.isFinite(m.scoreLead)).sort((a,b)=>a.order-b.order)};
+ // Validate each live candidate before using it to estimate a legacy root.
+ const validEvaluation=m=>Number.isFinite(m.winrate)&&m.winrate>=0&&m.winrate<=1
+  &&Number.isFinite(m.scoreLead)&&Number.isFinite(m.visits)&&m.visits>=0;
+ const moveInfos=moves.filter(m=>m.move&&validEvaluation(m))
+  .sort((a,b)=>(a.order??Infinity)-(b.order??Infinity));
+ if(!rootInfo&&moveInfos.length){
+  const best=moveInfos[0];
+  rootInfo={winrate:best.winrate,scoreLead:best.scoreLead,
+   visits:moveInfos.reduce((total,m)=>total+m.visits,0),legacyEstimate:true};
+ }
+ if(!rootInfo||!validEvaluation(rootInfo))return null;
+ return {rootInfo,moveInfos};
 }
 // KataGo v1.2 predates set_position. For legal setup diagrams, reconstruct
 // the exact stones with basic GTP play commands. This does not reconstruct
