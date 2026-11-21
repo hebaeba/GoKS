@@ -113,3 +113,10 @@ Source: https://github.com/hebaeba/GoKS
 When reporting an issue, include the version, Windows environment, engine used, and steps to reproduce. Do not publish names, IP addresses, local paths, or tokens from logs, or game records you are not permitted to share.
 
 Build using `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. The `web/window-assets.json` manifest checks consistency of the independent windows. When updating source files, apply all files from the same revision together.
+
+
+## KataGo v1.2 and the Igo Hatsuyoron 120 special network
+
+`igoh120-s618909184-d292623510.txt.gz` is an older neural network trained specifically with an emphasis on problem 120 of *Igo Hatsuyoron*, not on life-and-death problems in general. On Windows, extract the **Windows build** of KataGo v1.2, and register `katago.exe`, this `.txt.gz` model and the included `gtp_example.cfg` (or leave Config blank if it is next to the executable). Leave Additional Arguments blank. The Linux binary cannot be run by the Windows GoKS.exe.
+
+GoKS detects the older GTP implementation, does not add `-override-config`, and applies compatibility settings in a temporary copy of the CFG. It can reconstruct some setup diagrams through GTP `play` commands, but cannot recover the original move history, ko restrictions, or captures. **Shaded-region-only analysis and AI games are not supported with v1.2.** Use regular position analysis. Restart the engine after changing Japanese/Chinese rules. For the special network, prefer the win rate over its score estimate.

@@ -1392,3 +1392,24 @@ Object.assign(window.KifuEnglish, {
   "旧版KataGoには新しいCFG設定が指定されています。v1.2付属のgtp_example.cfgを設定CFGに指定してください。": "This configuration contains options unsupported by older KataGo. Select the gtp_example.cfg included with v1.2.",
   "旧版エンジンの設定に不正な値があります": "Invalid value in the older engine configuration"
 });
+
+// Update129: legacy KataGo and specialized Igo Hatsuyoron 120 model.
+Object.assign(window.KifuEnglish, {
+  "配置石の数が不正です。": "Invalid number of setup stones.",
+  "配置石の色が不正です。": "Invalid color in the setup stones.",
+  "配置石の座標が盤外です。": "A setup stone is outside the board.",
+  "配置石の座標が重複しています。": "The setup contains duplicate intersections.",
+  "旧版KataGoでは呼吸点のない配置石を再現できません。石の配置を確認するか、新しいKataGoをお使いください。": "Old KataGo cannot reconstruct a position containing groups without liberties. Check the diagram or use a newer KataGo.",
+  "このKataGoには配置石を再現するためのGTP命令がありません。新しいKataGoをご利用ください。": "The engine lacks the GTP commands required to reconstruct setup stones. Use a newer KataGo.",
+  "旧版KataGo：配置図を擬似着手で再現します。元の着手履歴・コウ履歴・アゲハマは再現されず、評価が異なる場合があります。": "Old KataGo: recreating setup stones using synthetic moves. The original move/ko history and captures are not reproduced, so evaluations may differ.",
+  "旧版KataGoでは解析中に日本・中国ルールを切り替えられません。ルールを選び直した後、エンジンを終了して再接続してください。": "Old KataGo cannot switch rules during analysis. Select the rules, stop the engine, and reconnect.",
+  "KataGo v1.2では網掛け領域内だけの解析に対応していません。チェックを外し、通常の局面解析を使用してください。": "KataGo v1.2 cannot restrict analysis to shaded regions. Uncheck the option and run normal position analysis.",
+  "旧版KataGoの一時設定ファイルを作成できません": "Could not create a temporary configuration file for old KataGo.",
+  "旧版KataGoの一時設定ファイルを保存できません：": "Could not save a temporary configuration file for old KataGo:",
+  "解析ルールが不正です": "Invalid analysis rules.",
+  "この旧版KataGoでは追加引数 -override-config を使用できません。追加引数欄から削除してください。": "This old KataGo does not support -override-config. Remove it from Additional Arguments.",
+  "旧版KataGoには新しい形式のCFGが指定されています。v1.2付属のgtp_example.cfgを設定CFGに指定してください。": "The configuration is too new for KataGo v1.2. Select the bundled gtp_example.cfg.",
+  "この旧版KataGoには付属のgtp_example.cfgが必要です。ZIPをすべて展開するか、設定CFGから指定してください。": "This old KataGo requires its bundled gtp_example.cfg. Extract the full ZIP or select the CFG file.",
+  "KataGo v1.2は現在のGoKSのAI対局に必要なGTP命令を備えていません。解析専用に使用してください。": "KataGo v1.2 lacks commands needed for AI games. Use it for analysis only.",
+  "KataGo v1.2では追加引数 -override-config を使用できません。追加引数欄から削除してください。": "KataGo v1.2 does not support -override-config. Remove it from Additional Arguments."
+});
