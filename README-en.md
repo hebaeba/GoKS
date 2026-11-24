@@ -1,6 +1,6 @@
 # GoKifuStudio / Go棋譜Studio
 
-**GoKS-v.1.0 (internal version 1.0.0)**
+**GoKS-v.1.1 (internal version 1.1.0)**
 
 GoKifuStudio is a Windows PC application for editing Go game records, analyzing positions with KataGo, and playing games. It supports Japanese and English and both Normal View and Simple View. The executable is `GoKS.exe`.
 
@@ -18,9 +18,23 @@ Open **Individual downloads** under Engine. Choose **Get CPU engine** to downloa
 
 [CPU engine](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) / [CPU model](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
 
-For instructions, open the included **Manual.html** and choose Japanese or English.
+For instructions, open the included [Manual.html](Manual.html) and choose Japanese or English.
 
-If this is the source ZIP, it does not include an executable. Run the Windows build using GitHub Actions and obtain the generated `GoKS-v.1.0` artifact. Do not confuse the ready-to-use Windows ZIP from Releases with GitHub's automatically generated “Source code” archives.
+If this is the source ZIP, it does not include an executable. Run the Windows build using GitHub Actions and obtain the generated `GoKS-v.1.1` artifact. Do not confuse the ready-to-use Windows ZIP from Releases with GitHub's automatically generated “Source code” archives.
+
+## Changes in GoKS-v.1.1
+
+In Engine, choose “Set up human-style engine automatically”. GoKS installs CPU KataGo, the regular and human-style models, and a dedicated CFG in katago-human beside GoKS.exe, then registers Human-style KataGo in the engine list. You can use this option on a fresh installation.
+
+In Match, select Human-style KataGo for Black or White, then choose a Human-style AI rank from 20 kyu to 9 dan before starting the game. Each side has its own setting. With the automatically installed CFG, “Use CFG setting” selects 1 dan.
+
+In the tools panel, select the black or white setup stone and click an intersection. Click again with the same color to remove the stone, or click with the other color to replace it. Undo restores the previous position.
+
+Analysis continues with valid candidates if an engine returns an invalid value for another candidate.
+
+## Using older KataGo engines
+
+GoKS can launch KataGo v1.2 and use [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120), a legacy model trained with a focus on problem 120 of Igo Hatsuyoron. Other older versions of KataGo may also work.
 
 ## Features
 
@@ -113,10 +127,3 @@ Source: https://github.com/hebaeba/GoKS
 When reporting an issue, include the version, Windows environment, engine used, and steps to reproduce. Do not publish names, IP addresses, local paths, or tokens from logs, or game records you are not permitted to share.
 
 Build using `.github/workflows/windows.yml` and `scripts/build-windows.ps1`. The `web/window-assets.json` manifest checks consistency of the independent windows. When updating source files, apply all files from the same revision together.
-
-
-## KataGo v1.2 and the Igo Hatsuyoron 120 special network
-
-`igoh120-s618909184-d292623510.txt.gz` is an older neural network trained specifically with an emphasis on problem 120 of *Igo Hatsuyoron*, not on life-and-death problems in general. On Windows, extract the **Windows build** of KataGo v1.2, and register `katago.exe`, this `.txt.gz` model and the included `gtp_example.cfg` (or leave Config blank if it is next to the executable). Leave Additional Arguments blank. The Linux binary cannot be run by the Windows GoKS.exe.
-
-GoKS detects the older GTP implementation, does not add `-override-config`, and applies compatibility settings in a temporary copy of the CFG. It can reconstruct some setup diagrams through GTP `play` commands, but cannot recover the original move history, ko restrictions, or captures. **Shaded-region-only analysis and AI games are not supported with v1.2.** Use regular position analysis. Restart the engine after changing Japanese/Chinese rules. For the special network, prefer the win rate over its score estimate.

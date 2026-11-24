@@ -1,6 +1,6 @@
 # Go棋譜Studio / GoKifuStudio
 
-**GoKS-v.1.0（内部バージョン1.0.0）**
+**GoKS-v.1.1（内部バージョン1.1.0）**
 
 Windows PC向けの棋譜編集・KataGo解析・対局アプリです。日本語／英語、通常表示／シンプル表示に対応します。実行ファイル名は `GoKS.exe` です。
 
@@ -19,9 +19,23 @@ CPU版エンジンは固定で、自動更新しません。エンジンを更�
 
 [CPU版エンジン](https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-eigen-windows-x64.zip) ／ [CPU版モデル](https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b10c128-s1141046784-d204142634.txt.gz)
 
-使い方は同梱の **Manual.html** を開いてください。日本語・英語を切り替えられます。
+使い方は同梱の [Manual.html](Manual.html) を開いてください。日本語・英語を切り替えられます。
 
-このZIPがソース版の場合、実行ファイルは含まれません。GitHub ActionsでWindowsビルドを実行し、生成された `GoKS-v.1.0` のArtifactsを取得します。Releasesの利用者向けZIPとGitHub自動生成の「Source code」は区別してください。
+このZIPがソース版の場合、実行ファイルは含まれません。GitHub ActionsでWindowsビルドを実行し、生成された `GoKS-v.1.1` のArtifactsを取得します。Releasesの利用者向けZIPとGitHub自動生成の「Source code」は区別してください。
+
+## GoKS-v.1.1の主な変更
+
+「エンジン」→「人間型エンジンを自動セットアップ」を選ぶと、GoKS.exeの隣の katago-human フォルダーにCPU版KataGo、通常モデル、人間型モデル、専用CFGが入り、エンジンリストに「人間型KataGo」が登録されます。CPU版の事前セットアップやCFGの手入力は不要です。
+
+「対局」で黒番または白番に人間型KataGoを選び、対局を始める前に「人間型AIの棋力」を20級～9段から選びます。黒番と白番は別々に指定できます。「CFGの設定を使う」を選ぶと、自動セットアップ版では初段になります。
+
+「手順・ツール」で「黒石」または「白石」を選び、交点をクリックして石を配置します。同じ色でもう一度クリックするとその石が消え、反対の色でクリックすると置き換わります。「取り消し」で直前の編集を戻せます。
+
+解析中に一部の候補手に不正な数値が含まれていても、有効な候補手を使って解析を続けます。
+
+## 旧版KataGoの利用
+
+GoKSはKataGo v1.2を起動できます。『囲碁発陽論』第120問に重点を置いて訓練された旧形式のモデル [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120) も使えます。ほかの旧版KataGoも動作する可能性があります。
 
 ## 機能
 
@@ -114,10 +128,3 @@ Windowsのインストール済みフォント一覧から選ぶか、フォン�
 Issuesへ報告する際は、バージョン、Windows環境、使用エンジン、再現手順を記載してください。ログの個人名・IP・パス・トークンや、共有許可のない棋譜を公開しないでください。
 
 ビルドは `.github/workflows/windows.yml` と `scripts/build-windows.ps1` を使用します。`web/window-assets.json` は独立窓を含む整合性チェックです。変更時には同じ更新版のソースを一式反映してください。
-
-
-## KataGo v1.2 と『囲碁発陽論120』専用モデル（旧版互換）
-
-`igoh120-s618909184-d292623510.txt.gz` は、特に『囲碁発陽論』第120問に重点を置いて訓練された旧形式のモデルです。一般的な詰碁全般に特化したものではありません。KataGo v1.2の**Windows版**を展開し、`katago.exe`、モデルの `.txt.gz`、v1.2付属の `gtp_example.cfg` をエンジンリストに指定してください（設定CFGは空欄でも同じフォルダーの `gtp_example.cfg` を探します）。追加引数は空欄にします。Linux版の実行ファイルはWindows版GoKS.exeでは起動できません。
-
-GoKSは旧版を判別して `-override-config` を使用せず、CFGの一時コピーに解析設定を反映します。手動配置した石は可能な場合にGTPの `play` で再現しますが、着手履歴・コウ履歴・アゲハマは再現できません。**v1.2では網掛け領域内だけの解析とAI対局には非対応**です。通常の局面解析でご利用ください。日本ルール・中国ルールを切り替えるときはエンジンを再接続してください。専用モデルでの目数評価にはご注意いただき、勝率を中心に参照してください。
