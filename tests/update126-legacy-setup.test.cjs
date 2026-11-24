@@ -41,9 +41,9 @@ test('Update126: invalid diagrams fail rather than silently using the wrong posi
  assert.throws(()=>replayLegacySetup([['B','pass']],9),/盤外/);
  assert.throws(()=>replayLegacySetup([['X','A1']],9),/色/);
 });
-test('Update126: legacy manual and cache-busted scripts explain the setup replay limit',()=>{
+test('Update126: legacy manual and cache-busted scripts reference the legacy release',()=>{
  const root=path.resolve(__dirname,'..');const src=p=>fs.readFileSync(path.join(root,p),'utf8');
  assert.match(src('web/index.html'),/gtp\.js\?v=130/);assert.match(src('web/index.html'),/analysis\.js\?v=132/);
- for(const file of ['README.md','Manual.html'])assert.match(src(file),/コウ履歴/);
- for(const file of ['README-en.md','Manual.html'])assert.match(src(file),/ko restrictions/);
+ for(const file of ['README.md','README-en.md','Manual.html'])
+  assert.ok(src(file).includes('https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120'));
 });
