@@ -196,7 +196,7 @@ html body.simple-mode #simple-menu .simple-edit-menu .side-navigation .navigatio
 /* Update116: beginner-friendly setup order and collapsible advanced downloads. */
 html body #engine-settings #engine-folder-tools{display:block;width:100%;margin:0 0 7px;min-width:0}
 html body #engine-settings .engine-setup-row{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin-bottom:6px}
-html body #engine-settings .engine-setup-row>button{flex:1 1 175px;min-width:0}
+html body #engine-settings .engine-setup-row>button{flex:1 1 100%;min-width:0}
 html body #engine-install{font-weight:700}
 html body #engine-downloads{width:100%;min-width:0;margin:6px 0}
 html body #engine-downloads>summary{cursor:pointer}

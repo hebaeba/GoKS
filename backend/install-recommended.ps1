@@ -9,7 +9,9 @@ $stage=$null
 $code='write'
 try {
  $base=(Get-Location).ProviderPath
- $dest=Join-Path $base 'katago'
+ $human=![string]::IsNullOrEmpty($env:GOKS_HUMAN_CFG)
+ $folder=if($human){'katago-human'}else{'katago'}
+ $dest=Join-Path $base $folder
  # Existing katago directories may have a missing model. Always permit repair.
  # Installation is built and verified in staging before any existing files move.
  $stage=Join-Path $base ('.goks-install-'+[guid]::NewGuid().ToString('N'))
@@ -51,7 +53,21 @@ try {
   try {$sha=[Security.Cryptography.SHA256]::Create();try {$hash=[BitConverter]::ToString($sha.ComputeHash($gz)).Replace('-','')}finally{$sha.Dispose()}} finally {$gz.Dispose()}
  } finally {$stream.Dispose()}
  if($hash -ne '3086fce524b9e7a8a979f6eed740d095ef8f3891233b60c709e3d640f997bc13'){throw 'model'}
- $info=@{exe=('./katago/'+$exe[0].Name);model=('./katago/models/'+$model);workdir='./katago';config=''}
+ $workdir='./'+$folder
+ $info=@{exe=($workdir+'/'+$exe[0].Name);model=($workdir+'/models/'+$model);workdir=$workdir;config=''}
+ if($human){
+  $humanName='b18c384nbt-humanv0.bin.gz'
+  $humanFile=Join-Path $models $humanName
+  Report '人間型モデルをダウンロード中' 82
+  $code='download'
+  Invoke-WebRequest -UseBasicParsing -TimeoutSec 600 -Uri ('https://github.com/lightvector/KataGo/releases/download/v1.15.0/'+$humanName) -OutFile $humanFile
+  $code='verify'
+  if((Get-FileHash -LiteralPath $humanFile -Algorithm SHA256).Hash -ne '637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5'){throw 'human model'}
+  $code='write'
+  [IO.File]::WriteAllText((Join-Path $root 'human_gtp.cfg'),$env:GOKS_HUMAN_CFG)
+  $info.config=$workdir+'/human_gtp.cfg'
+  $info.extraArgs=@('-human-model',('models/'+$humanName))
+ }
  Report 'エンジンを登録中' 95
  $code='write'
  if (Test-Path -LiteralPath $dest) {

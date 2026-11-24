@@ -15,7 +15,7 @@ test('engine tab is first and named エンジン',()=>{
 
 test('setup controls precede individual downloads, list and running details',()=>{
  const js=read('web/refine.js');
- const markers=["setup.append($('engine-install'),$('engine-folder'))", "downloads.id='engine-downloads'", "downloads.lastElementChild.append($('engine-cpu'),$('engine-network'))", "separator.className='engine-divider'", "settings.replaceChildren(tools,separator,d,running)"];
+ const markers=["setup.append($('engine-install'),$('engine-install-human'),$('engine-folder'))", "downloads.id='engine-downloads'", "downloads.lastElementChild.append($('engine-cpu'),$('engine-network'))", "separator.className='engine-divider'", "settings.replaceChildren(tools,separator,d,running)"];
  for(const marker of markers)assert.ok(js.includes(marker),marker);
  assert.ok(!js.slice(js.indexOf("downloads.id='engine-downloads'")).includes('d.open=true'), 'engine list must start collapsed');
  assert.ok(!js.includes('running.open=true'), 'running list must start collapsed');

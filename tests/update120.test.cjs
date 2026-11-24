@@ -25,6 +25,6 @@ test('setup, folder and download buttons give visible feedback and use direct na
  assert.match(js,/id='engine-action-feedback'/);
  assert.match(js,/const found=await rawCall\('pick',\{kind:'folder'\}\)/);
  assert.match(js,/await rawCall\('pick',\{kind\}\)/);
- assert.match(js,/const r=await rawCall\('install_recommended'\)/);
+ assert.match(js,/const r=await rawCall\('install_recommended',\{human\}\)/);
  assert.doesNotMatch(js,/document\.addEventListener\('click',\(\)=>profileMessage\(''\),true\)/);
 });

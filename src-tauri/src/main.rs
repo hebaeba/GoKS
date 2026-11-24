@@ -20,6 +20,7 @@ async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Deskt
  }
  if action=="install_recommended" {
   #[cfg(windows)] {
+   let human=payload["human"].as_bool().unwrap_or(false);
    let progress=state.install.clone();
    {
     let mut s=progress.lock().map_err(|_|"セットアップの状態を取得できません".to_string())?;
@@ -34,6 +35,7 @@ async fn engine_call(action:String,mut payload:Value,state:tauri::State<'_,Deskt
     let ps=PathBuf::from(std::env::var_os("SystemRoot").ok_or("SystemRoot")?).join("System32/WindowsPowerShell/v1.0/powershell.exe");
     let mut child=std::process::Command::new(ps)
      .args(["-NoLogo","-NoProfile","-NonInteractive","-Command",include_str!("../../backend/install-recommended.ps1")])
+     .env("GOKS_HUMAN_CFG",if human {include_str!("../../config/human_gtp.cfg")} else {""})
      .current_dir(base).creation_flags(0x08000000).stdout(Stdio::piped()).stderr(Stdio::null())
      .spawn().map_err(|e|e.to_string())?;
     let output=child.stdout.take().ok_or("進捗を読み取れません")?;

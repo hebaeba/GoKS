@@ -3,6 +3,8 @@ $ErrorActionPreference='Stop'
 $source=Get-Content -Raw -LiteralPath "$PSScriptRoot/../backend/install-recommended.ps1"
 $temp=Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 [void][IO.Directory]::CreateDirectory($temp)
+$originalCfg=$env:GOKS_HUMAN_CFG
+$env:GOKS_HUMAN_CFG=$null
 Push-Location $temp
 try {
  $fixtures=New-Item -ItemType Directory archive
@@ -34,9 +36,20 @@ try {
  $backupFolder=Join-Path $temp ($existing.backup.Substring(2))
  if (!(Test-Path -LiteralPath (Join-Path $backupFolder 'custom-model.txt'))) {throw 'Custom files not backed up'}
  if(Test-Path (Join-Path $temp 'katago/custom-model.txt')){throw 'Old installation was not swapped out'}
+ # Use the same verified fixture to exercise the second installation independently.
+ $env:GOKS_HUMAN_CFG='humanSLProfile = rank_1d'
+ $humanScript=$run.ToString().Replace('637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5',(Get-FileHash $modelPath).Hash)
+ $humanRun=[scriptblock]::Create($humanScript)
+ $humanResult=((& $humanRun)|Select-Object -Last 1)|ConvertFrom-Json
+ if(!(Test-Path $existing.exe) -or !(Test-Path $humanResult.exe) -or $existing.exe -eq $humanResult.exe){throw 'Installations are not independent'}
+ if((Get-Content -Raw $humanResult.config) -ne $env:GOKS_HUMAN_CFG){throw 'Human config mismatch'}
+ if($humanResult.extraArgs[0] -ne '-human-model' -or !(Test-Path (Join-Path $humanResult.workdir $humanResult.extraArgs[1]))){throw 'Human model not registered'}
+ $failedHuman=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
+ if($failedHuman.error -ne 'verify' -or !(Test-Path $humanResult.config)){throw 'Corrupt human model replaced existing installation'}
+ $env:GOKS_HUMAN_CFG=$null
  Remove-Item katago -Recurse -Force
  $digest='0'*64
  $bad=((& $run)|Select-Object -Last 1)|ConvertFrom-Json
  if($bad.error -ne 'verify'){throw 'Bad hash not rejected'}
  if((Test-Path katago) -or @(Get-ChildItem -Force -Filter '.goks-install-*').Count){throw 'Failed install left files'}
-} finally {Pop-Location;Remove-Item -LiteralPath $temp -Recurse -Force}
+} finally {$env:GOKS_HUMAN_CFG=$originalCfg;Pop-Location;Remove-Item -LiteralPath $temp -Recurse -Force}

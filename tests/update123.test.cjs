@@ -8,13 +8,13 @@ const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 
 test('Update123: folder chooser is hidden before removing it from the connected DOM',()=>{
  const src=read('web/refine.js');
- assert.match(src,/\$\('engine-folder'\)\.hidden=true;setup\.append\(\$\('engine-install'\),\$\('engine-folder'\)\)/);
- assert.doesNotMatch(src,/setup\.append\(\$\('engine-install'\),\$\('engine-folder'\)\);\$\('engine-folder'\)\.hidden=true/);
+ assert.match(src,/\$\('engine-folder'\)\.hidden=true;setup\.append\(\$\('engine-install'\),\$\('engine-install-human'\),\$\('engine-folder'\)\)/);
+ assert.doesNotMatch(src,/setup\.append\(\$\('engine-install'\),\$\('engine-install-human'\),\$\('engine-folder'\)\);\$\('engine-folder'\)\.hidden=true/);
  assert.match(src,/tools\.prepend\(setup,downloads\)/);
  assert.match(src,/downloads\.lastElementChild\.append\(\$\('engine-cpu'\),\$\('engine-network'\)\)/);
  assert.match(src,/legacyActions\.hidden=true/);
  assert.match(src,/settings\.replaceChildren\(tools,separator,d,running\)/);
- assert.match(read('web/index.html'),/refine\.js\?v=123/);
+ assert.match(read('web/index.html'),/refine\.js\?v=132/);
 });
 
 test('Update123: engine name is above engine executable and picker launches selected profile',()=>{

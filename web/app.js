@@ -158,10 +158,15 @@
   async function annotate(point){if(!editing||insertion||!(await canLeave()))return;transaction(()=>{
     let current=route[index],props=current.props;const coordinate=R.encode(point,size);
     if(['AB','AW','AE'].includes(tool)){
+      const color=tool==='AB'?R.BLACK:tool==='AW'?R.WHITE:null;
+      const erase=color!==null&&frames[index].board[point]===color;
       // SGF forbids setup properties and a move in the same node. Insert a setup-only node.
       if(props.B||props.W){const setup=S.node();setup.children=current.children;current.children=[setup];const preferred=choices.get(current)||0;choices.set(current,0);choices.set(setup,preferred);current=setup;props=setup.props;index++;}
       removeAt(props,point,['AB','AW','AE']);
-      (props[tool]??=[]).push(coordinate);
+      if(erase){
+        // Only inherited stones need an explicit SGF removal.
+        if(index>0&&frames[index-1].board[point])(props.AE??=[]).push(coordinate);
+      }else (props[tool]??=[]).push(coordinate);
     }else if(tool==='clear'){removeAt(props,point,markerKeys);removeAt(props,point,['AB','AW']);}
     else if(['upper','lower','number','label'].includes(tool)){
       const text=tool==='label'?$('label-text').value:tool==='number'?String(serial):String.fromCharCode((tool==='upper'?65:97)+(serial-1)%26);
