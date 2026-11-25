@@ -34,7 +34,7 @@ Analysis continues with valid candidates if an engine returns an invalid value f
 
 ## Using older KataGo engines
 
-GoKS can launch KataGo v1.2 and use [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120), a legacy model trained with a focus on problem 120 of Igo Hatsuyoron. Other older versions of KataGo may also work.
+GoKS can launch [KataGo v1.2](https://github.com/lightvector/KataGo/releases/tag/v1.2) and use [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120), a legacy model trained with a focus on problem 120 of Igo Hatsuyoron. Other older versions of KataGo may also work.
 
 ## Features
 
