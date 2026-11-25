@@ -35,7 +35,7 @@ CPU版エンジンは固定で、自動更新しません。エンジンを更�
 
 ## 旧版KataGoの利用
 
-GoKSはKataGo v1.2を起動できます。『囲碁発陽論』第120問に重点を置いて訓練された旧形式のモデル [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120) も使えます。ほかの旧版KataGoも動作する可能性があります。
+GoKSは[KataGo v1.2](https://github.com/lightvector/KataGo/releases/tag/v1.2)を起動できます。『囲碁発陽論』第120問に重点を置いて訓練された旧形式のモデル [igoh120-s618909184-d292623510.txt.gz](https://github.com/lightvector/KataGo/releases/tag/v1.2-igoh120) も使えます。ほかの旧版KataGoも動作する可能性があります。
 
 ## 機能
 
